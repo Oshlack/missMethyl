@@ -1,0 +1,218 @@
+%\VignetteIndexEntry{missMethyl: analysing data from Illumina's HumanMethylation450 array} \\
+%\VignetteKeywords{missMethyl, 450k analysis, methylation} \\
+%\VignettePackage{missMethyl} \\
+
+\documentclass{article}
+
+\usepackage[utf8]{inputenc} 
+
+<<style-Sweave, eval=TRUE, echo=FALSE, results=tex>>=
+BiocStyle::latex()
+@
+
+\newcommand{\exitem}[3]
+{\item \texttt{\textbackslash#1\{#2\}} #3 \csname#1\endcsname{#2}.}
+
+\title{missMethyl: Analysing Illumina \\ HumanMethylation450 BeadChip Data}
+\author{Belinda Phipson and Jovana Maksimovic}
+\date{Modified: 18 July, 2014. Compiled: \today}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+\section{Introduction}
+
+The \Biocpkg{missMethyl} package contains functions to analyse methylation data from Illumina's HumanMethylation450 beadchip. These arrays are a cost-effective alternative to whole genome bisulphite sequencing, and as such are widely used to profile DNA methylation. Specifically, missMethyl contains functions to perform SWAN normalisation \cite{swan} and differential variability analysis \cite{diffvar}. As our lab's research into specialised analyses of these arrays continues we anticipate that the package will be continuously updated with new functions.
+
+Raw data files are in IDAT format, which can be read into R using the \Biocpkg{minfi} package \cite{minfi}. Statistical analyses are usually performed on M-values, and $\beta$ values are used for visualisation, both of which can be extracted from \Rclass{MethylSet} objects, which is a class of object created by \Biocpkg{minfi}. For detecting differentially variable CpGs we recommend that the analysis is performed on M-values. All analyses described here are performed at the CpG site level.
+
+\section{Reading data into R}
+
+We will use the data in the \Biocpkg{minfiData} package to demonstrate the functions in \Biocpkg{missMethyl}. The example dataset has 6 samples across two slides. The sample information is in the targets file. An essential column in the targets file is the ``Basename" column which tells \Biocpkg{minfi} where the idat files to be read in are located. The R commands to read in the data are taken from the \Biocpkg{minfi} Users Guide. For additional details on how to read the IDAT files into R, as well as information regarding quality control please refer to the \Biocpkg{minfi} User\'s Guide. 
+
+<<reading_data,cache=TRUE>>=
+library(missMethyl)
+library(limma)
+library(minfi)
+library(minfiData)
+baseDir <- system.file("extdata", package = "minfiData")
+targets <- read.450k.sheet(baseDir)
+targets[,1:9]
+targets[,10:12]
+rgSet <- read.450k.exp(base = baseDir,targets = targets)
+@
+
+The data is now an \Rclass{RGChannelSet} object and needs to be normalised and converted to a \Rclass{MethylSet} object.  
+
+\section{Subset-quantile within array normalization (SWAN)}
+
+SWAN (subset-quantile within array normalization) is a within-array normalization method for Illumina 450k BeadChips. Technical differencs have been demonstrated to exist between the Infinium I and Infinium II assays on a single 450K array \cite{bibikova, dedeur}. Using the SWAN method substantially reduces the technical variability between the assay designs whilst maintaining the important biological differences. The SWAN method makes the assumption that the number of CpGs within the 50bp probe sequence reflects the underlying biology of the region being interrogated. Hence, the overall distribution of intensities of probes with the same number of CpGs in the probe body should be the same regardless of assay type. The method then uses a subset quantile normalization approach to adjust the intensities of each array \cite{swan}. 
+
+SWAN can take a \Rclass{MethylSet}, \Rclass{RGChannelSet} or \Rclass{MethyLumiSet} as input. It should be noted that, in order to create the normalization subset, SWAN randomly selects Infinium I and II probes that have one, two and three underlying CpGs; as such, we recommend using \Rcode{set.seed} before \Rfunction{SWAN} to ensure that the normalized intensities will be identical, if the normalization is repeated.
+
+The technical differences between Infinium I and II assay designs can result in aberrant beta value distributions (Figure \ref{fig:swan}, panel ``Raw''). Using SWAN corrects for the technical differences between the Infinium I and II assay designs and produces a smoother overall $\beta$ value distribution (Figure \ref{fig:swan}, panel ``SWAN'').
+
+<<swan,cache=TRUE>>=
+mSet <- preprocessRaw(rgSet)
+mSetSw <- SWAN(mSet,verbose=TRUE)
+@
+
+\setkeys{Gin}{width=1.0\textwidth}
+
+\begin{figure}[htbp!]
+\centering
+<<betasByType,fig=TRUE,height=5,width=10>>=
+par(mfrow=c(1,2), cex=1.25)
+densityByProbeType(mSet[,1], main = "Raw")
+densityByProbeType(mSetSw[,1], main = "SWAN")
+@
+\caption{Density distributions of $\beta$ values before and after using SWAN.}
+\label{fig:swan}
+\end{figure}
+
+\section{Filter out poor quality probes}
+
+Poor quality probes can be filtered out based on the detection p-value. For this example, to retain a CpG for further analysis, we require that the detection p-value is less than 0.01 in all samples.
+
+<<filtering>>=
+detP <- detectionP(rgSet)
+keep <- rowSums(detP < 0.01) == ncol(rgSet)
+mSet <- mSet[keep,]
+@
+
+\section{Extracting \texorpdfstring{$\beta$}{Lg} and M-values}
+
+Now that the data has been SWAN normalised we can extract $\beta$ and M-values from the \Rclass{MethylSet} object. We prefer to add an offset to the methylated and unmethylated intensities when calculating M-values, hence we extract the methylated and unmethylated channels separately and perform our own calculation. For all subsequent analysis we use a random selection of 20\,000 CpGs to reduce computation time.
+
+<<extraction>>=
+mset_reduced <- mSet[sample(1:nrow(mSet), 20000),]
+meth <- getMeth(mset_reduced)
+unmeth <- getUnmeth(mset_reduced)
+Mval <- log2((meth + 100)/(unmeth + 100))
+beta <- getBeta(mset_reduced)
+dim(Mval)
+@
+
+An MDS plot (Figure \ref{fig:MDS}) is a good sanity check to make sure samples cluster together according to the main factor of interest, in this case, cancer and normal.
+
+\setkeys{Gin}{width=0.75\textwidth}
+
+\begin{figure}[htbp!]
+\centering
+<<mdsplot,fig=TRUE,height=5,width=5>>=
+par(mfrow=c(1,1))
+plotMDS(Mval, labels=targets$Sample_Name, col=as.integer(factor(targets$status)))
+legend("topleft",legend=c("Cancer","Normal"),pch=16,cex=1.2,col=1:2)
+@
+\caption{A multi-dimensional scaling (MDS) plot of cancer and normal samples.}
+\label{fig:MDS}
+\end{figure}
+
+\section{Testing for differential methylation}
+
+To test for differential methylation we use the \Biocpkg{limma} package \cite{limma}, which employs an empirical Bayes framework based on Guassian model theory. First we need to set up the design matrix. There are a number of ways to do this, the most straightforward is directly from the targets file. There are a number of variables, with the status column indicating cancer/normal samples. From the person column of the targets file, we see that the cancer/normal samples are matched, with 3 individuals each contributing both a cancer and normal sample. Since the limma model framework can handle any experimental design which can be summarised by a design matrix, we can take into account the paired nature of the data in the analysis. For more complicated experimental designs, please refer to the \Biocpkg{limma} User\'s Guide.
+
+<<design>>=
+library(limma)
+group <- factor(targets$status,levels=c("normal","cancer"))
+id <- factor(targets$person)
+design <- model.matrix(~id + group)
+design
+@
+
+Now we can test for differential methylation using the \Rfunction{lmFit} and \Rfunction{eBayes} functions from \Biocpkg{limma}. As input data we use the matrix of M-values.
+
+<<diffmeth>>=
+fit <- lmFit(Mval,design)
+fit <- eBayes(fit)
+@
+
+The numbers of hyper-methylated (1) and hypo-methylated (-1) can be displayed using the \Rfunction{decideTests} function in \Biocpkg{limma} and the top 10 differentially methylated CpGs for cancer versus normal outputted using \Rfunction{topTable}.
+
+<<results>>=
+summary(decideTests(fit))
+top<-topTable(fit,coef=4)
+top
+@
+
+Note that since we performed our analysis on M-values, the logFC and AveExpr columns are computed on the M-value scale. For interpretability and visualisation we can look at the $\beta$ values. The beta values for the top 4 differentially methylated CpGs shown in Figure \ref{fig:top4}.
+
+\begin{figure}[htbp!]
+\centering
+<<top4,fig=TRUE,width=10,height=10>>=
+cpgs <- rownames(top)
+par(mfrow=c(2,2))
+for(i in 1:4){
+stripchart(beta[rownames(beta)==cpgs[i],]~design[,4],method="jitter",
+group.names=c("Normal","Cancer"),pch=16,cex=1.5,col=c(4,2),ylab="Beta values",
+vertical=TRUE,cex.axis=1.5,cex.lab=1.5)
+title(cpgs[i],cex.main=1.5)
+}
+@
+\caption{The $\beta$ values for the top 4 differentially methylated CpGs.}
+\label{fig:top4}
+\end{figure}
+
+\section{Testing for differential variability (DiffVar)}
+
+Rather than testing for differences in mean methylation, we may be interested in testing for differences between group variances. For example, it has been hypothesised that highly variable CpGs in cancer are important for tumour progression \cite{hansen}. Hence we may be interested in CpG sites that are consistently methylated in the normal samples, but variably methylated in the cancer samples. In general we recommend at least 10 samples in each group for accurate variance estimation, however for the purpose of this vignette we perform the analysis on 3 vs 3. In this example, we are interested in testing for differential variability in the cancer versus normal group (column 4 in the design matrix). The \Rfunction{varFit} function will take either a matrix of M-values, $\beta$ values or a MethylSet object as input. If $\beta$ values are supplied, a logit transformation is performed. Note that as a default, varFit uses the robust setting in the \CRANpkg{limma} framework, which requires the use of the \CRANpkg{statmod} package.
+
+<<diffvar>>=
+fitvar <- varFit(Mval, design, coef=4)
+@
+
+The numbers of hyper-variable (1) and hypo-variable (-1) genes in cancer vs normal can be obtained using \Rfunction{decideTests}. 
+
+<<results>>=
+summary(decideTests(fitvar))
+topDV <- topVar(fitvar,coef=4)
+topDV
+@
+
+The $\beta$ values for the top 4 differentially variable CpGs can be seen in Figure \ref{fig:top4DV}.
+
+\begin{figure}[htbp!]
+\centering
+<<top4DV,fig=TRUE,width=10,height=10>>=
+cpgsDV <- rownames(topDV)
+par(mfrow=c(2,2))
+for(i in 1:4){
+stripchart(beta[rownames(beta)==cpgsDV[i],]~design[,4],method="jitter",
+group.names=c("Normal","Cancer"),pch=16,cex=1.5,col=c(4,2),ylab="Beta values",
+vertical=TRUE,cex.axis=1.5,cex.lab=1.5)
+title(cpgsDV[i],cex.main=1.5)
+}
+@
+\caption{The $\beta$ values for the top 4 differentially variable CpGs.}
+\label{fig:top4DV}
+\end{figure}
+
+\newpage
+\section{Session information}
+<<sessionInfo, print=TRUE, eval=TRUE, results=tex>>=
+toLatex(sessionInfo())
+@
+
+\begin{thebibliography}{1}
+
+\bibitem{minfi} Aryee, M. J., Jaffe, A. E., Corrada-Bravo, H., Ladd-Acosta, C., Feinberg, A. P., Hansen, K. D., and Irizarry, R. A. (2014). Minfi: a flexible and comprehensive Bioconductor package for the analysis of Infinium DNA methylation microarrays. \textit{Bioinformatics}, \textbf{30}(10):1363-1369.
+
+\bibitem{bibikova} Bibikova, M., Barnes, B., Tsan, C., Ho, V., Klotzle, B, Le, J.M., Delano, D., Zhang, L., Schroth, G.P., Gunderson, K.L., Fan, J., and Shen, R. (2011). High density DNA methylation array with single CpG site resolution. \textit{Genomics}, \textbf{98}(4):288¿295.
+
+\bibitem{dedeur} Dedeurwaerder, S., Defrance, M., Calonne, E., Denis, H., Sotiriou, C., and Fuks, F. (2011). Evaluation of the Infinium Methylation 450K technology. \textit{Epigenomics}, \textbf{3}(6):771-784.
+
+\bibitem{hansen} Hansen, K.D., Timp, W., Bravo, H.C., Sabunciyan, S., Langmead, B., McDonald, O.G., Wen, B., Wu, H., Liu, Y., Diep, D., Briem, E., Zhang, K., Irizarry, R., and Feinberg, A.P. (2011). Increased methylation variation in epigenetic domains across cancer types. \textit{Nature Genetics}, \textbf{43}:768-75.
+
+\bibitem{swan} Maksimovic, J., Gordon, L., and Oshlack, A. (2012). SWAN: Subset-quantile within array normalization for illumina infinium HumanMethylation450 BeadChips. \textit{Genome Biology}, \textbf{13}(6):R44.
+
+\bibitem{diffvar} Phipson, B., and Oshlack, A. DiffVar: A new method for detecting differential variability with application to methylation in cancer and ageing. \textit{Submitted 30 June 2014}.
+
+\bibitem{limma} Smyth, G.K. (2005). Limma: linear models for microarray data. In: 'Bioinformatics and Computational Biology Solutions using R and Bioconductor'. R. Gentleman, V. Carey, S. Dudoit, R. Irizarry, W. Huber (eds), Springer, New York, pages 397-420.
+
+\end{thebibliography}
+
+
+\end{document}
