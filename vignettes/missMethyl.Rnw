@@ -15,7 +15,7 @@ BiocStyle::latex()
 
 \title{missMethyl: Analysing Illumina \\ HumanMethylation450 BeadChip Data}
 \author{Belinda Phipson and Jovana Maksimovic}
-\date{Modified: 18 July, 2014. Compiled: \today}
+\date{Modified: 4 September, 2014. Compiled: \today}
 
 \begin{document}
 
@@ -158,7 +158,9 @@ title(cpgs[i],cex.main=1.5)
 
 \section{Testing for differential variability (DiffVar)}
 
-Rather than testing for differences in mean methylation, we may be interested in testing for differences between group variances. For example, it has been hypothesised that highly variable CpGs in cancer are important for tumour progression \cite{hansen}. Hence we may be interested in CpG sites that are consistently methylated in the normal samples, but variably methylated in the cancer samples. In general we recommend at least 10 samples in each group for accurate variance estimation, however for the purpose of this vignette we perform the analysis on 3 vs 3. In this example, we are interested in testing for differential variability in the cancer versus normal group (column 4 in the design matrix). The \Rfunction{varFit} function will take either a matrix of M-values, $\beta$ values or a MethylSet object as input. If $\beta$ values are supplied, a logit transformation is performed. Note that as a default, varFit uses the robust setting in the \CRANpkg{limma} framework, which requires the use of the \CRANpkg{statmod} package.
+\subsection{Methylation data}
+
+Rather than testing for differences in mean methylation, we may be interested in testing for differences between group variances. For example, it has been hypothesised that highly variable CpGs in cancer are important for tumour progression \cite{hansen}. Hence we may be interested in CpG sites that are consistently methylated in the normal samples, but variably methylated in the cancer samples. In general we recommend at least 10 samples in each group for accurate variance estimation, however for the purpose of this vignette we perform the analysis on 3 vs 3. In this example, we are interested in testing for differential variability in the cancer versus normal group (column 4 in the design matrix). For methylation data, the \Rfunction{varFit} function will take either a matrix of M-values, $\beta$ values or a \Rclass{MethylSet} object as input. If $\beta$ values are supplied, a logit transformation is performed. Note that as a default, varFit uses the robust setting in the \Biocpkg{limma} framework, which requires the use of the \CRANpkg{statmod} package.
 
 <<diffvar>>=
 fitvar <- varFit(Mval, design, coef=4)
@@ -190,6 +192,80 @@ title(cpgsDV[i],cex.main=1.5)
 \label{fig:top4DV}
 \end{figure}
 
+\subsection{RNA-Seq expression data}
+
+Testing for differential variability in expression data is straightforward if the technology is gene expression microarrays. The matrix of expression values can be supplied directly to the \Rfunction{varFit} function. For RNA-Seq data, the mean-variance relationship that occurs in count data needs to be taken into account. In order to deal with this issue, we apply a \Rfunction{voom} transformation \cite{voom} to obtain observation weights, which are then used in the linear modelling step. For RNA-Seq data, the \Rfunction{varFit} function will take a \Rclass{DGEList} object as input.
+
+To demonstrate this, we use data from the \Biocpkg{tweeDEseqCountData} package. This data is part of the International HapMap project, consisting of RNA-Seq profiles from 69 unrelated Nigerian individuals \cite{pickrell}. The only covariate is gender, so we can look at differentially variable expression between males and females. We follow the code from the \Biocpkg{limma} vignette to read in and process the data before testing for differential variability.
+
+First we load up the data and extract the relevant information.
+
+<<loadingdata>>=
+library(tweeDEseqCountData)
+data(pickrell1)
+counts<-exprs(pickrell1.eset)
+dim(counts)
+gender <- pickrell1.eset$gender
+table(gender)
+rm(pickrell1.eset)
+data(genderGenes)
+data(annotEnsembl63)
+annot <- annotEnsembl63[,c("Symbol","Chr")]
+rm(annotEnsembl63)
+@
+
+We now have the counts, gender of each sample and annotation (gene symbol and chromosome) for each Ensemble gene. We can form a \Rclass{DGEList} object using the \Biocpkg{edgeR} package.
+
+<<dgelist>>=
+library(edgeR)
+y <- DGEList(counts=counts, genes=annot[rownames(counts),])
+@
+
+We filter out lowly expressed genes by keeping genes with at least 1 count per million reads in at least 20 samples, as well as genes that have defined annotation. Finally we perform scaling normalisation.
+
+<<filtering>>=
+isexpr <- rowSums(cpm(y)>1) >= 20
+hasannot <- rowSums(is.na(y$genes))==0
+y <- y[isexpr & hasannot,,keep.lib.sizes=FALSE]
+dim(y)
+y <- calcNormFactors(y)
+@
+
+We set up the design matrix and test for differential variability.
+
+<<testhapmap>>=
+design.hapmap <- model.matrix(~gender)
+fitvar.hapmap <- varFit(y, design.hapmap, coef=ncol(design.hapmap))
+fitvar.hapmap$genes <- y$genes
+@
+
+We can display the results of the test:
+
+<<resultshapmap>>=
+summary(decideTests(fitvar.hapmap))
+topDV.hapmap <- topVar(fitvar.hapmap,coef=ncol(design.hapmap))
+topDV.hapmap
+@
+
+The log counts per million for the top 4 differentially variable genes can be seen in Figure \ref{fig:top4DVhapmap}.
+
+\begin{figure}[htbp!]
+\centering
+<<top4DVhapmap,fig=TRUE,width=10,height=10>>=
+genesDV <- rownames(topDV.hapmap)
+par(mfrow=c(2,2))
+for(i in 1:4){
+stripchart(cpm(y,log=TRUE)[rownames(y)==genesDV[i],]~design.hapmap[,ncol(design.hapmap)],method="jitter",
+group.names=c("Female","Male"),pch=16,cex=1.5,col=c(4,2),ylab="Log counts per million",
+vertical=TRUE,cex.axis=1.5,cex.lab=1.5)
+title(genesDV[i],cex.main=1.5)
+}
+@
+\caption{The log counts per million for the top 4 differentially variably expressed genes.}
+\label{fig:top4DVhapmap}
+\end{figure}
+
+
 \newpage
 \section{Session information}
 <<sessionInfo, print=TRUE, eval=TRUE, results=tex>>=
@@ -206,9 +282,13 @@ toLatex(sessionInfo())
 
 \bibitem{hansen} Hansen, K.D., Timp, W., Bravo, H.C., Sabunciyan, S., Langmead, B., McDonald, O.G., Wen, B., Wu, H., Liu, Y., Diep, D., Briem, E., Zhang, K., Irizarry, R., and Feinberg, A.P. (2011). Increased methylation variation in epigenetic domains across cancer types. \textit{Nature Genetics}, \textbf{43}:768-75.
 
+\bibitem{voom} Law, C.W., Chen, Y., Shi, W., Smyth, G.K. (2014). Voom: precision weights unlock linear model analysis tools for RNA-seq read counts. \textit{Genome Biology}, 15, R29.
+
 \bibitem{swan} Maksimovic, J., Gordon, L., and Oshlack, A. (2012). SWAN: Subset-quantile within array normalization for illumina infinium HumanMethylation450 BeadChips. \textit{Genome Biology}, \textbf{13}(6):R44.
 
 \bibitem{diffvar} Phipson, B., and Oshlack, A. DiffVar: A new method for detecting differential variability with application to methylation in cancer and ageing. \textit{Submitted 30 June 2014}.
+
+\bibitem{pickrell} Pickrell, J.K., Marioni, J.C., Pai, A.A., Degner, J.F., Engelhardt, B.E., Nkadori, E., Veyrieras, J.B., Stephens, M., Gilad, Y., and Pritchard, J.K. (2010). Understanding mechanisms underlying human gene expression variation with RNA sequencing. \textit{Nature}, 464, 768--72.
 
 \bibitem{limma} Smyth, G.K. (2005). Limma: linear models for microarray data. In: 'Bioinformatics and Computational Biology Solutions using R and Bioconductor'. R. Gentleman, V. Carey, S. Dudoit, R. Irizarry, W. Huber (eds), Springer, New York, pages 397-420.
 

@@ -1,15 +1,16 @@
 \name{varFit}
 \alias{varFit}
 \alias{varFit.default}
+\alias{varFit.DGEList}
 \alias{varFit.MethylSet}
 \title{
 Testing for differential variability
 }
 \description{
-Fit linear model on mean absolute deviations for each CpG given a series of methylation arrays
+Fit linear model on mean absolute or squared deviations for each CpG given a series of methylation arrays
 }
 \usage{
-varFit(data, design = NULL, coef = NULL, type = NULL, trend = TRUE, robust = TRUE)
+varFit(data, design = NULL, coef = NULL, type = NULL, trend = TRUE, robust = TRUE, weights = NULL)
 }
 \arguments{
   \item{data}{
@@ -28,11 +29,16 @@ varFit(data, design = NULL, coef = NULL, type = NULL, trend = TRUE, robust = TRU
 	logical, if true fits a mean variance trend on the absolute or squared deviations
 }
   \item{robust}{
-	logical, if true performs robust empirical Bayes shrinkage of the variances for the moderated t statistics
+	logical, if true performs robust empirical Bayes shrinkage of the variances for the moderated t statistics	
 }
+  \item{weights}{
+  	non-negative observation weights. Can be a numeric matrix of individual weights, of same size as the object matrix, or a numeric vector of array weights, or a numeric vector of gene/feature weights. 
+}  
 }
 \details{
-This function depends on the \code{limma} package and is used to rank features such as CpG sites or genes in order of evidence of differential variability between two groups. Additional covariates can be taken into account with the design matrix. The analysis is performed on the M-values, defined as the log base 2 ratio of the methylated signal to the unmethylated signal. If a \code{MethylSet} object is supplied, M-values are extracted with an offset of 100 added to the numerator and denominator. A measure of variability is calculated for each CpG in each sample by subtracting out the group mean and taking the absolute or squared deviation. A linear model is then fitted to the absolute or squared deviations. The residuals of the linear model fit are subjected to empirical Bayes shrinkage and moderated t statistics (Smyth, 2004) calculated. False discovery rates are calculated using the method of Benjamini and Hochberg (1995).
+This function depends on the \code{limma} package and is used to rank features such as CpG sites or genes in order of evidence of differential variability between two groups. Additional covariates can be taken into account with the design matrix. For methylation data, the analysis is performed on the M-values, defined as the log base 2 ratio of the methylated signal to the unmethylated signal. If a \code{MethylSet} object is supplied, M-values are extracted with an offset of 100 added to the numerator and denominator. A measure of variability is calculated for each CpG in each sample by subtracting out the group mean and taking the absolute or squared deviation. A linear model is then fitted to the absolute or squared deviations. The residuals of the linear model fit are subjected to empirical Bayes shrinkage and moderated t statistics (Smyth, 2004) calculated. False discovery rates are calculated using the method of Benjamini and Hochberg (1995).
+
+For testing differential variability on RNA-Seq data, a \code{DGEList} object can be supplied directly to the function. A \code{voom} transformation is applied before testing for differential variability. The weights calculated in \code{voom} are used in the linear model fit. 
 
 Since the output is of class \code{MArrayLM}, any functions that can be applied to fit objects from \code{lmFit} and \code{eBayes} can be applied, for example, \code{topTable} and \code{decideTests}. 
 }
@@ -49,7 +55,7 @@ Smyth, G. K. (2005). Limma: linear models for microarray data. In: \emph{Bioinfo
 Benjamini, Y., and Hochberg, Y. (1995). Controlling the false discovery rate: a practical and powerful approach to multiple testing. \emph{Journal of the Royal Statistical Society Series}, B, \bold{57}, 289-300.
 }
 \seealso{
-\code{\link{topVar}}, \code{\link{getLeveneResiduals}}, \code{\link{lmFit}}, \code{\link{eBayes}}, \code{\link{topTable}}, \code{\link{decideTests}}
+\code{\link{topVar}}, \code{\link{getLeveneResiduals}}, \code{\link{lmFit}}, \code{\link{eBayes}}, \code{\link{topTable}}, \code{\link{decideTests}}, \code{\link{voom}}
 }
 \author{
 	Belinda Phipson

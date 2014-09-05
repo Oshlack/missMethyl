@@ -30,5 +30,5 @@ Maintainer: Belinda Phipson <belinda.phipson@mcri.edu.au>, Jovana Maksimovic <jo
 \references{
 Maksimovic, J., Gordon, L., Oshlack, A. (2012).  SWAN: Subset-quantile within array normalization for illumina infinium HumanMethylation450 BeadChips. \emph{Genome Biology}, 13:R44.
 
-Phipson, B., and Oshlack, A. (2014). A method for detecting differential variability in methylation data shows CpG islands are highl variably methylated in cancers. \emph{Manuscript submitted}.
+Phipson, B., and Oshlack, A. (2014). DiffVar: A new method for detecting differential variability with application to methylation in cancer and aging. \emph{Manuscript submitted}.
 }

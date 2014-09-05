@@ -1,7 +1,7 @@
-varFit <- function(data,design=NULL,coef=NULL,type=NULL,trend=TRUE,robust=TRUE)
+varFit <- function(data,design=NULL,coef=NULL,type=NULL,trend=TRUE,robust=TRUE,weights=NULL)
 UseMethod("varFit")
 
-varFit.MethylSet <- function(data,design=NULL,coef=NULL,type=NULL,trend=TRUE,robust=TRUE)
+varFit.MethylSet <- function(data,design=NULL,coef=NULL,type=NULL,trend=TRUE,robust=TRUE,weights=NULL)
 {
     message("Extracting M values from MethylSet object.")
     meth<-getMeth(data)
@@ -10,10 +10,17 @@ varFit.MethylSet <- function(data,design=NULL,coef=NULL,type=NULL,trend=TRUE,rob
     varFit.default(data=Mval,design=design,coef=coef,type=type,trend=trend,robust=robust)
 }
 
-varFit.default <- function(data,design=NULL,coef=NULL,type=NULL,trend=TRUE,robust=TRUE)
+varFit.DGEList <- function(data,design=NULL,coef=NULL,type=NULL,trend=TRUE,robust=TRUE,weights=NULL)
+{
+    message("Converting counts to log counts-per-million using voom.")
+    v <- voom(data,design)
+    varFit.default(data=v$E,design=design,coef=coef,type=type,trend=trend,robust=robust,weights=v$weights)
+}
+
+varFit.default <- function(data,design=NULL,coef=NULL,type=NULL,trend=TRUE,robust=TRUE,weights=NULL)
 #   Test for differential variability using linear modelling
 #   Belinda Phipson
-#   15 July 2014.
+#   15 July 2014. Updated 4 September 2014.
 {
 #   Check data
     data <- as.matrix(data)
@@ -44,7 +51,7 @@ varFit.default <- function(data,design=NULL,coef=NULL,type=NULL,trend=TRUE,robus
         z <- getLeveneResiduals(data,design=design,coef=coef,type=type)
     }
         
-    fit <- lmFit(z$data,design)
+    fit <- lmFit(z$data,design,weights=weights)
     if(is.null(fit$Amean)) 
         fit$Amean <- rowMeans(z$data, na.rm = TRUE)
 

@@ -6,4 +6,4 @@ import(statmod)
 
 export(SWAN, densityByProbeType, varFit, topVar, getLeveneResiduals,
        SWAN.MethyLumiSet, SWAN.RGChannelSet, SWAN.default, varFit.MethylSet,
-       varFit.default)
+       varFit.DGEList, varFit.default)
