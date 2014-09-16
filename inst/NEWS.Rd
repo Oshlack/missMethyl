@@ -2,6 +2,13 @@
 \title{missMethyl News}
 \encoding{UTF-8}
 
+\section{Version 0.99.6}{\itemize{
+
+\item
+Modified getLeveneResiduals 
+
+}}
+
 \section{Version 0.99.5}{\itemize{
 
 \item

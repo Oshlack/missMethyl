@@ -160,17 +160,18 @@ title(cpgs[i],cex.main=1.5)
 
 \subsection{Methylation data}
 
-Rather than testing for differences in mean methylation, we may be interested in testing for differences between group variances. For example, it has been hypothesised that highly variable CpGs in cancer are important for tumour progression \cite{hansen}. Hence we may be interested in CpG sites that are consistently methylated in the normal samples, but variably methylated in the cancer samples. In general we recommend at least 10 samples in each group for accurate variance estimation, however for the purpose of this vignette we perform the analysis on 3 vs 3. In this example, we are interested in testing for differential variability in the cancer versus normal group (column 4 in the design matrix). For methylation data, the \Rfunction{varFit} function will take either a matrix of M-values, $\beta$ values or a \Rclass{MethylSet} object as input. If $\beta$ values are supplied, a logit transformation is performed. Note that as a default, varFit uses the robust setting in the \Biocpkg{limma} framework, which requires the use of the \CRANpkg{statmod} package.
+Rather than testing for differences in mean methylation, we may be interested in testing for differences between group variances. For example, it has been hypothesised that highly variable CpGs in cancer are important for tumour progression \cite{hansen}. Hence we may be interested in CpG sites that are consistently methylated in the normal samples, but variably methylated in the cancer samples. In general we recommend at least 10 samples in each group for accurate variance estimation, however for the purpose of this vignette we perform the analysis on 3 vs 3, and ignore the ID variable. In this example, we are interested in testing for differential variability in the cancer versus normal group. For methylation data, the \Rfunction{varFit} function will take either a matrix of M-values, $\beta$ values or a \Rclass{MethylSet} object as input. If $\beta$ values are supplied, a logit transformation is performed. Note that as a default, varFit uses the robust setting in the \Biocpkg{limma} framework, which requires the use of the \CRANpkg{statmod} package.
 
 <<diffvar>>=
-fitvar <- varFit(Mval, design, coef=4)
+design2 <- model.matrix(~group)
+fitvar <- varFit(Mval, design2)
 @
 
 The numbers of hyper-variable (1) and hypo-variable (-1) genes in cancer vs normal can be obtained using \Rfunction{decideTests}. 
 
 <<results>>=
 summary(decideTests(fitvar))
-topDV <- topVar(fitvar,coef=4)
+topDV <- topVar(fitvar,coef=2)
 topDV
 @
 
@@ -182,7 +183,7 @@ The $\beta$ values for the top 4 differentially variable CpGs can be seen in Fig
 cpgsDV <- rownames(topDV)
 par(mfrow=c(2,2))
 for(i in 1:4){
-stripchart(beta[rownames(beta)==cpgsDV[i],]~design[,4],method="jitter",
+stripchart(beta[rownames(beta)==cpgsDV[i],]~design2[,2],method="jitter",
 group.names=c("Normal","Cancer"),pch=16,cex=1.5,col=c(4,2),ylab="Beta values",
 vertical=TRUE,cex.axis=1.5,cex.lab=1.5)
 title(cpgsDV[i],cex.main=1.5)
@@ -235,7 +236,7 @@ We set up the design matrix and test for differential variability.
 
 <<testhapmap>>=
 design.hapmap <- model.matrix(~gender)
-fitvar.hapmap <- varFit(y, design.hapmap, coef=ncol(design.hapmap))
+fitvar.hapmap <- varFit(y, design.hapmap)
 fitvar.hapmap$genes <- y$genes
 @
 
@@ -286,7 +287,7 @@ toLatex(sessionInfo())
 
 \bibitem{swan} Maksimovic, J., Gordon, L., and Oshlack, A. (2012). SWAN: Subset-quantile within array normalization for illumina infinium HumanMethylation450 BeadChips. \textit{Genome Biology}, \textbf{13}(6):R44.
 
-\bibitem{diffvar} Phipson, B., and Oshlack, A. DiffVar: A new method for detecting differential variability with application to methylation in cancer and ageing. \textit{Submitted 30 June 2014}.
+\bibitem{diffvar} Phipson, B., and Oshlack, A. DiffVar: A new method for detecting differential variability with application to methylation in cancer and ageing. \textit{Genome Biology, Accepted 10 September 2014}.
 
 \bibitem{pickrell} Pickrell, J.K., Marioni, J.C., Pai, A.A., Degner, J.F., Engelhardt, B.E., Nkadori, E., Veyrieras, J.B., Stephens, M., Gilad, Y., and Pritchard, J.K. (2010). Understanding mechanisms underlying human gene expression variation with RNA sequencing. \textit{Nature}, 464, 768--72.
 

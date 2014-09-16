@@ -10,7 +10,7 @@ Testing for differential variability
 Fit linear model on mean absolute or squared deviations for each CpG given a series of methylation arrays
 }
 \usage{
-varFit(data, design = NULL, coef = NULL, type = NULL, trend = TRUE, robust = TRUE, weights = NULL)
+varFit(data, design = NULL, type = NULL, trend = TRUE, robust = TRUE, weights = NULL)
 }
 \arguments{
   \item{data}{
@@ -18,9 +18,6 @@ varFit(data, design = NULL, coef = NULL, type = NULL, trend = TRUE, robust = TRU
 }
   \item{design}{
 	the design matrix of the experiment, with rows corresponding to arrays/samples and columns to coefficients to be estimated. Defaults to the unit vector.
-}
-  \item{coef}{
-	scalar indicating which column in the design matrix corresponds to the comparison of interest to test for differential variability. Defaults to last column in the design matrix.
 }
   \item{type}{
 	character string, \code{"AD"} for absolute residuals or \code{"SQ"} for squared residuals. Default is absolute.
@@ -36,7 +33,7 @@ varFit(data, design = NULL, coef = NULL, type = NULL, trend = TRUE, robust = TRU
 }  
 }
 \details{
-This function depends on the \code{limma} package and is used to rank features such as CpG sites or genes in order of evidence of differential variability between two groups. Additional covariates can be taken into account with the design matrix. For methylation data, the analysis is performed on the M-values, defined as the log base 2 ratio of the methylated signal to the unmethylated signal. If a \code{MethylSet} object is supplied, M-values are extracted with an offset of 100 added to the numerator and denominator. A measure of variability is calculated for each CpG in each sample by subtracting out the group mean and taking the absolute or squared deviation. A linear model is then fitted to the absolute or squared deviations. The residuals of the linear model fit are subjected to empirical Bayes shrinkage and moderated t statistics (Smyth, 2004) calculated. False discovery rates are calculated using the method of Benjamini and Hochberg (1995).
+This function depends on the \code{limma} package and is used to rank features such as CpG sites or genes in order of evidence of differential variability between different comparisons corresponding to the columns of the design matrix. For methylation data, the analysis is performed on the M-values, defined as the log base 2 ratio of the methylated signal to the unmethylated signal. If a \code{MethylSet} object is supplied, M-values are extracted with an offset of 100 added to the numerator and denominator. A measure of variability is calculated for each CpG in each sample by subtracting out the group mean and taking the absolute or squared deviation. A linear model is then fitted to the absolute or squared deviations. The residuals of the linear model fit are subjected to empirical Bayes shrinkage and moderated t statistics (Smyth, 2004) calculated. False discovery rates are calculated using the method of Benjamini and Hochberg (1995).
 
 For testing differential variability on RNA-Seq data, a \code{DGEList} object can be supplied directly to the function. A \code{voom} transformation is applied before testing for differential variability. The weights calculated in \code{voom} are used in the linear model fit. 
 
@@ -46,7 +43,7 @@ Since the output is of class \code{MArrayLM}, any functions that can be applied 
 	produces an object of class \code{MArrayLM} (see \code{\link{MArrayLM-class}}) containing everything found in a fitted model object produced by \code{lmFit} and \code{eBayes}
 }
 \references{
-Phipson, B., and Oshlack, A. (2013). A method for detecting differential variability in methylation data shows CpG islands are highly variably methylated in cancers. \emph{Manuscript submitted}.
+Phipson, B., and Oshlack, A. (2014). A method for detecting differential variability in methylation data shows CpG islands are highly variably methylated in cancers. \emph{Genome Biology, Accepted 10 September 2014}.
 
 Smyth, G.K. (2004). Linear models and empirical Bayes methods for assessing differential expression in microarray experiments. \emph{Statistical Applications in Genetics and Molecular Biology}, Volume \bold{3}, Article 3.
 
@@ -69,7 +66,7 @@ group<-factor(rep(c(1,2),each=5))
 design<-model.matrix(~group)
 
 # Fit linear model for differential variability
-vfit<-varFit(y,design,coef=2)
+vfit<-varFit(y,design)
 
 # Look at top table of results
 

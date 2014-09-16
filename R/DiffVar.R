@@ -1,23 +1,23 @@
-varFit <- function(data,design=NULL,coef=NULL,type=NULL,trend=TRUE,robust=TRUE,weights=NULL)
+varFit <- function(data,design=NULL,type=NULL,trend=TRUE,robust=TRUE,weights=NULL)
 UseMethod("varFit")
 
-varFit.MethylSet <- function(data,design=NULL,coef=NULL,type=NULL,trend=TRUE,robust=TRUE,weights=NULL)
+varFit.MethylSet <- function(data,design=NULL,type=NULL,trend=TRUE,robust=TRUE,weights=NULL)
 {
     message("Extracting M values from MethylSet object.")
     meth<-getMeth(data)
     unmeth<-getUnmeth(data)
     Mval<-log2((meth+100)/(unmeth+100))
-    varFit.default(data=Mval,design=design,coef=coef,type=type,trend=trend,robust=robust)
+    varFit.default(data=Mval,design=design,type=type,trend=trend,robust=robust)
 }
 
-varFit.DGEList <- function(data,design=NULL,coef=NULL,type=NULL,trend=TRUE,robust=TRUE,weights=NULL)
+varFit.DGEList <- function(data,design=NULL,type=NULL,trend=TRUE,robust=TRUE,weights=NULL)
 {
     message("Converting counts to log counts-per-million using voom.")
     v <- voom(data,design)
-    varFit.default(data=v$E,design=design,coef=coef,type=type,trend=trend,robust=robust,weights=v$weights)
+    varFit.default(data=v$E,design=design,type=type,trend=trend,robust=robust,weights=v$weights)
 }
 
-varFit.default <- function(data,design=NULL,coef=NULL,type=NULL,trend=TRUE,robust=TRUE,weights=NULL)
+varFit.default <- function(data,design=NULL,type=NULL,trend=TRUE,robust=TRUE,weights=NULL)
 #   Test for differential variability using linear modelling
 #   Belinda Phipson
 #   15 July 2014. Updated 4 September 2014.
@@ -41,14 +41,12 @@ varFit.default <- function(data,design=NULL,coef=NULL,type=NULL,trend=TRUE,robus
     
 #   Check design
     if(is.null(design)){
-        z <- getLeveneResiduals(data,design=design,coef=coef,type=type)    
+        z <- getLeveneResiduals(data,design=design,type=type)    
         design <- matrix(1,ncol(data),1)
     }    
     else{        
         design <- as.matrix(design)
-        if(is.null(coef))
-            coef <- ncol(design)    
-        z <- getLeveneResiduals(data,design=design,coef=coef,type=type)
+        z <- getLeveneResiduals(data,design=design,type=type)
     }
         
     fit <- lmFit(z$data,design,weights=weights)
@@ -71,13 +69,13 @@ topVar <- function(fit,coef = NULL,number=10,sort=TRUE)
         if(is.null(fit$LogVarRatio))
             out <- data.frame(fit$genes, SampleVar = fit$AvgVar, DiffLevene =  fit$coeff[,coef], t = fit$t[,coef], P.Value = fit$p.value[,coef], Adj.P.Value = p.adj)
         else    
-            out <- data.frame(fit$genes, SampleVar = fit$AvgVar, LogVarRatio = fit$LogVarRatio, DiffLevene =  fit$coeff[,coef], t = fit$t[,coef], P.Value = fit$p.value[,coef], Adj.P.Value = p.adj)
+            out <- data.frame(fit$genes, SampleVar = fit$AvgVar, LogVarRatio = fit$LogVarRatio[,coef], DiffLevene =  fit$coeff[,coef], t = fit$t[,coef], P.Value = fit$p.value[,coef], Adj.P.Value = p.adj)
     }
     else{
         if(is.null(fit$LogVarRatio))
             out <- data.frame(SampleVar = fit$AvgVar, DiffLevene =  fit$coeff[,coef], t = fit$t[,coef], P.Value = fit$p.value[,coef], Adj.P.Value = p.adj)
         else
-            out <- data.frame(SampleVar = fit$AvgVar, LogVarRatio = fit$LogVarRatio, DiffLevene =  fit$coeff[,coef], t = fit$t[,coef], P.Value = fit$p.value[,coef], Adj.P.Value = p.adj)
+            out <- data.frame(SampleVar = fit$AvgVar, LogVarRatio = fit$LogVarRatio[,coef], DiffLevene =  fit$coeff[,coef], t = fit$t[,coef], P.Value = fit$p.value[,coef], Adj.P.Value = p.adj)
     }
     if(sort){
         o <- order(p.adj,out$P.Value) 
@@ -87,7 +85,7 @@ topVar <- function(fit,coef = NULL,number=10,sort=TRUE)
         out[1:number,]
 }
 
-getLeveneResiduals<-function(data,design=NULL,coef=NULL,type=NULL)
+getLeveneResiduals<-function(data,design=NULL,type=NULL)
 {
 #   Check data
     data <- as.matrix(data)
@@ -96,7 +94,8 @@ getLeveneResiduals<-function(data,design=NULL,coef=NULL,type=NULL)
     y <- rowMeans(data)
     AvgVar <- rowSums((data-y)^2)/(ncol(data)-1)
     
-#   Do you want absolute levine residuals or squared levine residuals? Default is absolute.
+#   Absolute levine residuals or squared levine residuals? 
+#   Default is absolute levine residuals.
     if(is.null(type)) type = "AD"
 
 #   Check design
@@ -109,61 +108,35 @@ getLeveneResiduals<-function(data,design=NULL,coef=NULL,type=NULL)
         list(data=z,AvgVar=AvgVar,LogVarRatio=NULL)
     }    
 
-    else{
-#   Check coef
-        if(is.null(coef))
-            coef <- ncol(design)
-
-        o <- order(design[,coef])
-        o.design <- design[o,]
-        o.data <- data[,o]
-        group <- o.design[,coef]
-        i.group <- names(table(group))
-    
-#   Check i.group for length 2
-        if(length(i.group)!=2) 
-            stop("Design matrix not parameterised correctly. Comparison must be two group.")    
-  
-#   table always orders i.group "0","1"
-  
-        i.data1 <- o.data[,group==i.group[1]]
-        i.data2 <- o.data[,group==i.group[2]]
-  
-        if(ncol(i.data1)==1 | ncol(i.data2)==1) stop("Each group must have sample size greater than 1.")
-  
-        y1 <- rowMeans(i.data1)
-        y2 <- rowMeans(i.data2)
-                      
-#   Calculate leverage according to sample size
-        n1 <- ncol(i.data1)
-        n2 <- ncol(i.data2)
-        l1 <- sqrt(n1/(n1-1))
-        l2 <- sqrt(n2/(n2-1))
-  
-#   Calculate absolute Levene residuals
+    else{ 
+#   Calculating means based on design matrix    
+        QR <- qr(design)
+        V.inv <- chol2inv(QR$qr,size=QR$rank)
+       	des.y <- t(design) %*% t(data)
+	beta.hat <- V.inv %*% des.y
+	ybar <- design %*% beta.hat
+	ybar <- t(ybar)
+	
+#   Getting sample sizes to calculate leverage factors
+        n <- 1/diag(design %*% V.inv %*% t(design))
+        lvg <- sqrt(n/(n-1))
+        lvg <- matrix(rep(lvg,nrow(data)),byrow=TRUE,nrow=nrow(data))
+        
+#   Calculating group variances to get LogVarRatios        
+        z <- (data-ybar)^2
+	var.mat <- t((design %*% V.inv %*% t(design) %*% t(z))*n/(n-1))
+	LogVarRatio <- t(V.inv %*% t(design) %*% t(log(var.mat)))
+        
+#   Calculating Levene residuals        
         if(type=="AD"){
-            z1 <- abs(i.data1 - y1)
-            var1 <- rowSums(z1^2)/(n1-1)
-            z1 <- z1*l1
-            z2 <- abs(i.data2 - y2)
-            var2 <- rowSums(z2^2)/(n2-1)
-            z2 <- z2*l2
+            z <- abs(data-ybar)
+            z <- z*lvg
         }
         if(type=="SQ"){
-            z1 <- (i.data1 - y1)^2
-            var1 <- rowSums(z1)/(n1-1)
-            z1 <- z1*l1
-            z2 <- (i.data2 - y2)^2
-            var2 <- rowSums(z2)/(n2-1)
-            z2 <- z2*l2
+            z <- z*lvg
         }
-  
-#     Get data ready for mod t test and put it back into the original order
-        z <- cbind(z1,z2)
-        z <- z[,order(o)]
-          
-        LogVarRatio = log(var2/var1)
-          
         list(data=z,AvgVar=AvgVar,LogVarRatio=LogVarRatio)
     }
+
 }
+
