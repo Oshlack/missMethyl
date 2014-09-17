@@ -2,6 +2,14 @@
 \title{missMethyl News}
 \encoding{UTF-8}
 
+\section{Version 0.99.7}{\itemize{
+
+\item
+Added new function, contrasts.varFit. 
+
+}}
+
+
 \section{Version 0.99.6}{\itemize{
 
 \item

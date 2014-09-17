@@ -20,7 +20,7 @@ varFit.DGEList <- function(data,design=NULL,type=NULL,trend=TRUE,robust=TRUE,wei
 varFit.default <- function(data,design=NULL,type=NULL,trend=TRUE,robust=TRUE,weights=NULL)
 #   Test for differential variability using linear modelling
 #   Belinda Phipson
-#   15 July 2014. Updated 4 September 2014.
+#   15 July 2014. Updated 17 September 2014.
 {
 #   Check data
     data <- as.matrix(data)
@@ -59,6 +59,25 @@ varFit.default <- function(data,design=NULL,type=NULL,trend=TRUE,robust=TRUE,wei
     fit$LogVarRatio <- z$LogVarRatio
 
     fit
+}
+
+contrasts.varFit <- function(fit, contrasts=NULL)
+{
+    if(!is.null(fit$Amean))
+        trend <- TRUE
+    else
+        trend <- FALSE
+    if(length(fit$df.prior)>1)
+        robust <- TRUE
+    else
+    	robust <- FALSE
+    fit.contr <- contrasts.fit(fit, contrasts=contrasts)
+    fit.contr <- eBayes(fit.contr, trend=trend, robust=robust)
+    
+    fit.contr$AvgVar <- fit$AvgVar
+    fit.contr$LogVarRatio <- fit$LogVarRatio %*% contrasts
+    
+    fit.contr
 }
 
 topVar <- function(fit,coef = NULL,number=10,sort=TRUE)
