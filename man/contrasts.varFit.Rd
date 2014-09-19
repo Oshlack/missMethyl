@@ -32,6 +32,8 @@ contrasts.varFit(fit, contrasts=NULL)
 \examples{
 # Randomly generate data for a 3 group problem with 100 CpG sites and 4 arrays in each group. 
 
+library(limma)
+
 y<-matrix(rnorm(1200),ncol=12)
 
 group<-factor(rep(c(1,2,3),each=4))
