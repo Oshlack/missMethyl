@@ -2,6 +2,13 @@
 \title{missMethyl News}
 \encoding{UTF-8}
 
+\section{Version 0.99.9}{\itemize{
+
+\item
+This version of the package has all calculations in matrix formulation and handles nuisance parameters appropriately.
+
+}}
+
 \section{Version 0.99.7}{\itemize{
 
 \item

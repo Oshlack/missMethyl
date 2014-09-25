@@ -36,7 +36,7 @@ topVar(fit, coef = NULL, number = 10, sort = TRUE)
 	\item{Adj.P.Value }{adjusted p-value}
 }
 \references{
-	Phipson, B., and Oshlack, A. (2013). A method for detecting differential variability in methylation data shows CpG islands are highly variably methylated in cancers. \emph{Genome Biology, Accepted 10 September 2014}.
+	Phipson, B., and Oshlack, A. (2014). A method for detecting differential variability in methylation data shows CpG islands are highly variably methylated in cancers. \emph{Genome Biology}, \bold{15}:465.
 
 	Benjamini, Y., and Hochberg, Y. (1995). Controlling the false discovery rate: a practical and powerful approach to multiple testing. \emph{Journal of the Royal Statistical Society Series}, B, \bold{57}, 289-300.
 }

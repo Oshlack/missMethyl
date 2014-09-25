@@ -27,7 +27,7 @@ getLeveneResiduals(data, design = NULL, type = NULL)
 	Returns a list with three components. \code{data} contains a matrix of absolute or squared residuals, \code{AvgVar} is a vector of sample variances and \code{LogVarRatio} corresponds to the columns of the design matrix and is usually the ratios of the log of the group variances.
 }
 \references{
-Phipson, B., and Oshlack, A. (2014). A method for detecting differential variability in methylation data shows CpG islands are highly variably methylated in cancers. \emph{Genome Biology, Accepted 10 September 2014}.
+Phipson, B., and Oshlack, A. (2014). A method for detecting differential variability in methylation data shows CpG islands are highly variably methylated in cancers. \emph{Genome Biology}, \bold{15}:465.
 }
 \author{
 	Belinda Phipson

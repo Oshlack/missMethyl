@@ -1,7 +1,7 @@
-varFit <- function(data,design=NULL,type=NULL,trend=TRUE,robust=TRUE,weights=NULL)
+varFit <- function(data,design=NULL,coef=NULL,type=NULL,trend=TRUE,robust=TRUE,weights=NULL)
 UseMethod("varFit")
 
-varFit.MethylSet <- function(data,design=NULL,type=NULL,trend=TRUE,robust=TRUE,weights=NULL)
+varFit.MethylSet <- function(data,design=NULL,coef=NULL,type=NULL,trend=TRUE,robust=TRUE,weights=NULL)
 {
     message("Extracting M values from MethylSet object.")
     meth<-getMeth(data)
@@ -10,14 +10,14 @@ varFit.MethylSet <- function(data,design=NULL,type=NULL,trend=TRUE,robust=TRUE,w
     varFit.default(data=Mval,design=design,type=type,trend=trend,robust=robust)
 }
 
-varFit.DGEList <- function(data,design=NULL,type=NULL,trend=TRUE,robust=TRUE,weights=NULL)
+varFit.DGEList <- function(data,design=NULL,coef=NULL,type=NULL,trend=TRUE,robust=TRUE,weights=NULL)
 {
     message("Converting counts to log counts-per-million using voom.")
     v <- voom(data,design)
     varFit.default(data=v$E,design=design,type=type,trend=trend,robust=robust,weights=v$weights)
 }
 
-varFit.default <- function(data,design=NULL,type=NULL,trend=TRUE,robust=TRUE,weights=NULL)
+varFit.default <- function(data,design=NULL,coef=NULL,type=NULL,trend=TRUE,robust=TRUE,weights=NULL)
 #   Test for differential variability using linear modelling
 #   Belinda Phipson
 #   15 July 2014. Updated 17 September 2014.
@@ -38,15 +38,18 @@ varFit.default <- function(data,design=NULL,type=NULL,trend=TRUE,robust=TRUE,wei
 #   Perform logit transformation
         data<-log(data/(1-data))
     }
-    
-#   Check design
+
+#   Check design, coef and get Levene residuals
     if(is.null(design)){
         z <- getLeveneResiduals(data,design=design,type=type)    
         design <- matrix(1,ncol(data),1)
+        coef <- 1
     }    
     else{        
         design <- as.matrix(design)
-        z <- getLeveneResiduals(data,design=design,type=type)
+        if(is.null(coef)) 
+            coef <- 1:ncol(design)
+        z <- getLeveneResiduals(data,design=design[,coef],type=type)
     }
         
     fit <- lmFit(z$data,design,weights=weights)
@@ -56,7 +59,9 @@ varFit.default <- function(data,design=NULL,type=NULL,trend=TRUE,robust=TRUE,wei
     fit <- eBayes(fit,trend=trend,robust=robust)
      
     fit$AvgVar <- z$AvgVar
-    fit$LogVarRatio <- z$LogVarRatio
+    fit$LogVarRatio <- matrix(0,ncol=ncol(design),nrow=nrow(fit))
+    colnames(fit$LogVarRatio) <- colnames(design)
+    fit$LogVarRatio[,coef] <- z$LogVarRatio
 
     fit
 }
@@ -131,21 +136,25 @@ getLeveneResiduals<-function(data,design=NULL,type=NULL)
 #   Calculating means based on design matrix    
         QR <- qr(design)
         V.inv <- chol2inv(QR$qr,size=QR$rank)
-       	des.y <- t(design) %*% t(data)
-	beta.hat <- V.inv %*% des.y
-	ybar <- design %*% beta.hat
-	ybar <- t(ybar)
-	
+       	des.y <- data %*% design
+	beta.hat <- des.y %*% t(V.inv)
+	ybar <- beta.hat %*% t(design)
+		
 #   Getting sample sizes to calculate leverage factors
-        n <- 1/diag(design %*% V.inv %*% t(design))
+        n.inv <- diag(design %*% V.inv %*% t(design))
+        n <- 1/n.inv
         lvg <- sqrt(n/(n-1))
         lvg <- matrix(rep(lvg,nrow(data)),byrow=TRUE,nrow=nrow(data))
         
 #   Calculating group variances to get LogVarRatios        
         z <- (data-ybar)^2
-	var.mat <- t((design %*% V.inv %*% t(design) %*% t(z))*n/(n-1))
-	LogVarRatio <- t(V.inv %*% t(design) %*% t(log(var.mat)))
-        
+        a <- z %*% design
+        b <- t(V.inv) %*% t(design)
+	var.mat <- (a %*% b)*n/(n-1)
+	c <- design %*% t(V.inv)
+	LogVarRatio <- log(var.mat) %*% c
+	colnames(LogVarRatio) <- colnames(design)
+	        
 #   Calculating Levene residuals        
         if(type=="AD"){
             z <- abs(data-ybar)
@@ -156,6 +165,5 @@ getLeveneResiduals<-function(data,design=NULL,type=NULL)
         }
         list(data=z,AvgVar=AvgVar,LogVarRatio=LogVarRatio)
     }
-
 }
 

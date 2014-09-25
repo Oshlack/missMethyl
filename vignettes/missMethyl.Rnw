@@ -160,19 +160,34 @@ title(cpgs[i],cex.main=1.5)
 
 \subsection{Methylation data}
 
-Rather than testing for differences in mean methylation, we may be interested in testing for differences between group variances. For example, it has been hypothesised that highly variable CpGs in cancer are important for tumour progression \cite{hansen}. Hence we may be interested in CpG sites that are consistently methylated in the normal samples, but variably methylated in the cancer samples. In general we recommend at least 10 samples in each group for accurate variance estimation, however for the purpose of this vignette we perform the analysis on 3 vs 3, and ignore the ID variable. In this example, we are interested in testing for differential variability in the cancer versus normal group. For methylation data, the \Rfunction{varFit} function will take either a matrix of M-values, $\beta$ values or a \Rclass{MethylSet} object as input. If $\beta$ values are supplied, a logit transformation is performed. Note that as a default, varFit uses the robust setting in the \Biocpkg{limma} framework, which requires the use of the \CRANpkg{statmod} package.
+Rather than testing for differences in mean methylation, we may be interested in testing for differences between group variances. For example, it has been hypothesised that highly variable CpGs in cancer are important for tumour progression \cite{hansen}. Hence we may be interested in CpG sites that are consistently methylated in the normal samples, but variably methylated in the cancer samples. In general we recommend at least 10 samples in each group for accurate variance estimation, however for the purpose of this vignette we perform the analysis on 3 vs 3. In this example, we are interested in testing for differential variability in the cancer versus normal group. When we specify the \textit{coef} parameter, which corresponds to the columns of the design matrix to be used for testing differential variability, we specify both the intercept and the fourth column. The ID variable is a nuisance parameter and not used when obtained the absolute deviations, however it can be included in the linear modelling step. For methylation data, the \Rfunction{varFit} function will take either a matrix of M-values, $\beta$ values or a \Rclass{MethylSet} object as input. If $\beta$ values are supplied, a logit transformation is performed. Note that as a default, \Rfunction{varFit} uses the robust setting in the \Biocpkg{limma} framework, which requires the use of the \CRANpkg{statmod} package.
 
 <<diffvar>>=
-design2 <- model.matrix(~group)
-fitvar <- varFit(Mval, design2)
+fitvar <- varFit(Mval, design = design, coef = c(1,4))
 @
 
 The numbers of hyper-variable (1) and hypo-variable (-1) genes in cancer vs normal can be obtained using \Rfunction{decideTests}. 
 
 <<results>>=
 summary(decideTests(fitvar))
-topDV <- topVar(fitvar,coef=2)
+topDV <- topVar(fitvar, coef=4)
 topDV
+@
+
+An alternate parameterisation of the design matrix that does not include an intercept term can also be used, and specific contrasts tested with \Rfunction{contrasts.varFit}. Here we specify the design matrix such that the first two columns correspond to the normal and cancer groups, respectively.
+
+<<alternative>>=
+design2 <- model.matrix(~0+group+id)
+fitvar.contr <- varFit(Mval, design=design2, coef=c(1,2))
+contr <- makeContrasts(groupcancer-groupnormal,levels=colnames(design2))
+fitvar.contr <- contrasts.varFit(fitvar.contr,contrasts=contr)
+@
+
+The results are identical to before.
+
+<<altresults>>=
+summary(decideTests(fitvar.contr))
+topVar(fitvar.contr,coef=1)
 @
 
 The $\beta$ values for the top 4 differentially variable CpGs can be seen in Figure \ref{fig:top4DV}.
@@ -183,7 +198,7 @@ The $\beta$ values for the top 4 differentially variable CpGs can be seen in Fig
 cpgsDV <- rownames(topDV)
 par(mfrow=c(2,2))
 for(i in 1:4){
-stripchart(beta[rownames(beta)==cpgsDV[i],]~design2[,2],method="jitter",
+stripchart(beta[rownames(beta)==cpgsDV[i],]~design[,4],method="jitter",
 group.names=c("Normal","Cancer"),pch=16,cex=1.5,col=c(4,2),ylab="Beta values",
 vertical=TRUE,cex.axis=1.5,cex.lab=1.5)
 title(cpgsDV[i],cex.main=1.5)
@@ -232,11 +247,11 @@ dim(y)
 y <- calcNormFactors(y)
 @
 
-We set up the design matrix and test for differential variability.
+We set up the design matrix and test for differential variability. In this case there are no nuisance parameters, so \textit{coef} does not need to be explicitly specified.
 
 <<testhapmap>>=
 design.hapmap <- model.matrix(~gender)
-fitvar.hapmap <- varFit(y, design.hapmap)
+fitvar.hapmap <- varFit(y, design = design.hapmap)
 fitvar.hapmap$genes <- y$genes
 @
 
