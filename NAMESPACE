@@ -3,7 +3,9 @@ import(minfi)
 import(methylumi)
 import(IlluminaHumanMethylation450kmanifest)
 import(statmod)
+import(ruv)
 
 export(SWAN, densityByProbeType, varFit, topVar, getLeveneResiduals,
        SWAN.MethyLumiSet, SWAN.RGChannelSet, SWAN.default, varFit.MethylSet,
-       varFit.DGEList, varFit.default, contrasts.varFit)
+       varFit.DGEList, varFit.default, contrasts.varFit, RUVfit, RUVadj, 
+       topRUV)

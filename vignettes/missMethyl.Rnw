@@ -1,12 +1,13 @@
 %\VignetteIndexEntry{missMethyl: analysing data from Illumina's HumanMethylation450 array} \\
 %\VignetteKeywords{missMethyl, 450k analysis, methylation} \\
 %\VignettePackage{missMethyl} \\
+%\VignetteEngine{knitr::knitr}
 
 \documentclass{article}
 
 \usepackage[utf8]{inputenc} 
 
-<<style-Sweave, eval=TRUE, echo=FALSE, results=tex>>=
+<<style-knitr, eval=TRUE, echo=FALSE, results='asis'>>=
 BiocStyle::latex()
 @
 
@@ -15,7 +16,7 @@ BiocStyle::latex()
 
 \title{missMethyl: Analysing Illumina \\ HumanMethylation450 BeadChip Data}
 \author{Belinda Phipson and Jovana Maksimovic}
-\date{Modified: 4 September, 2014. Compiled: \today}
+\date{Modified: 14 November, 2014. Compiled: \today}
 
 \begin{document}
 
@@ -33,10 +34,13 @@ Raw data files are in IDAT format, which can be read into R using the \Biocpkg{m
 
 We will use the data in the \Biocpkg{minfiData} package to demonstrate the functions in \Biocpkg{missMethyl}. The example dataset has 6 samples across two slides. The sample information is in the targets file. An essential column in the targets file is the ``Basename" column which tells \Biocpkg{minfi} where the idat files to be read in are located. The R commands to read in the data are taken from the \Biocpkg{minfi} Users Guide. For additional details on how to read the IDAT files into R, as well as information regarding quality control please refer to the \Biocpkg{minfi} User\'s Guide. 
 
-<<reading_data,cache=TRUE>>=
+<<load_libs, cache=FALSE>>=
 library(missMethyl)
 library(limma)
 library(minfi)
+@
+
+<<reading_data,cache=TRUE>>=
 library(minfiData)
 baseDir <- system.file("extdata", package = "minfiData")
 targets <- read.450k.sheet(baseDir)
@@ -64,7 +68,7 @@ mSetSw <- SWAN(mSet,verbose=TRUE)
 
 \begin{figure}[htbp!]
 \centering
-<<betasByType,fig=TRUE,height=5,width=10>>=
+<<betasByType,fig.height=5,fig.width=10>>=
 par(mfrow=c(1,2), cex=1.25)
 densityByProbeType(mSet[,1], main = "Raw")
 densityByProbeType(mSetSw[,1], main = "SWAN")
@@ -102,7 +106,7 @@ An MDS plot (Figure \ref{fig:MDS}) is a good sanity check to make sure samples c
 
 \begin{figure}[htbp!]
 \centering
-<<mdsplot,fig=TRUE,height=5,width=5>>=
+<<mdsplot,fig.height=5,fig.width=5>>=
 par(mfrow=c(1,1))
 plotMDS(Mval, labels=targets$Sample_Name, col=as.integer(factor(targets$status)))
 legend("topleft",legend=c("Cancer","Normal"),pch=16,cex=1.2,col=1:2)
@@ -132,7 +136,7 @@ fit <- eBayes(fit)
 
 The numbers of hyper-methylated (1) and hypo-methylated (-1) can be displayed using the \Rfunction{decideTests} function in \Biocpkg{limma} and the top 10 differentially methylated CpGs for cancer versus normal outputted using \Rfunction{topTable}.
 
-<<results>>=
+<<diffmeth_results>>=
 summary(decideTests(fit))
 top<-topTable(fit,coef=4)
 top
@@ -140,9 +144,10 @@ top
 
 Note that since we performed our analysis on M-values, the logFC and AveExpr columns are computed on the M-value scale. For interpretability and visualisation we can look at the $\beta$ values. The beta values for the top 4 differentially methylated CpGs shown in Figure \ref{fig:top4}.
 
+\newpage
 \begin{figure}[htbp!]
 \centering
-<<top4,fig=TRUE,width=10,height=10>>=
+<<top4,fig.width=10,fig.height=10>>=
 cpgs <- rownames(top)
 par(mfrow=c(2,2))
 for(i in 1:4){
@@ -156,6 +161,52 @@ title(cpgs[i],cex.main=1.5)
 \label{fig:top4}
 \end{figure}
 
+\section{Removing unwanted variation when testing for differential methylation}
+
+Like other platforms, 450k array studies are subject to unwanted technical variation such as batch effects and other, often unknown, sources of variation. The adverse effects of unwanted variation have been extensively documented in gene expression array studies and have been shown to be able to both reduce power to detect true differences and to increase the number of false discoveries. As such, when it is apparent that data is significantly affected by unwanted variation, it is advisable to perform an adjustment to mitigate its effects.   
+
+\Biocpkg{missMethyl} provides a \Biocpkg{limma}-like interface to functions from the CRAN \CRANpkg{ruv} package that enables the removal of unwanted variation when performing a differential analysis. All of the \CRANpkg{ruv} methods rely on negative control features to accurately estimate the components of unwanted variation. Negative control features are probes/genes/etc. that are known \textit{a priori} to not truly be associated with the biological factor of interest, but are affected by unwanted variation. For example, in a microarray gene expression study, these could be house-keeping genes or a set of spike-in controls. Negative control features are extensively discussed in Gagnon-Bartsch and Speed (2012) \cite{G-B1} and Gagnon-Bartsch et al. (2013) \cite{G-B2}. Once the unwanted factors are accurate estimated from the data, they are adjusted for in the linear model that describes the differential analysis.  
+
+If the negative control features are not known \textit{a priori}, they can be identified empirically. This can be done by initially performing a differential methylation analysis without any adjustment using \Biocpkg{limma}, as described in the previous section. For simplicity, we are ingnoring the paired nature of the cancer and normal samples in this example.
+
+<<diffmeth2>>=
+# get M-values for ALL probes
+meth <- getMeth(mSet)
+unmeth <- getUnmeth(mSet)
+M <- log2((meth + 100)/(unmeth + 100))
+
+library(limma)
+grp <- factor(targets$status,levels=c("normal","cancer"))
+des <- model.matrix(~grp)
+des
+fit <- lmFit(M,des)
+fit <- eBayes(fit)
+summary(decideTests(fit))
+@
+
+Now that we have performed an initial differential methylation analysis to rank the CpGs with respect to their association with the factor of interest, we can designate the CpGs that are least associated with the factor of interest based on FDR-adjusted p-value as negative control features.  
+
+<<ruv1>>=
+topTab <- topTable(fit, coef=2, num=Inf)
+head(topTab)
+
+ctl <- rownames(M) %in% rownames(topTab[topTab$adj.P.Val > 0.5,])
+table(ctl)
+@
+
+We can now use the empirical controls to perform a differential methylation analysis using (by default) the RUV-inverse method, which is adjusted for the unwanted variation estimated from the data.
+
+<<ruv2, cache=TRUE>>=
+# Perform RUV adjustment and fit
+rfit <- RUVfit(data=M, design=des, coef=2, ctl=ctl)
+rfit2 <- RUVadj(rfit)
+
+# Look at table of top results
+topRUV(rfit2)
+@
+
+Note, at present RUVfit does not support contrasts, so only one factor of interest can be interrogated at a time using a design matrix with an intercept term. 
+
 \section{Testing for differential variability (DiffVar)}
 
 \subsection{Methylation data}
@@ -168,7 +219,7 @@ fitvar <- varFit(Mval, design = design, coef = c(1,4))
 
 The numbers of hyper-variable (1) and hypo-variable (-1) genes in cancer vs normal can be obtained using \Rfunction{decideTests}. 
 
-<<results>>=
+<<diffvar_results>>=
 summary(decideTests(fitvar))
 topDV <- topVar(fitvar, coef=4)
 topDV
@@ -194,7 +245,7 @@ The $\beta$ values for the top 4 differentially variable CpGs can be seen in Fig
 
 \begin{figure}[htbp!]
 \centering
-<<top4DV,fig=TRUE,width=10,height=10>>=
+<<top4DV,fig.width=10,fig.height=10>>=
 cpgsDV <- rownames(topDV)
 par(mfrow=c(2,2))
 for(i in 1:4){
@@ -239,7 +290,7 @@ y <- DGEList(counts=counts, genes=annot[rownames(counts),])
 
 We filter out lowly expressed genes by keeping genes with at least 1 count per million reads in at least 20 samples, as well as genes that have defined annotation. Finally we perform scaling normalisation.
 
-<<filtering>>=
+<<dgelist_filtering>>=
 isexpr <- rowSums(cpm(y)>1) >= 20
 hasannot <- rowSums(is.na(y$genes))==0
 y <- y[isexpr & hasannot,,keep.lib.sizes=FALSE]
@@ -267,7 +318,7 @@ The log counts per million for the top 4 differentially variable genes can be se
 
 \begin{figure}[htbp!]
 \centering
-<<top4DVhapmap,fig=TRUE,width=10,height=10>>=
+<<top4DVhapmap,fig.width=10,fig.height=10>>=
 genesDV <- rownames(topDV.hapmap)
 par(mfrow=c(2,2))
 for(i in 1:4){
@@ -284,7 +335,7 @@ title(genesDV[i],cex.main=1.5)
 
 \newpage
 \section{Session information}
-<<sessionInfo, print=TRUE, eval=TRUE, results=tex>>=
+<<sessionInfo, eval=TRUE, results='asis'>>=
 toLatex(sessionInfo())
 @
 
@@ -292,9 +343,13 @@ toLatex(sessionInfo())
 
 \bibitem{minfi} Aryee, M. J., Jaffe, A. E., Corrada-Bravo, H., Ladd-Acosta, C., Feinberg, A. P., Hansen, K. D., and Irizarry, R. A. (2014). Minfi: a flexible and comprehensive Bioconductor package for the analysis of Infinium DNA methylation microarrays. \textit{Bioinformatics}, \textbf{30}(10):1363-1369.
 
-\bibitem{bibikova} Bibikova, M., Barnes, B., Tsan, C., Ho, V., Klotzle, B, Le, J.M., Delano, D., Zhang, L., Schroth, G.P., Gunderson, K.L., Fan, J., and Shen, R. (2011). High density DNA methylation array with single CpG site resolution. \textit{Genomics}, \textbf{98}(4):288¿295.
+\bibitem{bibikova} Bibikova, M., Barnes, B., Tsan, C., Ho, V., Klotzle, B, Le, J.M., Delano, D., Zhang, L., Schroth, G.P., Gunderson, K.L., Fan, J., and Shen, R. (2011). High density DNA methylation array with single CpG site resolution. \textit{Genomics}, \textbf{98}(4):288-295.
 
 \bibitem{dedeur} Dedeurwaerder, S., Defrance, M., Calonne, E., Denis, H., Sotiriou, C., and Fuks, F. (2011). Evaluation of the Infinium Methylation 450K technology. \textit{Epigenomics}, \textbf{3}(6):771-784.
+
+\bibitem{G-B1} Gagnon-Bartsch JA, Speed TP. (2012). Using control genes to correct for unwanted variation in microarray data. \textit{Biostatistics}. \textbf{13}(3), 539-52. Available at: \url{http://biostatistics.oxfordjournals.org/content/13/3/539.full}.
+
+\bibitem{G-B2} Gagnon-Bartsch, Jacob, and Speed. (2013). Removing Unwanted Variation from High Dimensional Data with Negative Controls. Available at: \url{http://statistics.berkeley.edu/tech-reports/820}.
 
 \bibitem{hansen} Hansen, K.D., Timp, W., Bravo, H.C., Sabunciyan, S., Langmead, B., McDonald, O.G., Wen, B., Wu, H., Liu, Y., Diep, D., Briem, E., Zhang, K., Irizarry, R., and Feinberg, A.P. (2011). Increased methylation variation in epigenetic domains across cancer types. \textit{Nature Genetics}, \textbf{43}:768-75.
 
@@ -304,7 +359,7 @@ toLatex(sessionInfo())
 
 \bibitem{diffvar} Phipson, B., and Oshlack, A. DiffVar: A new method for detecting differential variability with application to methylation in cancer and ageing. \textit{Genome Biology, Accepted 10 September 2014}.
 
-\bibitem{pickrell} Pickrell, J.K., Marioni, J.C., Pai, A.A., Degner, J.F., Engelhardt, B.E., Nkadori, E., Veyrieras, J.B., Stephens, M., Gilad, Y., and Pritchard, J.K. (2010). Understanding mechanisms underlying human gene expression variation with RNA sequencing. \textit{Nature}, 464, 768--72.
+\bibitem{pickrell} Pickrell, J.K., Marioni, J.C., Pai, A.A., Degner, J.F., Engelhardt, B.E., Nkadori, E., Veyrieras, J.B., Stephens, M., Gilad, Y., and Pritchard, J.K. (2010). Understanding mechanisms underlying human gene expression variation with RNA sequencing. \textit{Nature}, 464, 768-72.
 
 \bibitem{limma} Smyth, G.K. (2005). Limma: linear models for microarray data. In: 'Bioinformatics and Computational Biology Solutions using R and Bioconductor'. R. Gentleman, V. Carey, S. Dudoit, R. Irizarry, W. Huber (eds), Springer, New York, pages 397-420.
 

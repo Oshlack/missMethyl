@@ -1,22 +1,26 @@
 Package: missMethyl
 Type: Package
 Title: Analysis of methylation array data
-Version: 1.1.0
+Version: 1.1.1
 Date: 2014-09-25
 Author: Belinda Phipson and Jovana Maksimovic
 Maintainer: Belinda Phipson <belinda.phipson@mcri.edu.au>, Jovana
         Maksimovic <jovana.maksimovic@mcri.edu.au>
 Depends: R (>= 2.3.0)
 Imports: limma, minfi, methylumi, IlluminaHumanMethylation450kmanifest,
-        statmod
-Suggests: minfiData, BiocStyle, edgeR, tweeDEseqCountData
-Description: Normalisation and testing for differential variability for
-        data from Illumina's Infinium HumanMethylation450 array. The
-        normalisation procedure is subset-quantile within-array
-        normalisation (SWAN), which allows Infinium I and II type
-        probes on a single array to be normalised together. The test
-        for differential variability is based on an empirical Bayes
-        version of Levene's test.
+        statmod, ruv
+VignetteBuilder: knitr
+Suggests: minfiData, BiocStyle, knitr, edgeR, tweeDEseqCountData
+Description: Normalisation and testing for differential variability and
+	differential methylation for data from Illumina's Infinium 
+	HumanMethylation450 array. The normalisation procedure is 
+	subset-quantile within-array normalisation (SWAN), which allows 
+	Infinium I and II type probes on a single array to be normalised 
+	together. The test for differential variability is based on an 
+	empirical Bayes version of Levene's test. Differential
+	methylation testing is performed using RUV, which can adjust for
+	systematic errors of unknown origin in high-dimensional data by
+ 	using negative control probes.
 License: GPL-2
 biocViews: Normalization, DNAMethylation, MethylationArray,
         GenomicVariation, GeneticVariability, DifferentialMethylation
