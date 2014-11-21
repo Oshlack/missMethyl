@@ -46,7 +46,7 @@ baseDir <- system.file("extdata", package = "minfiData")
 targets <- read.450k.sheet(baseDir)
 targets[,1:9]
 targets[,10:12]
-rgSet <- read.450k.exp(base = baseDir,targets = targets)
+rgSet <- read.450k.exp(targets = targets)
 @
 
 The data is now an \Rclass{RGChannelSet} object and needs to be normalised and converted to a \Rclass{MethylSet} object.  
