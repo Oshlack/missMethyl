@@ -1,3 +1,15 @@
+getINCs <- function(rgSet){
+    
+    ctrls = getProbeInfo(rgSet, type = "Control")
+    M.Neg = getGreen(rgSet)[ctrls$Address[ctrls$Type == "NEGATIVE"], ]
+    U.Neg = getRed(rgSet)[ctrls$Address[ctrls$Type == "NEGATIVE"], ]
+    
+    M.Neg[M.Neg == 0] = min(M.Neg[M.Neg != 0])
+    U.Neg[U.Neg == 0] = min(U.Neg[U.Neg != 0])
+    
+    log2(M.Neg/U.Neg)
+}
+
 RUVfit <- function(data, design, coef=ncol(design), ctl, method=c("inv", "rinv", "ruv4", "ruv2"), k = NULL, ...){
     
   method <- match.arg(method)
