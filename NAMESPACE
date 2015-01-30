@@ -4,8 +4,12 @@ import(methylumi)
 import(IlluminaHumanMethylation450kmanifest)
 import(statmod)
 import(ruv)
+import(stringr)
+import(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+import(org.Hs.eg.db)
+import(goseq)
 
 export(SWAN, densityByProbeType, varFit, topVar, getLeveneResiduals,
        SWAN.MethyLumiSet, SWAN.RGChannelSet, SWAN.default, varFit.MethylSet,
        varFit.DGEList, varFit.default, contrasts.varFit, RUVfit, RUVadj, 
-       topRUV, getINCs)
+       topRUV, getINCs, gometh)

@@ -2,6 +2,20 @@
 \title{missMethyl News}
 \encoding{UTF-8}
 
+\section{Version 1.1.3}{\itemize{
+
+\item
+Added the gometh function to perform gene ontology analysis.
+
+}}
+
+\section{Version 1.1.2}{\itemize{
+
+\item
+Added functions to perform RUV normalization and differential methylation analysis.
+
+}}
+
 \section{Version 0.99.9}{\itemize{
 
 \item

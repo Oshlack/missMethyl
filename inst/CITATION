@@ -18,9 +18,9 @@ citEntry(
   author=" Belinda Phipson and Alicia Oshlack",
   journal="Genome Biology",
   volume=15,
-  number=465,
-  pages="doi:10.1186/PREACCEPT-1259098574122074",
+  number=9,
+  pages=465,
   year=2014,
-  textVersion="B. Phipson and A. Oshlack. DiffVar: A new method for detecting differential variability with application to methylation in cancer and aging. Submitted 2014."
+  textVersion="B. Phipson and A. Oshlack. DiffVar: A new method for detecting differential variability with application to methylation in cancer and aging. Genome Biology 15(9), 465."
 )
 

@@ -16,7 +16,7 @@ BiocStyle::latex()
 
 \title{missMethyl: Analysing Illumina \\ HumanMethylation450 BeadChip Data}
 \author{Belinda Phipson and Jovana Maksimovic}
-\date{Modified: 14 November, 2014. Compiled: \today}
+\date{Modified: 28 January, 2015. Compiled: \today}
 
 \begin{document}
 
@@ -84,7 +84,7 @@ Poor quality probes can be filtered out based on the detection p-value. For this
 <<filtering>>=
 detP <- detectionP(rgSet)
 keep <- rowSums(detP < 0.01) == ncol(rgSet)
-mSet <- mSet[keep,]
+mSetSw <- mSetSw[keep,]
 @
 
 \section{Extracting \texorpdfstring{$\beta$}{Lg} and M-values}
@@ -92,7 +92,7 @@ mSet <- mSet[keep,]
 Now that the data has been SWAN normalised we can extract $\beta$ and M-values from the \Rclass{MethylSet} object. We prefer to add an offset to the methylated and unmethylated intensities when calculating M-values, hence we extract the methylated and unmethylated channels separately and perform our own calculation. For all subsequent analysis we use a random selection of 20\,000 CpGs to reduce computation time.
 
 <<extraction>>=
-mset_reduced <- mSet[sample(1:nrow(mSet), 20000),]
+mset_reduced <- mSetSw[sample(1:nrow(mSetSw), 20000),]
 meth <- getMeth(mset_reduced)
 unmeth <- getUnmeth(mset_reduced)
 Mval <- log2((meth + 100)/(unmeth + 100))
@@ -115,12 +115,11 @@ legend("topleft",legend=c("Cancer","Normal"),pch=16,cex=1.2,col=1:2)
 \label{fig:MDS}
 \end{figure}
 
-\section{Testing for differential methylation}
+\section{Testing for differential methylation using \Biocpkg{limma}}
 
 To test for differential methylation we use the \Biocpkg{limma} package \cite{limma}, which employs an empirical Bayes framework based on Guassian model theory. First we need to set up the design matrix. There are a number of ways to do this, the most straightforward is directly from the targets file. There are a number of variables, with the status column indicating cancer/normal samples. From the person column of the targets file, we see that the cancer/normal samples are matched, with 3 individuals each contributing both a cancer and normal sample. Since the limma model framework can handle any experimental design which can be summarised by a design matrix, we can take into account the paired nature of the data in the analysis. For more complicated experimental designs, please refer to the \Biocpkg{limma} User\'s Guide.
 
 <<design>>=
-library(limma)
 group <- factor(targets$status,levels=c("normal","cancer"))
 id <- factor(targets$person)
 design <- model.matrix(~id + group)
@@ -130,15 +129,15 @@ design
 Now we can test for differential methylation using the \Rfunction{lmFit} and \Rfunction{eBayes} functions from \Biocpkg{limma}. As input data we use the matrix of M-values.
 
 <<diffmeth>>=
-fit <- lmFit(Mval,design)
-fit <- eBayes(fit)
+fit.reduced <- lmFit(Mval,design)
+fit.reduced <- eBayes(fit.reduced)
 @
 
 The numbers of hyper-methylated (1) and hypo-methylated (-1) can be displayed using the \Rfunction{decideTests} function in \Biocpkg{limma} and the top 10 differentially methylated CpGs for cancer versus normal outputted using \Rfunction{topTable}.
 
 <<diffmeth_results>>=
-summary(decideTests(fit))
-top<-topTable(fit,coef=4)
+summary(decideTests(fit.reduced))
+top<-topTable(fit.reduced,coef=4)
 top
 @
 
@@ -167,7 +166,10 @@ Like other platforms, 450k array studies are subject to unwanted technical varia
 
 \Biocpkg{missMethyl} provides a \Biocpkg{limma}-like interface to functions from the CRAN \CRANpkg{ruv} package that enables the removal of unwanted variation when performing a differential analysis. All of the \CRANpkg{ruv} methods rely on negative control features to accurately estimate the components of unwanted variation. Negative control features are probes/genes/etc. that are known \textit{a priori} to not truly be associated with the biological factor of interest, but are affected by unwanted variation. For example, in a microarray gene expression study, these could be house-keeping genes or a set of spike-in controls. Negative control features are extensively discussed in Gagnon-Bartsch and Speed (2012) \cite{G-B1} and Gagnon-Bartsch et al. (2013) \cite{G-B2}. Once the unwanted factors are accurate estimated from the data, they are adjusted for in the linear model that describes the differential analysis.  
 
+<<<<<<< .mineIf the egative control features are not known \textit{a priori}, they can be identified empirically. This can be done by initially performing a differential methylation analysis without any adjustment using \Biocpkg{limma}, as described in the previous section. For simplicity, we are ignoring the paired nature of the cancer and normal samples in this example.
+
 If the negative control features are not known \textit{a priori}, they can be identified empirically. This can be achieved using a 2-stage approach, \textit{RUVm}, based on \textbf{RUV-inverse}. Stage 1 involves performing a differential methylation analysis with using \textbf{RUV-inverse} and the 613 Illumina negative controls (INCs) as negative control features. This will produce a list of CpGs ranked by p-value according to their level of association with the factor of interest. This list can then be used to identify a set of empirical control probes (ECPs), which will capture more of the unwanted variation than using the INCs alone. ECPs are selected by designating a proportion of the CpGs least associated with the factor of interest as negative control features; this can be done based on either an FDR cut-off or by taking a fixed percentage of probes from the bottom of the ranked list. Stage 2 involves performing a second differential methylation ananlysis on the original data using \textbf{RUV-inverse} and the ECPs. For simplicity, we are ingnoring the paired nature of the cancer and normal samples in this example.
+
 
 <<diffmeth2, cache=TRUE>>=
 # get M-values for ALL probes
@@ -217,7 +219,7 @@ Note, at present \Rfunction{RUVfit} does not support contrasts, so only one fact
 
 \subsection{Methylation data}
 
-Rather than testing for differences in mean methylation, we may be interested in testing for differences between group variances. For example, it has been hypothesised that highly variable CpGs in cancer are important for tumour progression \cite{hansen}. Hence we may be interested in CpG sites that are consistently methylated in the normal samples, but variably methylated in the cancer samples. In general we recommend at least 10 samples in each group for accurate variance estimation, however for the purpose of this vignette we perform the analysis on 3 vs 3. In this example, we are interested in testing for differential variability in the cancer versus normal group. When we specify the \textit{coef} parameter, which corresponds to the columns of the design matrix to be used for testing differential variability, we specify both the intercept and the fourth column. The ID variable is a nuisance parameter and not used when obtained the absolute deviations, however it can be included in the linear modelling step. For methylation data, the \Rfunction{varFit} function will take either a matrix of M-values, $\beta$ values or a \Rclass{MethylSet} object as input. If $\beta$ values are supplied, a logit transformation is performed. Note that as a default, \Rfunction{varFit} uses the robust setting in the \Biocpkg{limma} framework, which requires the use of the \CRANpkg{statmod} package.
+Rather than testing for differences in mean methylation, we may be interested in testing for differences between group variances. For example, it has been hypothesised that highly variable CpGs in cancer are important for tumour progression \cite{hansen}. Hence we may be interested in CpG sites that are consistently methylated in the normal samples, but variably methylated in the cancer samples. In general we recommend at least 10 samples in each group for accurate variance estimation, however for the purpose of this vignette we perform the analysis on 3 vs 3. In this example, we are interested in testing for differential variability in the cancer versus normal group. When we specify the \textit{coef} parameter, which corresponds to the columns of the design matrix to be used for testing differential variability, we specify both the intercept and the fourth column. The ID variable is a nuisance parameter and not used when obtaining the absolute deviations, however it can be included in the linear modelling step. For methylation data, the \Rfunction{varFit} function will take either a matrix of M-values, $\beta$ values or a \Rclass{MethylSet} object as input. If $\beta$ values are supplied, a logit transformation is performed. Note that as a default, \Rfunction{varFit} uses the robust setting in the \Biocpkg{limma} framework, which requires the use of the \CRANpkg{statmod} package.
 
 <<diffvar>>=
 fitvar <- varFit(Mval, design = design, coef = c(1,4))
@@ -338,6 +340,44 @@ title(genesDV[i],cex.main=1.5)
 \label{fig:top4DVhapmap}
 \end{figure}
 
+\section{Gene ontology analysis}
+
+Once a differential methylation or differential variability analysis has been performed, it may be of interest to know which gene pathways are targeted by the significant CpG sites. It is not entirely clear from the literature how best to perform such an analysis, however Geeleher et al. (2013) showed there is a severe bias when performing gene ontology analysis with methylation data. This is due to the fact that there are differing numbers of probes per gene on several different array technologies. For the Illumina Infinium HumanMethylation450 array the number of probes per gene ranges from 1 to 1299, with a median of 15 probes per gene. This means that when mapping CpG sites to genes, a gene is more likely to be ''selected" if there are many CpG sites associated with the gene.
+
+One way to take into account this selection bias is to model the relationship between the number of probes per gene and the probability of being selected. This can be performed by adapting the \Biocpkg{goseq} method of Young et al. (2010). Each gene then has a prior probability associated with it, and a modified version of a hypergeometric test can be performed, testing for over-representation of the selected genes in each GO category. The function \Rfunction{gometh} performs this analysis, taking as input the list of significant CpGs.
+
+To illustrate how to use \Rfunction{gometh}, consider the results from the differential methylation analysis with ruv. 
+
+<<gometh1>>=
+topRUV(rfit2)
+table(rfit2$p.ebayes.BH < 0.01)
+@
+
+At a 1\% false discovery rate cut-off, there are still tens of thousands of CpG sites differentially methylated. These will undoubtably map to almost all the genes in the genome, making a gene ontology analysis irrelevant. One option for selecting CpGs in this context is to apply not only a false discovery rate cut-off, but also a $\delta\beta$ cut-off.  However, for this dataset, taking a relatively large $\delta\beta$ cut-off of 0.25 still leaves more than 30,000 CpGs differentially methylated.
+
+<<gometh2>>=
+beta <- getBeta(mSet)
+beta_norm <- rowMeans(beta[,des[,2]==0])
+beta_can <- rowMeans(beta[,des[,2]==1])
+delta_beta <- beta_can - beta_norm
+sigDM <- rfit2$p.ebayes.BH < 0.01 & abs(delta_beta) > 0.25
+table(sigDM)
+@
+
+Instead, we take the top 10,000 CpG sites as input to \Rfunction{gometh}.
+
+<<gometh3>>=
+topCpGs<-topRUV(rfit2,number=10000)
+sigCpGs <- rownames(topCpGs)
+sigCpGs[1:10]
+@
+
+The \Rfunction{gometh} takes as input a character vector of CpG names, and optionally, a character vector of all CpG sites tested. If the \textit{all.cpg} argument is omitted, all the CpGs on the array are used as background. If the \textit{plot.fit} argument is TRUE, a figure showing the relationship between the probability of being selected and the number of probes per gene will be displayed. The function \Rfunction{topGO} shows the top enriched GO categories.
+
+<<gometh4>>=
+gst <- gometh(sig.cpg=sigCpGs, all.cpg=rownames(rfit2))
+topGO(gst)
+@
 
 \newpage
 \section{Session information}
@@ -357,6 +397,8 @@ toLatex(sessionInfo())
 
 \bibitem{G-B2} Gagnon-Bartsch, Jacob, and Speed. (2013). Removing Unwanted Variation from High Dimensional Data with Negative Controls. Available at: \url{http://statistics.berkeley.edu/tech-reports/820}.
 
+\bibitem{geeleher} Geeleher, P., Hartnett, L., Egan, L. J., Golden, A., Ali, R. A. R., and Seoighe, C. (2013). Gene-set analysis is severely biased when applied to genome-wide methylation data. \emph{Bioinformatics}, \textbf{29}(15), 1851-1857.
+
 \bibitem{hansen} Hansen, K.D., Timp, W., Bravo, H.C., Sabunciyan, S., Langmead, B., McDonald, O.G., Wen, B., Wu, H., Liu, Y., Diep, D., Briem, E., Zhang, K., Irizarry, R., and Feinberg, A.P. (2011). Increased methylation variation in epigenetic domains across cancer types. \textit{Nature Genetics}, \textbf{43}:768-75.
 
 \bibitem{voom} Law, C.W., Chen, Y., Shi, W., Smyth, G.K. (2014). Voom: precision weights unlock linear model analysis tools for RNA-seq read counts. \textit{Genome Biology}, 15, R29.
@@ -368,6 +410,8 @@ toLatex(sessionInfo())
 \bibitem{pickrell} Pickrell, J.K., Marioni, J.C., Pai, A.A., Degner, J.F., Engelhardt, B.E., Nkadori, E., Veyrieras, J.B., Stephens, M., Gilad, Y., and Pritchard, J.K. (2010). Understanding mechanisms underlying human gene expression variation with RNA sequencing. \textit{Nature}, 464, 768-72.
 
 \bibitem{limma} Smyth, G.K. (2005). Limma: linear models for microarray data. In: 'Bioinformatics and Computational Biology Solutions using R and Bioconductor'. R. Gentleman, V. Carey, S. Dudoit, R. Irizarry, W. Huber (eds), Springer, New York, pages 397-420.
+
+\bibitem{young} Young, M. D., Wakefield, M. J., Smyth, G. K., and Oshlack, A. (2010). Gene ontology analysis for RNA-seq: accounting for selection bias. \emph{Genome Biology}, 11, R14.
 
 \end{thebibliography}
 

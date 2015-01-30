@@ -1,14 +1,15 @@
 Package: missMethyl
 Type: Package
 Title: Analysis of methylation array data
-Version: 1.1.3
-Date: 2015-01-21
+Version: 1.1.4
+Date: 2015-01-30
 Author: Belinda Phipson and Jovana Maksimovic
 Maintainer: Belinda Phipson <belinda.phipson@mcri.edu.au>, Jovana
         Maksimovic <jovana.maksimovic@mcri.edu.au>
 Depends: R (>= 2.3.0)
 Imports: limma, minfi, methylumi, IlluminaHumanMethylation450kmanifest,
-        statmod, ruv
+        statmod, ruv, stringr, IlluminaHumanMethylation450kanno.ilmn12.hg19,
+        org.Hs.eg.db, goseq
 VignetteBuilder: knitr
 Suggests: minfiData, BiocStyle, knitr, edgeR, tweeDEseqCountData
 Description: Normalisation and testing for differential variability and
@@ -20,7 +21,10 @@ Description: Normalisation and testing for differential variability and
 	empirical Bayes version of Levene's test. Differential
 	methylation testing is performed using RUV, which can adjust for
 	systematic errors of unknown origin in high-dimensional data by
- 	using negative control probes.
+ 	using negative control probes. Gene ontology analysis is performed
+ 	by taking into account the distribution of probes per gene on the
+ 	array.
 License: GPL-2
 biocViews: Normalization, DNAMethylation, MethylationArray,
-        GenomicVariation, GeneticVariability, DifferentialMethylation
+        GenomicVariation, GeneticVariability, DifferentialMethylation,
+        GeneSetEnrichment
