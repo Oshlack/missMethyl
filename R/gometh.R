@@ -10,7 +10,6 @@ gometh <- function(sig.cpg, all.cpg=NULL, plot.fit=FALSE, prior.prob=TRUE)
     sig.cpg <- sig.cpg[!is.na(sig.cpg)]
         
     # flatten 450k array annotation
-    require(IlluminaHumanMethylation450kanno.ilmn12.hg19)
     ann.450k = getAnnotation(IlluminaHumanMethylation450kanno.ilmn12.hg19)
     
     # get rid of the non-CpG sites
