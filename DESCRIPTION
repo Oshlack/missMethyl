@@ -1,7 +1,7 @@
 Package: missMethyl
 Type: Package
 Title: Analysis of methylation array data
-Version: 1.1.6
+Version: 1.1.7
 Date: 2015-01-30
 Author: Belinda Phipson and Jovana Maksimovic
 Maintainer: Belinda Phipson <belinda.phipson@mcri.edu.au>, Jovana

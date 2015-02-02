@@ -7,20 +7,20 @@ varFit.MethylSet <- function(data,design=NULL,coef=NULL,type=NULL,trend=TRUE,rob
     meth<-getMeth(data)
     unmeth<-getUnmeth(data)
     Mval<-log2((meth+100)/(unmeth+100))
-    varFit.default(data=Mval,design=design,type=type,trend=trend,robust=robust)
+    varFit.default(data=Mval,design=design,coef=coef,type=type,trend=trend,robust=robust,weights=weights)
 }
 
 varFit.DGEList <- function(data,design=NULL,coef=NULL,type=NULL,trend=TRUE,robust=TRUE,weights=NULL)
 {
     message("Converting counts to log counts-per-million using voom.")
     v <- voom(data,design)
-    varFit.default(data=v$E,design=design,type=type,trend=trend,robust=robust,weights=v$weights)
+    varFit.default(data=v$E,design=design,coef=coef,type=type,trend=trend,robust=robust,weights=v$weights)
 }
 
 varFit.default <- function(data,design=NULL,coef=NULL,type=NULL,trend=TRUE,robust=TRUE,weights=NULL)
 #   Test for differential variability using linear modelling
 #   Belinda Phipson
-#   15 July 2014. Updated 17 September 2014.
+#   15 July 2014. Updated 2 February 2015.
 {
 #   Check data
     data <- as.matrix(data)
@@ -48,7 +48,7 @@ varFit.default <- function(data,design=NULL,coef=NULL,type=NULL,trend=TRUE,robus
     else{        
         design <- as.matrix(design)
         if(is.null(coef)) 
-            coef <- 1:ncol(design)
+            coef <- c(1,ncol(design))
         z <- getLeveneResiduals(data,design=design[,coef],type=type)
     }
         
