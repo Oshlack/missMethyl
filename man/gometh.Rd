@@ -7,7 +7,7 @@ Gene ontology testing for 450K methylation data
 Tests gene ontology enrichment for significant CpGs from Illumina's Infinium HumanMethylation450 array, taking into account the differing number of probes per gene present on the array. 
 }
 \usage{
-gometh(sig.cpg, all.cpg = NULL, plot.fit = FALSE, prior.prob = TRUE)
+gometh(sig.cpg, all.cpg = NULL, plot.bias = FALSE, prior.prob = TRUE)
 }
 \arguments{
   \item{sig.cpg}{
@@ -16,7 +16,7 @@ gometh(sig.cpg, all.cpg = NULL, plot.fit = FALSE, prior.prob = TRUE)
   \item{all.cpg}{
   	character vector of all CpG sites tested. Defaults to all CpG sites on the array.
   }
-  \item{plot.fit}{
+  \item{plot.bias}{
   	logical, if true a plot showing the bias due to the differing numbers of probes per gene will be displayed
   }
   \item{prior.prob}{
@@ -26,7 +26,7 @@ gometh(sig.cpg, all.cpg = NULL, plot.fit = FALSE, prior.prob = TRUE)
 \details{
 This function takes a character vector of significant CpG sites, maps the CpG sites to Entrez Gene IDs, and tests for GO term enrichment using a hypergeometric test, taking into account the number of CpG sites per gene on the 450K array. 
 
-Geeleher et al. (2013) showed that a severe bias exists when performing gene set analysis for genome-wide methylation data that occurs due to the differing numbers of CpG sites profiled for each gene. \code{gometh} is based on the \code{goseq} method (Young et al., 2010) and calls the \code{goana} function from the \code{limma} package (Ritchie et al. 2015). \code{goseq} is used to estimate the probability weighting function for each gene, and \code{goana} performs the hypergeometric test for each GO category, taking into account the prior probabilities calculated by goseq. If \code{prior.prob} is set to FALSE, then prior probabilities are not used and it is assumed that each gene is equally likely to have a significant CpG site associated with it.
+Geeleher et al. (2013) showed that a severe bias exists when performing gene set analysis for genome-wide methylation data that occurs due to the differing numbers of CpG sites profiled for each gene. \code{gometh} is based on the \code{goseq} method (Young et al., 2010) and calls the \code{goana} function from the \code{limma} package (Ritchie et al. 2015). If \code{prior.prob} is set to FALSE, then prior probabilities are not used and it is assumed that each gene is equally likely to have a significant CpG site associated with it.
 
 Genes associated with each CpG site are obtained from the annotation package \code{IlluminaHumanMethylation450kanno.ilmn12.hg19}.
 
@@ -63,7 +63,7 @@ Ritchie, M. E., Phipson, B., Wu, D., Hu, Y., Law, C. W., Shi, W., and Smyth, G. 
 Benjamini, Y., and Hochberg, Y. (1995). Controlling the false discovery rate: a practical and powerful approach to multiple testing. \emph{Journal of the Royal Statistical Society Series}, B, \bold{57}, 289-300.
 }
 \seealso{
-\code{\link{goseq}}, \code{\link{goana}}, \code{\link{nullp}}
+\code{\link{goseq}}, \code{\link{goana}}}
 }
 \author{
 Belinda Phipson
@@ -81,7 +81,7 @@ allcpgs <- rownames(ann)
 
 # GO testing with prior probabilities taken into account
 # Plot of bias due to differing numbers of CpG sites per gene
-gst <- gometh(sig.cpg = sigcpgs, all.cpg = allcpgs, plot.fit=TRUE, prior.prob=TRUE)
+gst <- gometh(sig.cpg = sigcpgs, all.cpg = allcpgs, plot.bias=TRUE, prior.prob=TRUE)
 
 # Total number of GO categories significant at 5\% FDR
 table(gst$FDR<0.05)

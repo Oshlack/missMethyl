@@ -372,7 +372,7 @@ sigCpGs <- rownames(topCpGs)
 sigCpGs[1:10]
 @
 
-The \Rfunction{gometh} takes as input a character vector of CpG names, and optionally, a character vector of all CpG sites tested. If the \textit{all.cpg} argument is omitted, all the CpGs on the array are used as background. If the \textit{plot.fit} argument is TRUE, a figure showing the relationship between the probability of being selected and the number of probes per gene will be displayed. The function \Rfunction{topGO} shows the top enriched GO categories.
+The \Rfunction{gometh} takes as input a character vector of CpG names, and optionally, a character vector of all CpG sites tested. If the \textit{all.cpg} argument is omitted, all the CpGs on the array are used as background. If the \textit{plot.bias} argument is TRUE, a figure showing the relationship between the probability of being selected and the number of probes per gene will be displayed. The function \Rfunction{topGO} shows the top enriched GO categories.
 
 <<gometh4>>=
 gst <- gometh(sig.cpg=sigCpGs, all.cpg=rownames(rfit2))

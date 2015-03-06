@@ -9,7 +9,7 @@ Maintainer: Belinda Phipson <belinda.phipson@mcri.edu.au>, Jovana
 Depends: R (>= 2.3.0)
 Imports: limma, minfi, methylumi, IlluminaHumanMethylation450kmanifest,
         statmod, ruv, stringr, IlluminaHumanMethylation450kanno.ilmn12.hg19,
-        org.Hs.eg.db, goseq
+        org.Hs.eg.db
 VignetteBuilder: knitr
 Suggests: minfiData, BiocStyle, knitr, edgeR, tweeDEseqCountData
 Description: Normalisation and testing for differential variability and
@@ -22,7 +22,7 @@ Description: Normalisation and testing for differential variability and
 	methylation testing is performed using RUV, which can adjust for
 	systematic errors of unknown origin in high-dimensional data by
  	using negative control probes. Gene ontology analysis is performed
- 	by taking into account the distribution of probes per gene on the
+ 	by taking into account the number of probes per gene on the
  	array.
 License: GPL-2
 biocViews: Normalization, DNAMethylation, MethylationArray,

@@ -1,4 +1,4 @@
-gometh <- function(sig.cpg, all.cpg=NULL, plot.fit=FALSE, prior.prob=TRUE)
+gometh <- function(sig.cpg, all.cpg=NULL, plot.bias=FALSE, prior.prob=TRUE)
 # Gene ontology testing for 450K methylation arrays based on goseq
 # Takes into account probability of differential methylation based on
 # numbers of probes on array per gene
@@ -71,14 +71,41 @@ gometh <- function(sig.cpg, all.cpg=NULL, plot.fit=FALSE, prior.prob=TRUE)
     
     # get gene-wise prior probabilities
     if(prior.prob){
-        test.null <- nullp(test.de,bias.data=as.vector(freq_genes),plot.fit=plot.fit)
-    
-    # goseq
-        gst.goseq <- goana(sorted.eg.sig,universe=eg.universe,prior.prob=test.null$pwf)
+        pwf <- .estimatePWF(D=test.de,bias=as.vector(freq_genes))
+        if(plot.bias)
+        	.plotBias(D=test.de,bias=as.vector(freq_genes))
+    # go testing
+        gst.go <- goana(sorted.eg.sig,universe=eg.universe,prior.prob=pwf)
     }
     else
-        gst.goseq <- goana(sorted.eg.sig,universe=eg.universe)
+        gst.go <- goana(sorted.eg.sig,universe=eg.universe)
     
-    gst.goseq$FDR<-p.adjust(gst.goseq$P.DE,method="BH")
-    gst.goseq
+    gst.go$FDR<-p.adjust(gst.go$P.DE,method="BH")
+    gst.go
+}
+
+.plotBias <- function(D,bias)
+# Plotting function to show gene level CpG density bias
+# Belinda Phipson
+# 5 March 2015
+{
+    o <- order(bias)
+    splitf <- rep(1:100,each=200)[1:length(bias)]
+    avgbias <- tapply(bias[o],factor(splitf),mean)
+    sumDM <- tapply(D[o],factor(splitf),sum)
+    propDM <- sumDM/table(splitf)
+    par(mar=c(5,5,2,2))
+    plot(avgbias,as.vector(propDM),xlab="Binned gene-level CpG density bias", ylab="Proportion Differential Methylation",cex.lab=1.5,cex.axis=1.2)
+    lines(lowess(avgbias,propDM),col=4,lwd=2)
+}
+
+.estimatePWF <- function(D,bias)
+# An alternative to goseq function nullp, which is transformation invariant
+# Belinda Phipson and Gordon Smyth
+# 6 March 2015
+{
+    prior.prob <- bias
+    o <- order(bias)
+    prior.prob[o] <- tricubeMovingAverage(D[o],span=0.5,full.length=TRUE)
+    prior.prob
 }
