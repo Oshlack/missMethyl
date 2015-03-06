@@ -63,7 +63,7 @@ Ritchie, M. E., Phipson, B., Wu, D., Hu, Y., Law, C. W., Shi, W., and Smyth, G. 
 Benjamini, Y., and Hochberg, Y. (1995). Controlling the false discovery rate: a practical and powerful approach to multiple testing. \emph{Journal of the Royal Statistical Society Series}, B, \bold{57}, 289-300.
 }
 \seealso{
-\code{\link{goseq}}, \code{\link{goana}}}
+\code{\link{goseq}}, \code{\link{goana}}
 }
 \author{
 Belinda Phipson
