@@ -32,7 +32,7 @@ Raw data files are in IDAT format, which can be read into R using the \Biocpkg{m
 
 \section{Reading data into R}
 
-We will use the data in the \Biocpkg{minfiData} package to demonstrate the functions in \Biocpkg{missMethyl}. The example dataset has 6 samples across two slides. The sample information is in the targets file. An essential column in the targets file is the ``Basename" column which tells \Biocpkg{minfi} where the idat files to be read in are located. The R commands to read in the data are taken from the \Biocpkg{minfi} Users Guide. For additional details on how to read the IDAT files into R, as well as information regarding quality control please refer to the \Biocpkg{minfi} User\'s Guide. 
+We will use the data in the \Biocpkg{minfiData} package to demonstrate the functions in \Biocpkg{missMethyl}. The example dataset has 6 samples across two slides. The sample information is in the targets file. An essential column in the targets file is the ``Basename" column which tells \Biocpkg{minfi} where the idat files to be read in are located. The R commands to read in the data are taken from the \Biocpkg{minfi} User's Guide. For additional details on how to read the IDAT files into R, as well as information regarding quality control please refer to the \Biocpkg{minfi} User's Guide. 
 
 <<load_libs, cache=FALSE>>=
 library(missMethyl)
@@ -117,7 +117,7 @@ legend("topleft",legend=c("Cancer","Normal"),pch=16,cex=1.2,col=1:2)
 
 \section{Testing for differential methylation using \Biocpkg{limma}}
 
-To test for differential methylation we use the \Biocpkg{limma} package \cite{limma}, which employs an empirical Bayes framework based on Guassian model theory. First we need to set up the design matrix. There are a number of ways to do this, the most straightforward is directly from the targets file. There are a number of variables, with the status column indicating cancer/normal samples. From the person column of the targets file, we see that the cancer/normal samples are matched, with 3 individuals each contributing both a cancer and normal sample. Since the limma model framework can handle any experimental design which can be summarised by a design matrix, we can take into account the paired nature of the data in the analysis. For more complicated experimental designs, please refer to the \Biocpkg{limma} User\'s Guide.
+To test for differential methylation we use the \Biocpkg{limma} package \cite{limma}, which employs an empirical Bayes framework based on Guassian model theory. First we need to set up the design matrix. There are a number of ways to do this, the most straightforward is directly from the targets file. There are a number of variables, with the status column indicating cancer/normal samples. From the person column of the targets file, we see that the cancer/normal samples are matched, with 3 individuals each contributing both a cancer and normal sample. Since the limma model framework can handle any experimental design which can be summarised by a design matrix, we can take into account the paired nature of the data in the analysis. For more complicated experimental designs, please refer to the \Biocpkg{limma} User's Guide.
 
 <<design>>=
 group <- factor(targets$status,levels=c("normal","cancer"))
