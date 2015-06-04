@@ -11,8 +11,8 @@
 BiocStyle::latex()
 @
 
-\newcommand{\exitem}[3]
-{\item \texttt{\textbackslash#1\{#2\}} #3 \csname#1\endcsname{#2}.}
+%#\newcommand{\exitem}[3]
+%{\item \texttt{\textbackslash#1\{#2\}} #3 \csname#1\endcsname{#2}.}
 
 \title{missMethyl: Analysing Illumina \\ HumanMethylation450 BeadChip Data}
 \author{Belinda Phipson and Jovana Maksimovic}
@@ -26,13 +26,13 @@ BiocStyle::latex()
 
 \section{Introduction}
 
-The \Biocpkg{missMethyl} package contains functions to analyse methylation data from Illumina's HumanMethylation450 beadchip. These arrays are a cost-effective alternative to whole genome bisulphite sequencing, and as such are widely used to profile DNA methylation. Specifically, missMethyl contains functions to perform SWAN normalisation \cite{swan} and differential variability analysis \cite{diffvar}. As our lab's research into specialised analyses of these arrays continues we anticipate that the package will be continuously updated with new functions.
+The \Biocpkg{missMethyl} package contains functions to analyse methylation data from Illumina\'s HumanMethylation450 beadchip. These arrays are a cost-effective alternative to whole genome bisulphite sequencing, and as such are widely used to profile DNA methylation. Specifically, missMethyl contains functions to perform SWAN normalisation \cite{swan} and differential variability analysis \cite{diffvar}. As our lab's research into specialised analyses of these arrays continues we anticipate that the package will be continuously updated with new functions.
 
 Raw data files are in IDAT format, which can be read into R using the \Biocpkg{minfi} package \cite{minfi}. Statistical analyses are usually performed on M-values, and $\beta$ values are used for visualisation, both of which can be extracted from \Rclass{MethylSet} objects, which is a class of object created by \Biocpkg{minfi}. For detecting differentially variable CpGs we recommend that the analysis is performed on M-values. All analyses described here are performed at the CpG site level.
 
 \section{Reading data into R}
 
-We will use the data in the \Biocpkg{minfiData} package to demonstrate the functions in \Biocpkg{missMethyl}. The example dataset has 6 samples across two slides. The sample information is in the targets file. An essential column in the targets file is the ``Basename" column which tells \Biocpkg{minfi} where the idat files to be read in are located. The R commands to read in the data are taken from the \Biocpkg{minfi} User's Guide. For additional details on how to read the IDAT files into R, as well as information regarding quality control please refer to the \Biocpkg{minfi} User's Guide. 
+We will use the data in the \Biocpkg{minfiData} package to demonstrate the functions in \Biocpkg{missMethyl}. The example dataset has 6 samples across two slides. The sample information is in the targets file. An essential column in the targets file is the ``Basename'' column which tells \Biocpkg{minfi} where the idat files to be read in are located. The R commands to read in the data are taken from the \Biocpkg{minfi} User's Guide. For additional details on how to read the IDAT files into R, as well as information regarding quality control please refer to the \Biocpkg{minfi} User's Guide. 
 
 <<load_libs, cache=FALSE>>=
 library(missMethyl)
@@ -343,9 +343,9 @@ title(genesDV[i],cex.main=1.5)
 
 \section{Gene ontology analysis}
 
-Once a differential methylation or differential variability analysis has been performed, it may be of interest to know which gene pathways are targeted by the significant CpG sites. It is not entirely clear from the literature how best to perform such an analysis, however Geeleher et al. (2013) showed there is a severe bias when performing gene ontology analysis with methylation data. This is due to the fact that there are differing numbers of probes per gene on several different array technologies. For the Illumina Infinium HumanMethylation450 array the number of probes per gene ranges from 1 to 1299, with a median of 15 probes per gene. This means that when mapping CpG sites to genes, a gene is more likely to be ``selected" if there are many CpG sites associated with the gene.
+Once a differential methylation or differential variability analysis has been performed, it may be of interest to know which gene pathways are targeted by the significant CpG sites. It is not entirely clear from the literature how best to perform such an analysis, however Geeleher et al. \cite{geeleher} showed there is a severe bias when performing gene ontology analysis with methylation data. This is due to the fact that there are differing numbers of probes per gene on several different array technologies. For the Illumina Infinium HumanMethylation450 array the number of probes per gene ranges from 1 to 1299, with a median of 15 probes per gene. This means that when mapping CpG sites to genes, a gene is more likely to be ``selected'' if there are many CpG sites associated with the gene.
 
-One way to take into account this selection bias is to model the relationship between the number of probes per gene and the probability of being selected. This can be performed by adapting the \Biocpkg{goseq} method of Young et al. (2010). Each gene then has a prior probability associated with it, and a modified version of a hypergeometric test can be performed, testing for over-representation of the selected genes in each GO category. The function \Rfunction{gometh} performs this analysis, taking as input the list of significant CpGs.
+One way to take into account this selection bias is to model the relationship between the number of probes per gene and the probability of being selected. This can be performed by adapting the \Biocpkg{goseq} method of Young et al. \cite{young}. Each gene then has a prior probability associated with it, and a modified version of a hypergeometric test can be performed, testing for over-representation of the selected genes in each GO category. The function \Rfunction{gometh} performs this analysis, taking as input the list of significant CpGs.
 
 To illustrate how to use \Rfunction{gometh}, consider the results from the differential methylation analysis with ruv. 
 
@@ -356,9 +356,7 @@ table(rfit2$p.ebayes.BH < 0.01)
 
 At a 1\% false discovery rate cut-off, there are still tens of thousands of CpG sites differentially methylated. 
 These will undoubtably map to almost all the genes in the genome, making a gene ontology analysis irrelevant. 
-One option for selecting CpGs in this context is to apply not only a false discovery rate cut-off, but also a 
-$\delta \beta$ cut-off. 
-However, for this dataset, taking a relatively large $\delta\beta$ cut-off of 0.25 still leaves more than 30,000 CpGs differentially methylated.
+One option for selecting CpGs in this context is to apply not only a false discovery rate cut-off, but also a $\delta\beta$ cut-off.  However, for this dataset, taking a relatively large $\delta\beta$ cut-off of 0.25 still leaves more than 30\,000 CpGs differentially methylated.
 
 <<gometh2>>=
 beta <- getBeta(mSet)
@@ -369,7 +367,7 @@ sigDM <- rfit2$p.ebayes.BH < 0.01 & abs(delta_beta) > 0.25
 table(sigDM)
 @
 
-Instead, we take the top 10,000 CpG sites as input to \Rfunction{gometh}.
+Instead, we take the top 10\,000 CpG sites as input to \Rfunction{gometh}.
 
 <<gometh3>>=
 topCpGs<-topRUV(rfit2,number=10000)
@@ -380,6 +378,7 @@ sigCpGs[1:10]
 The \Rfunction{gometh} takes as input a character vector of CpG names, and optionally, a character vector of all CpG sites tested. If the \textit{all.cpg} argument is omitted, all the CpGs on the array are used as background. If the \textit{plot.bias} argument is TRUE, a figure showing the relationship between the probability of being selected and the number of probes per gene will be displayed. The function \Rfunction{topGO} shows the top enriched GO categories.
 
 <<gometh4>>=
+library(IlluminaHumanMethylation450kanno.ilmn12.hg19)
 gst <- gometh(sig.cpg=sigCpGs, all.cpg=rownames(rfit2))
 topGO(gst)
 @

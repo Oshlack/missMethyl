@@ -8,7 +8,7 @@ gometh <- function(sig.cpg, all.cpg=NULL, plot.bias=FALSE, prior.prob=TRUE)
     # check input
     sig.cpg <- as.character(sig.cpg)
     sig.cpg <- sig.cpg[!is.na(sig.cpg)]
-        
+    
     # flatten 450k array annotation
     ann.450k = getAnnotation(IlluminaHumanMethylation450kanno.ilmn12.hg19)
     
