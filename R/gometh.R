@@ -95,7 +95,7 @@ gometh <- function(sig.cpg, all.cpg=NULL, plot.bias=FALSE, prior.prob=TRUE)
     sumDM <- tapply(D[o],factor(splitf),sum)
     propDM <- sumDM/table(splitf)
     par(mar=c(5,5,2,2))
-    plot(avgbias,as.vector(propDM),xlab="Binned gene-level CpG density bias", ylab="Proportion Differential Methylation",cex.lab=1.5,cex.axis=1.2)
+    plot(avgbias,as.vector(propDM),xlab="Number of CpGs per gene", ylab="Proportion Differential Methylation",cex.lab=1.5,cex.axis=1.2)
     lines(lowess(avgbias,propDM),col=4,lwd=2)
 }
 
