@@ -16,7 +16,7 @@ BiocStyle::latex()
 
 \title{missMethyl: Analysing Illumina \\ HumanMethylation450 BeadChip Data}
 \author{Belinda Phipson and Jovana Maksimovic}
-\date{Modified: 28 January, 2015. Compiled: \today}
+\date{Modified: 10 September 2015. Compiled: \today}
 
 \begin{document}
 
@@ -341,47 +341,47 @@ title(genesDV[i],cex.main=1.5)
 \label{fig:top4DVhapmap}
 \end{figure}
 
-\section{Gene ontology analysis}
+%\section{Gene ontology analysis}
 
-Once a differential methylation or differential variability analysis has been performed, it may be of interest to know which gene pathways are targeted by the significant CpG sites. It is not entirely clear from the literature how best to perform such an analysis, however Geeleher et al. \cite{geeleher} showed there is a severe bias when performing gene ontology analysis with methylation data. This is due to the fact that there are differing numbers of probes per gene on several different array technologies. For the Illumina Infinium HumanMethylation450 array the number of probes per gene ranges from 1 to 1299, with a median of 15 probes per gene. This means that when mapping CpG sites to genes, a gene is more likely to be ``selected'' if there are many CpG sites associated with the gene.
+%Once a differential methylation or differential variability analysis has been performed, it may be of interest to know which gene pathways are targeted by the significant CpG sites. It is not entirely clear from the literature how best to perform such an analysis, however Geeleher et al. \cite{geeleher} showed there is a severe bias when performing gene ontology analysis with methylation data. This is due to the fact that there are differing numbers of probes per gene on several different array technologies. For the Illumina Infinium HumanMethylation450 array the number of probes per gene ranges from 1 to 1299, with a median of 15 probes per gene. This means that when mapping CpG sites to genes, a gene is more likely to be ``selected'' if there are many CpG sites associated with the gene.
 
-One way to take into account this selection bias is to model the relationship between the number of probes per gene and the probability of being selected. This can be performed by adapting the \Biocpkg{goseq} method of Young et al. \cite{young}. Each gene then has a prior probability associated with it, and a modified version of a hypergeometric test can be performed, testing for over-representation of the selected genes in each GO category. The function \Rfunction{gometh} performs this analysis, taking as input the list of significant CpGs.
+%One way to take into account this selection bias is to model the relationship between the number of probes per gene and the probability of being selected. This can be performed by adapting the \Biocpkg{goseq} method of Young et al. \cite{young}. Each gene then has a prior probability associated with it, and a modified version of a hypergeometric test can be performed, testing for over-representation of the selected genes in each GO category. The function \Rfunction{gometh} performs this analysis, taking as input the list of significant CpGs.
 
-To illustrate how to use \Rfunction{gometh}, consider the results from the differential methylation analysis with ruv. 
+%To illustrate how to use \Rfunction{gometh}, consider the results from the differential methylation analysis with ruv. 
 
-<<gometh1>>=
-topRUV(rfit2)
-table(rfit2$p.ebayes.BH < 0.01)
-@
+%<<gometh1>>=
+%topRUV(rfit2)
+%table(rfit2$p.ebayes.BH < 0.01)
+%@
 
-At a 1\% false discovery rate cut-off, there are still tens of thousands of CpG sites differentially methylated. 
-These will undoubtably map to almost all the genes in the genome, making a gene ontology analysis irrelevant. 
-One option for selecting CpGs in this context is to apply not only a false discovery rate cut-off, but also a $\delta\beta$ cut-off.  However, for this dataset, taking a relatively large $\delta\beta$ cut-off of 0.25 still leaves more than 30\,000 CpGs differentially methylated.
+%At a 1\% false discovery rate cut-off, there are still tens of thousands of CpG sites differentially methylated. 
+%These will undoubtably map to almost all the genes in the genome, making a gene ontology analysis irrelevant. 
+%One option for selecting CpGs in this context is to apply not only a false discovery rate cut-off, but also a $\delta\beta$ cut-off.  However, for this dataset, taking a relatively large $\delta\beta$ cut-off of 0.25 still leaves more than 30\,000 CpGs differentially methylated.
 
-<<gometh2>>=
-beta <- getBeta(mSet)
-beta_norm <- rowMeans(beta[,des[,2]==0])
-beta_can <- rowMeans(beta[,des[,2]==1])
-delta_beta <- beta_can - beta_norm
-sigDM <- rfit2$p.ebayes.BH < 0.01 & abs(delta_beta) > 0.25
-table(sigDM)
-@
+%<<gometh2>>=
+%beta <- getBeta(mSet)
+%beta_norm <- rowMeans(beta[,des[,2]==0])
+%beta_can <- rowMeans(beta[,des[,2]==1])
+%delta_beta <- beta_can - beta_norm
+%sigDM <- rfit2$p.ebayes.BH < 0.01 & abs(delta_beta) > 0.25
+%table(sigDM)
+%@
 
-Instead, we take the top 10\,000 CpG sites as input to \Rfunction{gometh}.
+%Instead, we take the top 10\,000 CpG sites as input to \Rfunction{gometh}.
 
-<<gometh3>>=
-topCpGs<-topRUV(rfit2,number=10000)
-sigCpGs <- rownames(topCpGs)
-sigCpGs[1:10]
-@
+%<<gometh3>>=
+%topCpGs<-topRUV(rfit2,number=10000)
+%sigCpGs <- rownames(topCpGs)
+%sigCpGs[1:10]
+%@
 
-The \Rfunction{gometh} takes as input a character vector of CpG names, and optionally, a character vector of all CpG sites tested. If the \textit{all.cpg} argument is omitted, all the CpGs on the array are used as background. If the \textit{plot.bias} argument is TRUE, a figure showing the relationship between the probability of being selected and the number of probes per gene will be displayed. The function \Rfunction{topGO} shows the top enriched GO categories.
+%The \Rfunction{gometh} takes as input a character vector of CpG names, and optionally, a character vector of all CpG sites tested. If the \textit{all.cpg} argument is omitted, all the CpGs on the array are used as background. If the \textit{plot.bias} argument is TRUE, a figure showing the relationship between the probability of being selected and the number of probes per gene will be displayed. The function \Rfunction{topGO} shows the top enriched GO categories.
 
-<<gometh4>>=
-library(IlluminaHumanMethylation450kanno.ilmn12.hg19)
-gst <- gometh(sig.cpg=sigCpGs, all.cpg=rownames(rfit2))
-topGO(gst)
-@
+%<<gometh4>>=
+%library(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+%gst <- gometh(sig.cpg=sigCpGs, all.cpg=rownames(rfit2))
+%topGO(gst)
+%@
 
 \newpage
 \section{Session information}
