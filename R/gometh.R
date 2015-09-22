@@ -106,6 +106,6 @@ gometh <- function(sig.cpg, all.cpg=NULL, plot.bias=FALSE, prior.prob=TRUE)
 {
     prior.prob <- bias
     o <- order(bias)
-    prior.prob[o] <- tricubeMovingAverage(D[o],span=0.5,full.length=TRUE)
+    prior.prob[o] <- tricubeMovingAverage(D[o],span=0.5)
     prior.prob
 }
