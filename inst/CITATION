@@ -1,4 +1,4 @@
-citHeader("Please cite the first paper for SWAN normalisation and the second paper for the method of testing differential variability")
+citHeader("Please cite the relevant papers for individual methods and the missMethyl Bioinformatics paper for the whole package.")
 
 citEntry(
   entry="article",	
@@ -22,5 +22,25 @@ citEntry(
   pages=465,
   year=2014,
   textVersion="B. Phipson and A. Oshlack. DiffVar: A new method for detecting differential variability with application to methylation in cancer and aging. Genome Biology 15(9), 465."
+)
+
+citEntry(
+  entry="article",
+  title="Removing unwanted variation in a differential methylation analysis of Illumina HumanMethylation450 array data",
+  author="Jovana Maksimovic and Johann A Gagnon-Bartsch and Terence P Speed and Alicia Oshlack",
+  journal="Nucleic acids research",
+  pages=gkv526,
+  year=2015,
+  textVersion="J. Maksimovic and J.A. Gagnon-Bartsch and T.P. Speed and A. Oshlack (2015). Removing unwanted variation in a differential methylation analysis of Illumina HumanMethylation450 array data. Nucleic acids research, gkv526."
+)
+
+citEntry(
+  entry="article",
+  title="missMethyl: an R package for analysing methylation data from Illumina’s HumanMethylation450 platform",
+  author="Belinda Phipson and Jovana Maksimovic and Alicia Oshlack",
+  journal="Bioinformatics",
+  pages=btv560,
+  year=2015,
+  textVersion="B. Phipson  and J. Maksimovic and A. Oshlack (2015). missMethyl: an R package for analysing methylation data from Illumina’s HumanMethylation450 platform. Bioinformatics, btv560."
 )
 
