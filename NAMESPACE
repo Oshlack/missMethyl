@@ -11,4 +11,4 @@ import(org.Hs.eg.db)
 export(SWAN, densityByProbeType, varFit, topVar, getLeveneResiduals,
        SWAN.MethyLumiSet, SWAN.RGChannelSet, SWAN.default, varFit.MethylSet,
        varFit.DGEList, varFit.default, contrasts.varFit, RUVfit, RUVadj, 
-       topRUV, getINCs, gometh)
+       topRUV, getINCs, gometh, gsameth, topGSA, getMappedEntrezIDs)

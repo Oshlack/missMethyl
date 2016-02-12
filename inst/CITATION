@@ -2,45 +2,57 @@ citHeader("Please cite the relevant papers for individual methods and the missMe
 
 citEntry(
   entry="article",	
+  author=c(person("Jovana","Maksimovic"),
+           person("Lavinia","Gordon"),
+           person("Alicia","Oshlack")),
   title="SWAN: Subset-quantile within array normalization for illumina infinium HumanMethylation450 BeadChips",
-  author="Jovana Maksimovic and Lavinia Gordon and Alicia Oshlack",
   journal="Genome Biology",
   volume=13,
   number=6,
   pages="R44",
   year=2012,
-  textVersion="J. Maksimovic and L. Gordon and A. Oshlack A (2012). SWAN: Subset-quantile within array normalization for illumina infinium HumanMethylation450 BeadChips. Genome Biology 13(6), R44"
+  
+  textVersion="Maksimovic, J.,Gordon, L., and Oshlack, A. (2012). SWAN: Subset-quantile within array normalization for illumina infinium HumanMethylation450 BeadChips. Genome Biology 13(6), R44"
 )
 
 citEntry(
   entry="article",	
-  title="DiffVar: A new method for detecting differential variability with applicatino to methylation in cancer and aging",
-  author=" Belinda Phipson and Alicia Oshlack",
+  author=c(person("Belinda","Phipson"),
+           person("Alicia","Oshlack")),
+  title="DiffVar: A new method for detecting differential variability with application to methylation in cancer and aging",
   journal="Genome Biology",
   volume=15,
   number=9,
   pages=465,
   year=2014,
-  textVersion="B. Phipson and A. Oshlack. DiffVar: A new method for detecting differential variability with application to methylation in cancer and aging. Genome Biology 15(9), 465."
+  
+  textVersion="Phipson, B., and Oshlack, A. (2014). DiffVar: A new method for detecting differential variability with application to methylation in cancer and aging. Genome Biology 15(9), 465."
 )
 
 citEntry(
   entry="article",
+  author=c(person("Jovana","Maksimovic"),
+           person(c("Johann","A"),"Gagnon-Bartsch"),
+           person(c("Terence","P"),"Speed"),
+           person("Alicia","Oshlack")),
   title="Removing unwanted variation in a differential methylation analysis of Illumina HumanMethylation450 array data",
-  author="Jovana Maksimovic and Johann A Gagnon-Bartsch and Terence P Speed and Alicia Oshlack",
   journal="Nucleic acids research",
-  pages=gkv526,
+  pages="gkv526",
   year=2015,
-  textVersion="J. Maksimovic and J.A. Gagnon-Bartsch and T.P. Speed and A. Oshlack (2015). Removing unwanted variation in a differential methylation analysis of Illumina HumanMethylation450 array data. Nucleic acids research, gkv526."
+  
+  textVersion="Maksimovic, J., Gagnon-Bartsch, J.A., Speed, T.P., and Oshlack, A. (2015). Removing unwanted variation in a differential methylation analysis of Illumina HumanMethylation450 array data. Nucleic acids research, gkv526."
 )
 
 citEntry(
   entry="article",
-  title="missMethyl: an R package for analysing methylation data from Illumina’s HumanMethylation450 platform",
-  author="Belinda Phipson and Jovana Maksimovic and Alicia Oshlack",
+  author=c(person("Belinda","Phipson"),
+           person("Jovana","Maksimovic"),
+           person("Alicia","Oshlack")),
+  title="missMethyl: an R package for analysing methylation data from Illuminas HumanMethylation450 platform",
   journal="Bioinformatics",
-  pages=btv560,
+  pages="btv560",
   year=2015,
-  textVersion="B. Phipson  and J. Maksimovic and A. Oshlack (2015). missMethyl: an R package for analysing methylation data from Illumina’s HumanMethylation450 platform. Bioinformatics, btv560."
+  
+  textVersion="Phipson, B., Maksimovic, J., and Oshlack, A. (2015). missMethyl: an R package for analysing methylation data from Illuminas HumanMethylation450 platform. Bioinformatics, btv560."
 )
 

@@ -2,6 +2,12 @@
 \title{missMethyl News}
 \encoding{UTF-8}
 
+\section{Version 1.5.1}{\itemize{
+
+\item New gene set testing function gsameth() added, kegg testing functionality added to gometh().
+
+}}
+
 \section{Version 1.1.10}{\itemize{
 
 \item This version of the package contains functions to perform SWAN normalisation, RUV normalisation and differential methylation analysis, differential variability analysis and gene ontology testing for the 450K array.
