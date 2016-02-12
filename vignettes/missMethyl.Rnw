@@ -343,9 +343,9 @@ title(genesDV[i],cex.main=1.5)
 
 \section{Gene ontology analysis}
 
-%Once a differential methylation or differential variability analysis has been performed, it may be of interest to know which gene pathways are targeted by the significant CpG sites. It is not entirely clear from the literature how best to perform such an analysis, however Geeleher et al. \cite{geeleher} showed there is a severe bias when performing gene ontology analysis with methylation data. This is due to the fact that there are differing numbers of probes per gene on several different array technologies. For the Illumina Infinium HumanMethylation450 array the number of probes per gene ranges from 1 to 1299, with a median of 15 probes per gene. This means that when mapping CpG sites to genes, a gene is more likely to be ``selected'' if there are many CpG sites associated with the gene.
+Once a differential methylation or differential variability analysis has been performed, it may be of interest to know which gene pathways are targeted by the significant CpG sites. It is not entirely clear from the literature how best to perform such an analysis, however Geeleher et al. \cite{geeleher} showed there is a severe bias when performing gene ontology analysis with methylation data. This is due to the fact that there are differing numbers of probes per gene on several different array technologies. For the Illumina Infinium HumanMethylation450 array the number of probes per gene ranges from 1 to 1299, with a median of 15 probes per gene. This means that when mapping CpG sites to genes, a gene is more likely to be ``selected'' if there are many CpG sites associated with the gene.
 
-One way to take into account this selection bias is to model the relationship between the number of probes per gene and the probability of being selected. This can be performed by adapting the \Biocpkg{goseq} method of Young et al. \cite{young}. Each gene then has a prior probability associated with it, and a modified version of a hypergeometric test can be performed, testing for over-representation of the selected genes in each GO category. The function \Rfunction{gometh} performs this analysis, taking as input the list of significant CpGs.
+One way to take into account this selection bias is to model the relationship between the number of probes per gene and the probability of being selected. This can be performed by adapting the \Biocpkg{goseq} method of Young et al. \cite{young}. Each gene then has a prior probability associated with it, and a modified version of a hypergeometric test can be performed, testing for over-representation of the selected genes in each GO category. The function \Rfunction{gometh} performs this analysis, taking as input the list of significant CpGs. The \Rfunction{gometh} function can perform enrichment testing on GO categories, or KEGG pathways. 
 
 To illustrate how to use \Rfunction{gometh}, consider the results from the differential methylation analysis with ruv. 
 
@@ -375,13 +375,28 @@ sigCpGs <- rownames(topCpGs)
 sigCpGs[1:10]
 @
 
-The \Rfunction{gometh} takes as input a character vector of CpG names, and optionally, a character vector of all CpG sites tested. If the \textit{all.cpg} argument is omitted, all the CpGs on the array are used as background. If the \textit{plot.bias} argument is TRUE, a figure showing the relationship between the probability of being selected and the number of probes per gene will be displayed. The function \Rfunction{topGO} shows the top enriched GO categories.
+The \Rfunction{gometh} takes as input a character vector of CpG names, and optionally, a character vector of all CpG sites tested. If the \textit{all.cpg} argument is omitted, all the CpGs on the array are used as background. If the \textit{plot.bias} argument is TRUE, a figure showing the relationship between the probability of being selected and the number of probes per gene will be displayed. For testing of GO terms, the \textit{collection} argument takes the value ``GO", which is the default setting. For KEGG pathway analysis, set \textit{collection} to ``KEGG". The function \Rfunction{topGO} shows the top enriched GO categories. For KEGG testing, use the \Rfunction{topKEGG} function. The \Rpackage{limma} functions \Rfunction{goana} and \Rfunction{kegga} are called by \Rfunction{gometh} for GO and KEGG pathway analysis respectively.
 
 <<gometh4>>=
 library(IlluminaHumanMethylation450kanno.ilmn12.hg19)
-gst <- gometh(sig.cpg=sigCpGs, all.cpg=rownames(rfit2))
+gst <- gometh(sig.cpg=sigCpGs, all.cpg=rownames(rfit2), collection="GO")
 topGO(gst)
 @
+
+For a more generalised version of gene set testing in methylation data where the user can specify the gene set to be tested, the \Rfunction{gsameth} function can be used. To display the top 20 pathways, \Rfunction{topGSA} can be called. \Rfunction{gsameth} can take a single gene set, or a list of gene sets. The gene identifiers in the gene set must be Entrez Gene IDs. To demonstrate \Rfunction{gsameth} a toy example is shown below, with gene sets made up of randomly selected genes from the \Rpackage{org.Hs.eg.db} package.
+
+<<gsameth>>=
+library(org.Hs.eg.db)
+genes <- toTable(org.Hs.egSYMBOL2EG)
+set1 <- sample(genes$gene_id,size=80)
+set2 <- sample(genes$gene_id,size=100)
+set3 <- sample(genes$gene_id,size=30)
+genesets <- list(set1,set2,set3)
+gsa <- gsameth(sig.cpg=sigCpGs, all.cpg=rownames(rfit2), collection=genesets)
+topGSA(gsa)
+@
+
+Note that if it is of interest to obtain the Entrez Gene IDs that the significant CpGs are mapped to, the \Rfunction{getMappedEntrezIDs} can be called. 
 
 \newpage
 \section{Session information}
