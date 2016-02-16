@@ -60,11 +60,11 @@ allcpgs <- rownames(ann)
 GOtoID <- toTable(org.Hs.egGO2EG)
 setname1 <- GOtoID$go_id[1]
 setname1
-keep.set1 <- GOtoID$go_id %in% setname1
+keep.set1 <- GOtoID$go_id \%in\% setname1
 set1 <- GOtoID$gene_id[keep.set1]
 setname2 <- GOtoID$go_id[2]
 setname2
-keep.set2 <- GOtoID$go_id %in% setname2
+keep.set2 <- GOtoID$go_id \%in\% setname2
 set2 <- GOtoID$gene_id[keep.set2]
 
 # Make the gene sets into a list
