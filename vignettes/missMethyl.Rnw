@@ -27,7 +27,7 @@ BiocStyle::latex()
 
 \section{Introduction}
 
-The \Biocpkg{missMethyl} package contains functions to analyse methylation data from Illumina\'s HumanMethylation450 beadchip. These arrays are a cost-effective alternative to whole genome bisulphite sequencing, and as such are widely used to profile DNA methylation. Specifically, missMethyl contains functions to perform SWAN normalisation \cite{swan}, perform differential methylation analysis using RUV \cite{ruv}, differential variability analysis \cite{diffvar} and gene set analysis \cite{missMethyl}. As our lab's research into specialised analyses of these arrays continues we anticipate that the package will be continuously updated with new functions.
+The \Biocpkg{missMethyl} package contains functions to analyse methylation data from Illumina\'s HumanMethylation450 beadchip. These arrays are a cost-effective alternative to whole genome bisulphite sequencing, and as such are widely used to profile DNA methylation. Specifically, missMethyl contains functions to perform SWAN normalisation \cite{swan}, perform differential methylation analysis using RUV \cite{RUV}, differential variability analysis \cite{diffvar} and gene set analysis \cite{missMethyl}. As our lab's research into specialised analyses of these arrays continues we anticipate that the package will be continuously updated with new functions.
 
 Raw data files are in IDAT format, which can be read into R using the \Biocpkg{minfi} package \cite{minfi}. Statistical analyses are usually performed on M-values, and $\beta$ values are used for visualisation, both of which can be extracted from \Rclass{MethylSet} objects, which is a class of object created by \Biocpkg{minfi}. For detecting differentially variable CpGs we recommend that the analysis is performed on M-values. All analyses described here are performed at the CpG site level.
 
@@ -348,7 +348,7 @@ Once a differential methylation or differential variability analysis has been pe
 
 One way to take into account this selection bias is to model the relationship between the number of probes per gene and the probability of being selected. This can be performed by adapting the \Biocpkg{goseq} method of Young et al. \cite{young}. Each gene then has a prior probability associated with it, and a modified version of a hypergeometric test can be performed, testing for over-representation of the selected genes in each gene set. 
 
-The function \Rfunction{gometh} performs gene set testing on GO categories or KEGG pathways. The function \Rfunction{gsameth} is a more generalised gene set testing function which can take as input a list of user specified gene sets. Note that for \Rfunction{gsameth}, the format for the gene ids for each gene in the gene set needs to be Entrez Gene IDs. For example, the entire curated gene set list (C2) from the Broad's Molecular Signatures Database can be specified as input. The R version of these lists can be downloaded from \url{http://bioinf.wehi.edu.au/software/MSigDB/index.html}. Both functions take a vector of significant CpG probe names as input. 
+The function \Rfunction{gometh} performs gene set testing on GO categories or KEGG pathways \cite{missMethyl}. The function \Rfunction{gsameth} is a more generalised gene set testing function which can take as input a list of user specified gene sets. Note that for \Rfunction{gsameth}, the format for the gene ids for each gene in the gene set needs to be Entrez Gene IDs. For example, the entire curated gene set list (C2) from the Broad's Molecular Signatures Database can be specified as input. The R version of these lists can be downloaded from \url{http://bioinf.wehi.edu.au/software/MSigDB/index.html}. Both functions take a vector of significant CpG probe names as input. 
 
 To illustrate how to use \Rfunction{gometh}, consider the results from the differential methylation analysis with ruv. 
 
@@ -444,7 +444,7 @@ toLatex(sessionInfo())
 
 \bibitem{RUV} Maksimovic, J., Gagnon-Bartsch, J.A., Speed, T.P., and Oshlack, A. (2015). Removing unwanted variation in a differential methylation analysis of Illumina HumanMethylation450 array data. \textit{Nucleic acids research}, gkv526.
 
-bibitem{missMethyl} Phipson, B., Maksimovic, J., and Oshlack, A. (2015). missMethyl: an R package for analysing methylation data from Illuminas HumanMethylation450 platform. \textit{Bioinformatics}, btv560.
+\bibitem{missMethyl} Phipson, B., Maksimovic, J., and Oshlack, A. (2015). missMethyl: an R package for analysing methylation data from Illuminas HumanMethylation450 platform. \textit{Bioinformatics}, btv560.
 
 \end{thebibliography}
 
