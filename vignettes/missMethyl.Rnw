@@ -6,6 +6,7 @@
 \documentclass{article}
 
 \usepackage[utf8]{inputenc} 
+\usepackage{hyperref}
 
 <<style-knitr, eval=TRUE, echo=FALSE, results='asis'>>=
 BiocStyle::latex()
@@ -26,7 +27,7 @@ BiocStyle::latex()
 
 \section{Introduction}
 
-The \Biocpkg{missMethyl} package contains functions to analyse methylation data from Illumina\'s HumanMethylation450 beadchip. These arrays are a cost-effective alternative to whole genome bisulphite sequencing, and as such are widely used to profile DNA methylation. Specifically, missMethyl contains functions to perform SWAN normalisation \cite{swan} and differential variability analysis \cite{diffvar}. As our lab's research into specialised analyses of these arrays continues we anticipate that the package will be continuously updated with new functions.
+The \Biocpkg{missMethyl} package contains functions to analyse methylation data from Illumina\'s HumanMethylation450 beadchip. These arrays are a cost-effective alternative to whole genome bisulphite sequencing, and as such are widely used to profile DNA methylation. Specifically, missMethyl contains functions to perform SWAN normalisation \cite{swan}, perform differential methylation analysis using RUV \cite{ruv}, differential variability analysis \cite{diffvar} and gene set analysis \cite{missMethyl}. As our lab's research into specialised analyses of these arrays continues we anticipate that the package will be continuously updated with new functions.
 
 Raw data files are in IDAT format, which can be read into R using the \Biocpkg{minfi} package \cite{minfi}. Statistical analyses are usually performed on M-values, and $\beta$ values are used for visualisation, both of which can be extracted from \Rclass{MethylSet} objects, which is a class of object created by \Biocpkg{minfi}. For detecting differentially variable CpGs we recommend that the analysis is performed on M-values. All analyses described here are performed at the CpG site level.
 
@@ -53,7 +54,7 @@ The data is now an \Rclass{RGChannelSet} object and needs to be normalised and c
 
 \section{Subset-quantile within array normalization (SWAN)}
 
-SWAN (subset-quantile within array normalization) is a within-array normalization method for Illumina 450k BeadChips. Technical differencs have been demonstrated to exist between the Infinium I and Infinium II assays on a single 450K array \cite{bibikova, dedeur}. Using the SWAN method substantially reduces the technical variability between the assay designs whilst maintaining the important biological differences. The SWAN method makes the assumption that the number of CpGs within the 50bp probe sequence reflects the underlying biology of the region being interrogated. Hence, the overall distribution of intensities of probes with the same number of CpGs in the probe body should be the same regardless of assay type. The method then uses a subset quantile normalization approach to adjust the intensities of each array \cite{swan}. 
+SWAN (subset-quantile within array normalization) is a within-array normalization method for Illumina 450k BeadChips. Technical differencs have been demonstrated to exist between the Infinium I and Infinium II assays on a single 450K array \cite{bibikova, dedeur}. Using the SWAN method substantially reduces the technical variability between the assay designs whilst maintaining important biological differences. The SWAN method makes the assumption that the number of CpGs within the 50bp probe sequence reflects the underlying biology of the region being interrogated. Hence, the overall distribution of intensities of probes with the same number of CpGs in the probe body should be the same regardless of assay type. The method then uses a subset quantile normalization approach to adjust the intensities of each array \cite{swan}. 
 
 SWAN can take a \Rclass{MethylSet}, \Rclass{RGChannelSet} or \Rclass{MethyLumiSet} as input. It should be noted that, in order to create the normalization subset, SWAN randomly selects Infinium I and II probes that have one, two and three underlying CpGs; as such, we recommend using \Rcode{set.seed} before \Rfunction{SWAN} to ensure that the normalized intensities will be identical, if the normalization is repeated.
 
@@ -165,11 +166,9 @@ title(cpgs[i],cex.main=1.5)
 
 Like other platforms, 450k array studies are subject to unwanted technical variation such as batch effects and other, often unknown, sources of variation. The adverse effects of unwanted variation have been extensively documented in gene expression array studies and have been shown to be able to both reduce power to detect true differences and to increase the number of false discoveries. As such, when it is apparent that data is significantly affected by unwanted variation, it is advisable to perform an adjustment to mitigate its effects.   
 
-\Biocpkg{missMethyl} provides a \Biocpkg{limma}-like interface to functions from the CRAN \CRANpkg{ruv} package that enables the removal of unwanted variation when performing a differential analysis. All of the \CRANpkg{ruv} methods rely on negative control features to accurately estimate the components of unwanted variation. Negative control features are probes/genes/etc. that are known \textit{a priori} to not truly be associated with the biological factor of interest, but are affected by unwanted variation. For example, in a microarray gene expression study, these could be house-keeping genes or a set of spike-in controls. Negative control features are extensively discussed in Gagnon-Bartsch and Speed (2012) \cite{G-B1} and Gagnon-Bartsch et al. (2013) \cite{G-B2}. Once the unwanted factors are accurately estimated from the data, they are adjusted for in the linear model that describes the differential analysis.  
+\Biocpkg{missMethyl} provides a \Biocpkg{limma}-like interface to functions from the CRAN \CRANpkg{ruv} package that enables the removal of unwanted variation when performing a differential analysis \cite{RUV}. All of the \CRANpkg{ruv} methods rely on negative control features to accurately estimate the components of unwanted variation. Negative control features are probes/genes/etc. that are known \textit{a priori} to not truly be associated with the biological factor of interest, but are affected by unwanted variation. For example, in a microarray gene expression study, these could be house-keeping genes or a set of spike-in controls. Negative control features are extensively discussed in Gagnon-Bartsch and Speed (2012) \cite{G-B1} and Gagnon-Bartsch et al. (2013) \cite{G-B2}. Once the unwanted factors are accurately estimated from the data, they are adjusted for in the linear model that describes the differential analysis.  
 
-If the negative control features are not known \textit{a priori}, they can be identified empirically. This can be done by initially performing a differential methylation analysis without any adjustment using \Biocpkg{limma}, as described in the previous section. For simplicity, we are ignoring the paired nature of the cancer and normal samples in this example.
-
-If the negative control features are not known \textit{a priori}, they can be identified empirically. This can be achieved using a 2-stage approach, \textit{RUVm}, based on \textbf{RUV-inverse}. Stage 1 involves performing a differential methylation analysis with using \textbf{RUV-inverse} and the 613 Illumina negative controls (INCs) as negative control features. This will produce a list of CpGs ranked by p-value according to their level of association with the factor of interest. This list can then be used to identify a set of empirical control probes (ECPs), which will capture more of the unwanted variation than using the INCs alone. ECPs are selected by designating a proportion of the CpGs least associated with the factor of interest as negative control features; this can be done based on either an FDR cut-off or by taking a fixed percentage of probes from the bottom of the ranked list. Stage 2 involves performing a second differential methylation ananlysis on the original data using \textbf{RUV-inverse} and the ECPs. For simplicity, we are ignoring the paired nature of the cancer and normal samples in this example.
+If the negative control features are not known \textit{a priori}, they can be identified empirically. This can be achieved using a 2-stage approach, \textit{RUVm}, based on \textbf{RUV-inverse}. Stage 1 involves performing a differential methylation analysis using \textbf{RUV-inverse} and the 613 Illumina negative controls (INCs) as negative control features. This will produce a list of CpGs ranked by p-value according to their level of association with the factor of interest. This list can then be used to identify a set of empirical control probes (ECPs), which will capture more of the unwanted variation than using the INCs alone. ECPs are selected by designating a proportion of the CpGs least associated with the factor of interest as negative control features; this can be done based on either an FDR cut-off or by taking a fixed percentage of probes from the bottom of the ranked list. Stage 2 involves performing a second differential methylation analysis on the original data using \textbf{RUV-inverse} and the ECPs. For simplicity, we are ignoring the paired nature of the cancer and normal samples in this example.
 
 
 <<diffmeth2>>=
@@ -220,7 +219,9 @@ Note, at present \Rfunction{RUVfit} does not support contrasts, so only one fact
 
 \subsection{Methylation data}
 
-Rather than testing for differences in mean methylation, we may be interested in testing for differences between group variances. For example, it has been hypothesised that highly variable CpGs in cancer are important for tumour progression \cite{hansen}. Hence we may be interested in CpG sites that are consistently methylated in the normal samples, but variably methylated in the cancer samples. In general we recommend at least 10 samples in each group for accurate variance estimation, however for the purpose of this vignette we perform the analysis on 3 vs 3. In this example, we are interested in testing for differential variability in the cancer versus normal group. When we specify the \textit{coef} parameter, which corresponds to the columns of the design matrix to be used for testing differential variability, we specify both the intercept and the fourth column. The ID variable is a nuisance parameter and not used when obtaining the absolute deviations, however it can be included in the linear modelling step. For methylation data, the \Rfunction{varFit} function will take either a matrix of M-values, $\beta$ values or a \Rclass{MethylSet} object as input. If $\beta$ values are supplied, a logit transformation is performed. Note that as a default, \Rfunction{varFit} uses the robust setting in the \Biocpkg{limma} framework, which requires the use of the \CRANpkg{statmod} package.
+Rather than testing for differences in mean methylation, we may be interested in testing for differences between group variances. For example, it has been hypothesised that highly variable CpGs in cancer are important for tumour progression \cite{hansen}. Hence we may be interested in CpG sites that are consistently methylated in the normal samples, but variably methylated in the cancer samples. 
+
+In general we recommend at least 10 samples in each group for accurate variance estimation, however for the purpose of this vignette we perform the analysis on 3 vs 3. In this example, we are interested in testing for differential variability in the cancer versus normal group. Note that when we specify the \textit{coef} parameter, which corresponds to the columns of the design matrix to be used for testing differential variability, we need to specify both the intercept and the fourth column. The ID variable is a nuisance parameter and not used when obtaining the absolute deviations, however it can be included in the linear modelling step. For methylation data, the \Rfunction{varFit} function will take either a matrix of M-values, $\beta$ values or a \Rclass{MethylSet} object as input. If $\beta$ values are supplied, a logit transformation is performed. Note that as a default, \Rfunction{varFit} uses the robust setting in the \Biocpkg{limma} framework, which requires the use of the \CRANpkg{statmod} package.
 
 <<diffvar>>=
 fitvar <- varFit(Mval, design = design, coef = c(1,4))
@@ -345,7 +346,9 @@ title(genesDV[i],cex.main=1.5)
 
 Once a differential methylation or differential variability analysis has been performed, it may be of interest to know which gene pathways are targeted by the significant CpG sites. It is not entirely clear from the literature how best to perform such an analysis, however Geeleher et al. \cite{geeleher} showed there is a severe bias when performing gene ontology analysis with methylation data. This is due to the fact that there are differing numbers of probes per gene on several different array technologies. For the Illumina Infinium HumanMethylation450 array the number of probes per gene ranges from 1 to 1299, with a median of 15 probes per gene. This means that when mapping CpG sites to genes, a gene is more likely to be ``selected'' if there are many CpG sites associated with the gene.
 
-One way to take into account this selection bias is to model the relationship between the number of probes per gene and the probability of being selected. This can be performed by adapting the \Biocpkg{goseq} method of Young et al. \cite{young}. Each gene then has a prior probability associated with it, and a modified version of a hypergeometric test can be performed, testing for over-representation of the selected genes in each GO category. The function \Rfunction{gometh} performs this analysis, taking as input the list of significant CpGs. The \Rfunction{gometh} function can perform enrichment testing on GO categories, or KEGG pathways. 
+One way to take into account this selection bias is to model the relationship between the number of probes per gene and the probability of being selected. This can be performed by adapting the \Biocpkg{goseq} method of Young et al. \cite{young}. Each gene then has a prior probability associated with it, and a modified version of a hypergeometric test can be performed, testing for over-representation of the selected genes in each gene set. 
+
+The function \Rfunction{gometh} performs gene set testing on GO categories or KEGG pathways. The function \Rfunction{gsameth} is a more generalised gene set testing function which can take as input a list of user specified gene sets. Note that for \Rfunction{gsameth}, the format for the gene ids for each gene in the gene set needs to be Entrez Gene IDs. For example, the entire curated gene set list (C2) from the Broad's Molecular Signatures Database can be specified as input. The R version of these lists can be downloaded from \url{http://bioinf.wehi.edu.au/software/MSigDB/index.html}. Both functions take a vector of significant CpG probe names as input. 
 
 To illustrate how to use \Rfunction{gometh}, consider the results from the differential methylation analysis with ruv. 
 
@@ -377,10 +380,17 @@ sigCpGs[1:10]
 
 The \Rfunction{gometh} takes as input a character vector of CpG names, and optionally, a character vector of all CpG sites tested. If the \textit{all.cpg} argument is omitted, all the CpGs on the array are used as background. If the \textit{plot.bias} argument is TRUE, a figure showing the relationship between the probability of being selected and the number of probes per gene will be displayed. For testing of GO terms, the \textit{collection} argument takes the value ``GO", which is the default setting. For KEGG pathway analysis, set \textit{collection} to ``KEGG". The function \Rfunction{topGO} shows the top enriched GO categories. For KEGG testing, use the \Rfunction{topKEGG} function. The \Rpackage{limma} functions \Rfunction{goana} and \Rfunction{kegga} are called by \Rfunction{gometh} for GO and KEGG pathway analysis respectively.
 
+For GO testing on our example dataset:
 <<gometh4>>=
 library(IlluminaHumanMethylation450kanno.ilmn12.hg19)
 gst <- gometh(sig.cpg=sigCpGs, all.cpg=rownames(rfit2), collection="GO")
 topGO(gst)
+@
+
+For KEGG testing on our example dataset:
+<<gometh5>>=
+gst.kegg <- gometh(sig.cpg=sigCpGs, all.cpg=rownames(rfit2), collection="KEGG")
+topGO(gst.kegg)
 @
 
 For a more generalised version of gene set testing in methylation data where the user can specify the gene set to be tested, the \Rfunction{gsameth} function can be used. To display the top 20 pathways, \Rfunction{topGSA} can be called. \Rfunction{gsameth} can take a single gene set, or a list of gene sets. The gene identifiers in the gene set must be Entrez Gene IDs. To demonstrate \Rfunction{gsameth} a toy example is shown below, with gene sets made up of randomly selected genes from the \Rpackage{org.Hs.eg.db} package.
@@ -396,7 +406,7 @@ gsa <- gsameth(sig.cpg=sigCpGs, all.cpg=rownames(rfit2), collection=genesets)
 topGSA(gsa)
 @
 
-Note that if it is of interest to obtain the Entrez Gene IDs that the significant CpGs are mapped to, the \Rfunction{getMappedEntrezIDs} can be called. 
+Note that if it is of interest to obtain the Entrez Gene IDs that the significant CpGs are mapped to, the \Rfunction{getMappedEntrezIDs} can be called.
 
 \newpage
 \section{Session information}
@@ -431,6 +441,10 @@ toLatex(sessionInfo())
 \bibitem{limma} Smyth, G.K. (2005). Limma: linear models for microarray data. In: `Bioinformatics and Computational Biology Solutions using R and Bioconductor'. R. Gentleman, V. Carey, S. Dudoit, R. Irizarry, W. Huber (eds), Springer, New York, pages 397-420.
 
 \bibitem{young} Young, M. D., Wakefield, M. J., Smyth, G. K., and Oshlack, A. (2010). Gene ontology analysis for RNA-seq: accounting for selection bias. \textit{Genome Biology}, 11, R14.
+
+\bibitem{RUV} Maksimovic, J., Gagnon-Bartsch, J.A., Speed, T.P., and Oshlack, A. (2015). Removing unwanted variation in a differential methylation analysis of Illumina HumanMethylation450 array data. \textit{Nucleic acids research}, gkv526.
+
+bibitem{missMethyl} Phipson, B., Maksimovic, J., and Oshlack, A. (2015). missMethyl: an R package for analysing methylation data from Illuminas HumanMethylation450 platform. \textit{Bioinformatics}, btv560.
 
 \end{thebibliography}
 
