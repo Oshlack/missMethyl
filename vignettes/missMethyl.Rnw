@@ -6,7 +6,7 @@
 \documentclass{article}
 
 \usepackage[utf8]{inputenc} 
-\usepackage{hyperref}
+
 
 <<style-knitr, eval=TRUE, echo=FALSE, results='asis'>>=
 BiocStyle::latex()
