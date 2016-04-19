@@ -7,6 +7,7 @@ import(ruv)
 import(stringr)
 import(IlluminaHumanMethylation450kanno.ilmn12.hg19)
 import(org.Hs.eg.db)
+importMethodsFrom(AnnotationDbi, toTable)
 
 export(SWAN, densityByProbeType, varFit, topVar, getLeveneResiduals,
        SWAN.MethyLumiSet, SWAN.RGChannelSet, SWAN.default, varFit.MethylSet,
