@@ -2,6 +2,12 @@
 \title{missMethyl News}
 \encoding{UTF-8}
 
+\section{Version 1.7.3}{\itemize{
+
+\item modified gene set testing functions gometh and gsameth to accommodate EPIC arrays
+
+}}
+
 \section{Version 1.5.1}{\itemize{
 
 \item New gene set testing function gsameth() added, kegg testing functionality added to gometh().

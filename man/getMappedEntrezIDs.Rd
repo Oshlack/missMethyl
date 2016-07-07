@@ -7,7 +7,7 @@ Get mapped Entrez Gene IDs from CpG probe names
 Given a set of CpG probe names and optionally all the CpG sites tested, this function outputs a list containing the mapped Entrez Gene IDs as well as the numbers of probes per gene, and a vector indicating significance. 
 }
 \usage{
-getMappedEntrezIDs(sig.cpg, all.cpg = NULL)
+getMappedEntrezIDs(sig.cpg, all.cpg = NULL, array.type)
 }
 \arguments{
   \item{sig.cpg}{
@@ -16,11 +16,14 @@ getMappedEntrezIDs(sig.cpg, all.cpg = NULL)
   \item{all.cpg}{
       character vector of all CpG sites tested. Defaults to all CpG sites on the array.
   }
+  \item(array.type){
+        the Illumina methylation array used. Options are "450K" or "EPIC". Defaults to "450K".
+  }
 }
 \details{
 This function is used by the gene set testing functions \code{gometh} and \code{gsameth}. It maps the significant CpG probe names to Entrez Gene IDs, as well as all the CpG sites tested. It also calculated the numbers of probes for gene.
 
-Genes associated with each CpG site are obtained from the annotation package \code{IlluminaHumanMethylation450kanno.ilmn12.hg19}. 
+Genes associated with each CpG site are obtained from the annotation package \code{IlluminaHumanMethylation450kanno.ilmn12.hg19} if the array type is "450K". For the EPIC array, the annotation package \code{IlluminaHumanMethylationEPICanno.ilm10b2.hg19} is used.
 }
 \value{
 A list with the following elements

@@ -1,14 +1,18 @@
-gometh <- function(sig.cpg, all.cpg=NULL, collection="GO", plot.bias=FALSE, prior.prob=TRUE)
+gometh <- function(sig.cpg, all.cpg=NULL, collection="GO", array.type = c("450K","EPIC"), plot.bias=FALSE, prior.prob=TRUE)
 # Gene ontology testing or KEGG pathway analysis for 450K methylation arrays based on goseq
 # Takes into account probability of differential methylation based on
 # numbers of probes on array per gene
 # Belinda Phipson
-# 28 January 2015. Last updated 10 February 2016.
+# 28 January 2015. Last updated 7 July 2016.
+# EPIC functionality contributed by Andrew Y.F. Li Yim
 {
     if(!is.vector(sig.cpg))
         stop("Input CpG list is not a character vector")
+    array.type <- match.arg(toupper(array.type),c("450K","EPIC"))
+        
+    
     # Get mapped entrez gene IDs from CpG probe names
-    out <- getMappedEntrezIDs(sig.cpg=sig.cpg,all.cpg=all.cpg)
+    out <- getMappedEntrezIDs(sig.cpg=sig.cpg,all.cpg=all.cpg,array.type=array.type)
     sorted.eg.sig <- out$sig.eg
     eg.universe <- out$universe
     freq_genes <- out$freq
@@ -23,8 +27,7 @@ gometh <- function(sig.cpg, all.cpg=NULL, collection="GO", plot.bias=FALSE, prio
             gst <- goana(sorted.eg.sig,universe=eg.universe,prior.prob=pwf)
         if(collection=="KEGG")
             gst <- kegga(sorted.eg.sig,universe=eg.universe,prior.prob=pwf)
-        #    stop("KEGG with prior probability not available at the moment. Please run gometh with prior.prob=FALSE for KEGG pathway analysis.")
-    }
+        }
     # Perform GO or KEGG testing without correcting for CpG density bias
     else{
         if(collection=="GO")
@@ -62,16 +65,20 @@ gometh <- function(sig.cpg, all.cpg=NULL, collection="GO", plot.bias=FALSE, prio
     prior.prob
 }
 
-.flattenAnn <- function()
-# flatten 450k array annotation
+.flattenAnn <- function(array.type)
+# flatten 450k or EPIC array annotation
 # Belinda Phipson
 # 10 February 2016
+# Updated 7 July 2016
 {
-    ann.450k = getAnnotation(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+    if(array.type=="450K")    
+        anno <- getAnnotation(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+    else
+        anno <- getAnnotation(IlluminaHumanMethylationEPICanno.ilm10b2.hg19)
     
     # get rid of the non-CpG sites
-    strlen<-str_length(rownames(ann.450k))
-    ann.keep<-ann.450k[strlen==10,]
+    strlen<-str_length(rownames(anno))
+    ann.keep<-anno[strlen==10,]
     
     # get rid of CpGs that are not annotated
     missing<-ann.keep$UCSC_RefGene_Name==""
@@ -104,17 +111,18 @@ gometh <- function(sig.cpg, all.cpg=NULL, collection="GO", plot.bias=FALSE, prio
     flat.u
 }
 
-getMappedEntrezIDs <- function(sig.cpg,all.cpg=NULL)
+getMappedEntrezIDs <- function(sig.cpg,all.cpg=NULL,array.type)
 # From a list of CpG sites, obtain the Entrez Gene IDs that are used for testing pathway enrichment
 # Belinda Phipson
 # 10 February 2016
+# Updated 7 July 2016
 {
     # check input
     sig.cpg <- as.character(sig.cpg)
     sig.cpg <- sig.cpg[!is.na(sig.cpg)]
     
     # Get annotaton in appropriate format
-    flat.u <- .flattenAnn()
+    flat.u <- .flattenAnn(array.type)
     
     if(is.null(all.cpg))
         all.cpg <- unique(flat.u$cpg)

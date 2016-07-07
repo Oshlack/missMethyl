@@ -1,13 +1,13 @@
 \name{gometh}
 \alias{gometh}
 \title{
-Gene ontology testing for 450K methylation data
+Gene ontology testing for Ilumina methylation array data
 }
 \description{
-Tests gene ontology enrichment for significant CpGs from Illumina's Infinium HumanMethylation450 array, taking into account the differing number of probes per gene present on the array. 
+Tests gene ontology enrichment for significant CpGs from Illumina's Infinium HumanMethylation450 or MethylationEPIC array, taking into account the differing number of probes per gene present on the array. 
 }
 \usage{
-gometh(sig.cpg, all.cpg = NULL, collection = "GO", plot.bias = FALSE, prior.prob = TRUE)
+gometh(sig.cpg, all.cpg = NULL, collection = "GO", array.type = c("450K","EPIC"), plot.bias = FALSE, prior.prob = TRUE)
 }
 \arguments{
   \item{sig.cpg}{
@@ -19,6 +19,9 @@ gometh(sig.cpg, all.cpg = NULL, collection = "GO", plot.bias = FALSE, prior.prob
   \item{collection}{
       the collection of pathways to test. Options are "GO" and "KEGG". Defaults to "GO".
   }
+  \item(array.type){
+      the Illumina methylation array used. Options are "450K" or "EPIC". Defaults to "450K".
+  }
   \item{plot.bias}{
       logical, if true a plot showing the bias due to the differing numbers of probes per gene will be displayed
   }
@@ -27,15 +30,15 @@ gometh(sig.cpg, all.cpg = NULL, collection = "GO", plot.bias = FALSE, prior.prob
   }
 }
 \details{
-This function takes a character vector of significant CpG sites, maps the CpG sites to Entrez Gene IDs, and tests for GO term or KEGG pathway enrichment using a hypergeometric test, taking into account the number of CpG sites per gene on the 450K array. 
+This function takes a character vector of significant CpG sites, maps the CpG sites to Entrez Gene IDs, and tests for GO term or KEGG pathway enrichment using a hypergeometric test, taking into account the number of CpG sites per gene on the 450K/EPIC array. 
 
-Geeleher et al. (2013) showed that a severe bias exists when performing gene set analysis for genome-wide methylation data that occurs due to the differing numbers of CpG sites profiled for each gene. \code{gometh} is based on the \code{goseq} method (Young et al., 2010) and calls the \code{goana} function from the \code{limma} package (Ritchie et al. 2015). If \code{prior.prob} is set to FALSE, then prior probabilities are not used and it is assumed that each gene is equally likely to have a significant CpG site associated with it.
+Geeleher et al. (2013) showed that a severe bias exists when performing gene set analysis for genome-wide methylation data that occurs due to the differing numbers of CpG sites profiled for each gene. \code{gometh} is based on the \code{goseq} method (Young et al., 2010) and calls the \code{goana} function for GO testing, or the \code{kegga} function for KEGG testing, both of which are from the \code{limma} package (Ritchie et al. 2015). If \code{prior.prob} is set to FALSE, then prior probabilities are not used and it is assumed that each gene is equally likely to have a significant CpG site associated with it.
 
-Genes associated with each CpG site are obtained from the annotation package \code{IlluminaHumanMethylation450kanno.ilmn12.hg19}. In order to get a list which contains the mapped Entrez gene IDS, please use the \code{getMappedEntrezIDs} function.
+Genes associated with each CpG site are obtained from the annotation package \code{IlluminaHumanMethylation450kanno.ilmn12.hg19} if the array type is "450K". For the EPIC array, the annotation package \code{IlluminaHumanMethylationEPICanno.ilm10b2.hg19} is used. In order to get a list which contains the mapped Entrez gene IDS, please use the \code{getMappedEntrezIDs} function.
 
 \code{gometh} tests all GO or KEGG terms, and false discovery rates are calculated using the method of Benjamini and Hochberg (1995). 
 
-The \code{limma} functions \code{topGO} and \code{topKEGG} can be used to display the top 20 most enriched pathways.
+The \code{limma} functions \code{topGO} and \code{topKEGG} can be used to display the top 20 most enriched pathways. 
 
 For more generalised gene set testing where the user can specify the gene set/s of interest to be tested, please use the \code{gsameth} function.
 }
@@ -64,6 +67,8 @@ A data frame with a row for each GO or KEGG term and the following columns:
   }
 }
 \references{
+Phipson, B., Maksimovic, J., and Oshlack, A. (2016). missMethyl: an R package for analysing methylation data from Illuminas HumanMethylation450 platform. \emph{Bioinformatics}, \bold{15};32(2), 286--8.
+
 Geeleher, P., Hartnett, L., Egan, L. J., Golden, A., Ali, R. A. R., and Seoighe, C. (2013). Gene-set analysis is severely biased when applied to genome-wide methylation data. \emph{Bioinformatics}, \bold{29}(15), 1851--1857.
 
 Young, M. D., Wakefield, M. J., Smyth, G. K., and Oshlack, A. (2010). Gene ontology analysis for RNA-seq: accounting for selection bias. \emph{Genome Biology}, 11, R14.
@@ -73,7 +78,7 @@ Ritchie, M. E., Phipson, B., Wu, D., Hu, Y., Law, C. W., Shi, W., and Smyth, G. 
 Benjamini, Y., and Hochberg, Y. (1995). Controlling the false discovery rate: a practical and powerful approach to multiple testing. \emph{Journal of the Royal Statistical Society Series}, B, \bold{57}, 289-300.
 }
 \seealso{
-\code{\link{goana},\link{gsameth}}
+\code{\link{goana},\link{kegga},\link{gsameth}}
 }
 \author{
 Belinda Phipson

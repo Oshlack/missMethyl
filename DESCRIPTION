@@ -1,15 +1,16 @@
 Package: missMethyl
 Type: Package
 Title: Analysis of methylation array data
-Version: 1.7.2
-Date: 2016-02-16
+Version: 1.7.3
+Date: 2016-06-24
 Author: Belinda Phipson and Jovana Maksimovic
 Maintainer: Belinda Phipson <belinda.phipson@mcri.edu.au>, Jovana
         Maksimovic <jovana.maksimovic@mcri.edu.au>
 Depends: R (>= 2.3.0)
 Imports: limma, minfi, methylumi, IlluminaHumanMethylation450kmanifest,
         statmod, ruv, stringr, IlluminaHumanMethylation450kanno.ilmn12.hg19,
-        org.Hs.eg.db, AnnotationDbi, BiasedUrn
+        org.Hs.eg.db, AnnotationDbi, BiasedUrn, GO.db,
+        IlluminaHumanMethylationEPICanno.ilm10b2.hg19
 VignetteBuilder: knitr
 Suggests: minfiData, BiocStyle, knitr, edgeR, tweeDEseqCountData
 Description: Normalisation and testing for differential variability and

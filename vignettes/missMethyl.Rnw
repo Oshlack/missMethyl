@@ -27,7 +27,7 @@ BiocStyle::latex()
 
 \section{Introduction}
 
-The \Biocpkg{missMethyl} package contains functions to analyse methylation data from Illumina\'s HumanMethylation450 beadchip. These arrays are a cost-effective alternative to whole genome bisulphite sequencing, and as such are widely used to profile DNA methylation. Specifically, missMethyl contains functions to perform SWAN normalisation \cite{swan}, perform differential methylation analysis using RUV \cite{RUV}, differential variability analysis \cite{diffvar} and gene set analysis \cite{missMethyl}. As our lab's research into specialised analyses of these arrays continues we anticipate that the package will be continuously updated with new functions.
+The \Biocpkg{missMethyl} package contains functions to analyse methylation data from Illumina\'s HumanMethylation450 and MethylationEPIC beadchip. These arrays are a cost-effective alternative to whole genome bisulphite sequencing, and as such are widely used to profile DNA methylation. Specifically, missMethyl contains functions to perform SWAN normalisation \cite{swan}, perform differential methylation analysis using RUV \cite{RUV}, differential variability analysis \cite{diffvar} and gene set analysis \cite{missMethyl}. As our lab's research into specialised analyses of these arrays continues we anticipate that the package will be continuously updated with new functions.
 
 Raw data files are in IDAT format, which can be read into R using the \Biocpkg{minfi} package \cite{minfi}. Statistical analyses are usually performed on M-values, and $\beta$ values are used for visualisation, both of which can be extracted from \Rclass{MethylSet} objects, which is a class of object created by \Biocpkg{minfi}. For detecting differentially variable CpGs we recommend that the analysis is performed on M-values. All analyses described here are performed at the CpG site level.
 
@@ -44,10 +44,10 @@ library(minfi)
 <<reading-data>>=
 library(minfiData)
 baseDir <- system.file("extdata", package = "minfiData")
-targets <- read.450k.sheet(baseDir)
+targets <- read.metharray.sheet(baseDir)
 targets[,1:9]
 targets[,10:12]
-rgSet <- read.450k.exp(targets = targets)
+rgSet <- read.metharray.exp(targets = targets)
 @
 
 The data is now an \Rclass{RGChannelSet} object and needs to be normalised and converted to a \Rclass{MethylSet} object.  
@@ -344,7 +344,7 @@ title(genesDV[i],cex.main=1.5)
 
 \section{Gene ontology analysis}
 
-Once a differential methylation or differential variability analysis has been performed, it may be of interest to know which gene pathways are targeted by the significant CpG sites. It is not entirely clear from the literature how best to perform such an analysis, however Geeleher et al. \cite{geeleher} showed there is a severe bias when performing gene ontology analysis with methylation data. This is due to the fact that there are differing numbers of probes per gene on several different array technologies. For the Illumina Infinium HumanMethylation450 array the number of probes per gene ranges from 1 to 1299, with a median of 15 probes per gene. This means that when mapping CpG sites to genes, a gene is more likely to be ``selected'' if there are many CpG sites associated with the gene.
+Once a differential methylation or differential variability analysis has been performed, it may be of interest to know which gene pathways are targeted by the significant CpG sites. It is not entirely clear from the literature how best to perform such an analysis, however Geeleher et al. \cite{geeleher} showed there is a severe bias when performing gene ontology analysis with methylation data. This is due to the fact that there are differing numbers of probes per gene on several different array technologies. For the Illumina Infinium HumanMethylation450 array the number of probes per gene ranges from 1 to 1299, with a median of 15 probes per gene. For the EPIC array, the range is 1 to 1487, with a median of 20 probes per gene. This means that when mapping CpG sites to genes, a gene is more likely to be ``selected'' if there are many CpG sites associated with the gene.
 
 One way to take into account this selection bias is to model the relationship between the number of probes per gene and the probability of being selected. This can be performed by adapting the \Biocpkg{goseq} method of Young et al. \cite{young}. Each gene then has a prior probability associated with it, and a modified version of a hypergeometric test can be performed, testing for over-representation of the selected genes in each gene set. 
 
@@ -378,7 +378,11 @@ sigCpGs <- rownames(topCpGs)
 sigCpGs[1:10]
 @
 
-The \Rfunction{gometh} takes as input a character vector of CpG names, and optionally, a character vector of all CpG sites tested. If the \textit{all.cpg} argument is omitted, all the CpGs on the array are used as background. If the \textit{plot.bias} argument is TRUE, a figure showing the relationship between the probability of being selected and the number of probes per gene will be displayed. For testing of GO terms, the \textit{collection} argument takes the value ``GO", which is the default setting. For KEGG pathway analysis, set \textit{collection} to ``KEGG". The function \Rfunction{topGO} shows the top enriched GO categories. For KEGG testing, use the \Rfunction{topKEGG} function. The \Rpackage{limma} functions \Rfunction{goana} and \Rfunction{kegga} are called by \Rfunction{gometh} for GO and KEGG pathway analysis respectively.
+The \Rfunction{gometh} takes as input a character vector of CpG names, and optionally, a character vector of all CpG sites tested. If the \textit{all.cpg} argument is omitted, all the CpGs on the array are used as background. To change the array type, the \textit{array.type} argument can be specified as either ``450K" or ``EPIC". The default is ``450K". 
+
+If the \textit{plot.bias} argument is TRUE, a figure showing the relationship between the probability of being selected and the number of probes per gene will be displayed. 
+
+For testing of GO terms, the \textit{collection} argument takes the value ``GO", which is the default setting. For KEGG pathway analysis, set \textit{collection} to ``KEGG". The function \Rfunction{topGO} shows the top enriched GO categories. For KEGG testing, use the \Rfunction{topKEGG} function. The \Rpackage{limma} functions \Rfunction{goana} and \Rfunction{kegga} are called by \Rfunction{gometh} for GO and KEGG pathway analysis respectively.
 
 For GO testing on our example dataset:
 <<gometh4>>=

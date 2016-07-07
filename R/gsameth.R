@@ -1,16 +1,19 @@
-gsameth <- function(sig.cpg, all.cpg=NULL, collection, plot.bias=FALSE, prior.prob=TRUE)
+gsameth <- function(sig.cpg, all.cpg=NULL, collection, array.type = c("450K","EPIC"), plot.bias=FALSE, prior.prob=TRUE)
 # Generalised version of gometh with user-specified gene sets 
 # Gene sets collections must be Entrez Gene ID
 # Can take into account probability of differential methylation 
 # based on numbers of probes on array per gene.
 # Belinda Phipson
 # 10 February 2016
+# Updated 7 July 2016
 {
     
     if(!is.vector(sig.cpg))
         stop("Input CpG list is not a character vector")
+    array.type <- match.arg(toupper(array.type),c("450K","EPIC"))
+     
     # Get mapped entrez gene IDs from CpG probe names
-    out <- getMappedEntrezIDs(sig.cpg=sig.cpg,all.cpg=all.cpg)
+    out <- getMappedEntrezIDs(sig.cpg=sig.cpg,all.cpg=all.cpg,array.type=array.type)
     sorted.eg.sig <- out$sig.eg
     eg.universe <- out$universe
     freq_genes <- out$freq
@@ -22,6 +25,9 @@ gsameth <- function(sig.cpg, all.cpg=NULL, collection, plot.bias=FALSE, prior.pr
     collection <- lapply(collection, as.character)
     # Make sure gene set collections don't have any NAs
     collection <- lapply(collection, function(x) x[!is.na(x)])
+    # Make sure only collections with geneids present in universe are included
+    inUniv <- lapply(collection, function(x) sum(eg.universe %in% x))
+    collection <- collection[inUniv!=0]
 
     # Estimate prior probabilities
     if(prior.prob){
@@ -45,13 +51,13 @@ gsameth <- function(sig.cpg, all.cpg=NULL, collection, plot.bias=FALSE, prior.pr
             pw.red <- sum(pwf[InSet])/results[i,"N"]
             pw.white <- sum(pwf[!InSet])/(Nuniverse-results[i,"N"])
             odds <- pw.red/pw.white
-            results[i,"P.DE"] <- BiasedUrn::pWNCHypergeo(results[i,"DE"],results[i,"N"],Nuniverse-results[i,"N"],m,odds,lower.tail=FALSE)
+            results[i,"P.DE"] <- BiasedUrn::pWNCHypergeo(results[i,"DE"],results[i,"N"],Nuniverse-results[i,"N"],m,odds,lower.tail=FALSE,precision=1E-32) 
         }
     }
     # Hypergeometric test without prior probabilities
     else{
         for(i in 1:length(collection)){
-            results[i,"P.DE"] <- phyper(q=results[i,"DE"],m=m,n=Nuniverse-m,k=results[i,"N"],lower.tail=FALSE)    
+            results[i,"P.DE"] <- phyper(q=results[i,"DE"]-0.5,m=m,n=Nuniverse-m,k=results[i,"N"],lower.tail=FALSE)    
         }
     }
     results[,"FDR"] <- p.adjust(results[,"P.DE"],method="BH")
