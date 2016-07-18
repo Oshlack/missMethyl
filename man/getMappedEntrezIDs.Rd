@@ -16,8 +16,8 @@ getMappedEntrezIDs(sig.cpg, all.cpg = NULL, array.type)
   \item{all.cpg}{
       character vector of all CpG sites tested. Defaults to all CpG sites on the array.
   }
-  \item(array.type){
-        the Illumina methylation array used. Options are "450K" or "EPIC". Defaults to "450K".
+  \item{array.type}{
+        the Illumina methylation array used. Options are "450K" or "EPIC".
   }
 }
 \details{
@@ -58,7 +58,7 @@ sigcpgs <- sample(rownames(ann),1000,replace=FALSE)
 # All CpG sites tested
 allcpgs <- rownames(ann)
 
-mappedEz <- getMappedEntrezIDs(sigcpgs,allcpgs)
+mappedEz <- getMappedEntrezIDs(sigcpgs,allcpgs,array.type="450K")
 mappedEz$sig.eg[1:10]
 mappedEz$universe[1:10]
 mappedEz$freq[1:10]

@@ -7,7 +7,7 @@ Gene ontology testing for Ilumina methylation array data
 Tests gene ontology enrichment for significant CpGs from Illumina's Infinium HumanMethylation450 or MethylationEPIC array, taking into account the differing number of probes per gene present on the array. 
 }
 \usage{
-gometh(sig.cpg, all.cpg = NULL, collection = "GO", array.type = c("450K","EPIC"), plot.bias = FALSE, prior.prob = TRUE)
+gometh(sig.cpg, all.cpg = NULL, collection = c("GO","KEGG"), array.type = c("450K","EPIC"), plot.bias = FALSE, prior.prob = TRUE)
 }
 \arguments{
   \item{sig.cpg}{
@@ -19,7 +19,7 @@ gometh(sig.cpg, all.cpg = NULL, collection = "GO", array.type = c("450K","EPIC")
   \item{collection}{
       the collection of pathways to test. Options are "GO" and "KEGG". Defaults to "GO".
   }
-  \item(array.type){
+  \item{array.type}{
       the Illumina methylation array used. Options are "450K" or "EPIC". Defaults to "450K".
   }
   \item{plot.bias}{

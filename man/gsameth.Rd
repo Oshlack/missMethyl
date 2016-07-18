@@ -19,7 +19,7 @@ gsameth(sig.cpg, all.cpg = NULL, collection, array.type=c("450K","EPIC"),plot.bi
   \item{collection}{
       a list of user specified gene sets to test. Can also be a single character vector gene set. Gene identifiers must be Entrez Gene IDs.
   }  
-   \item(array.type){
+   \item{array.type}{
         the Illumina methylation array used. Options are "450K" or "EPIC". Defaults to "450K".
   }
   \item{plot.bias}{

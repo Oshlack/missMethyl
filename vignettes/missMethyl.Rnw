@@ -391,12 +391,6 @@ gst <- gometh(sig.cpg=sigCpGs, all.cpg=rownames(rfit2), collection="GO")
 topGO(gst)
 @
 
-For KEGG testing on our example dataset:
-<<gometh5>>=
-gst.kegg <- gometh(sig.cpg=sigCpGs, all.cpg=rownames(rfit2), collection="KEGG")
-topGO(gst.kegg)
-@
-
 For a more generalised version of gene set testing in methylation data where the user can specify the gene set to be tested, the \Rfunction{gsameth} function can be used. To display the top 20 pathways, \Rfunction{topGSA} can be called. \Rfunction{gsameth} can take a single gene set, or a list of gene sets. The gene identifiers in the gene set must be Entrez Gene IDs. To demonstrate \Rfunction{gsameth} a toy example is shown below, with gene sets made up of randomly selected genes from the \Rpackage{org.Hs.eg.db} package.
 
 <<gsameth>>=

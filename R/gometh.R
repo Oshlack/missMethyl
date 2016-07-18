@@ -1,4 +1,4 @@
-gometh <- function(sig.cpg, all.cpg=NULL, collection="GO", array.type = c("450K","EPIC"), plot.bias=FALSE, prior.prob=TRUE)
+gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"), array.type = c("450K","EPIC"), plot.bias=FALSE, prior.prob=TRUE)
 # Gene ontology testing or KEGG pathway analysis for 450K methylation arrays based on goseq
 # Takes into account probability of differential methylation based on
 # numbers of probes on array per gene
@@ -9,7 +9,7 @@ gometh <- function(sig.cpg, all.cpg=NULL, collection="GO", array.type = c("450K"
     if(!is.vector(sig.cpg))
         stop("Input CpG list is not a character vector")
     array.type <- match.arg(toupper(array.type),c("450K","EPIC"))
-        
+    collection <- match.arg(toupper(collection),c("GO","KEGG"))    
     
     # Get mapped entrez gene IDs from CpG probe names
     out <- getMappedEntrezIDs(sig.cpg=sig.cpg,all.cpg=all.cpg,array.type=array.type)

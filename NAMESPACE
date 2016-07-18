@@ -7,6 +7,9 @@ import(ruv)
 import(stringr)
 import(IlluminaHumanMethylation450kanno.ilmn12.hg19)
 import(org.Hs.eg.db)
+import(BiasedUrn)
+import(GO.db)
+import(IlluminaHumanMethylationEPICanno.ilm10b2.hg19)
 importMethodsFrom(AnnotationDbi, toTable)
 
 export(SWAN, densityByProbeType, varFit, topVar, getLeveneResiduals,
