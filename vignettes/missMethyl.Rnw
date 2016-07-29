@@ -60,8 +60,11 @@ SWAN can take a \Rclass{MethylSet}, \Rclass{RGChannelSet} or \Rclass{MethyLumiSe
 
 The technical differences between Infinium I and II assay designs can result in aberrant beta value distributions (Figure \ref{fig:swan}, panel ``Raw''). Using SWAN corrects for the technical differences between the Infinium I and II assay designs and produces a smoother overall $\beta$ value distribution (Figure \ref{fig:swan}, panel ``SWAN'').
 
-<<swan>>=
+<<ppraw>>=
 mSet <- preprocessRaw(rgSet)
+@
+
+<<swan>>=
 mSetSw <- SWAN(mSet,verbose=TRUE)
 @
 
