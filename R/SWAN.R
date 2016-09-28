@@ -27,10 +27,11 @@ SWAN.default <- function(data, verbose = FALSE){
     if(!is(data, "MethylSet")) stop("'data' should be a 'MethylSet'")
   
     cat("[SWAN] Preparing normalization subset\n")
-    rgSet <- new("RGChannelSet", annotation = "IlluminaHumanMethylation450k")
-    CpG.counts <- rbind(data.frame(getProbeInfo(rgSet, type = "I")[, c("Name", "nCpG")], Type="I"),
-                        data.frame(getProbeInfo(rgSet, type = "II")[, c("Name", "nCpG")], Type="II"))
-    inBoth <- intersect(getManifestInfo(rgSet,type="locusNames"), featureNames(data))
+    CpG.counts <- rbind(data.frame(getProbeInfo(IlluminaHumanMethylation450kmanifest, type = "I")[, c("Name", "nCpG")], Type="I"),
+                        data.frame(getProbeInfo(IlluminaHumanMethylation450kmanifest, type = "II")[, c("Name", "nCpG")], Type="II"))
+    
+    inBoth <- intersect(getManifestInfo(IlluminaHumanMethylation450kmanifest,type="locusNames"), 
+                        featureNames(data))
     CpG.counts <- CpG.counts[CpG.counts$Name %in% inBoth,]
                           
     subset <- min(table(CpG.counts$nCpG[CpG.counts$Type == "I" & CpG.counts$nCpG %in% 1:3]),

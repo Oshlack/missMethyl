@@ -36,9 +36,8 @@ densityByProbeType <- function(data, legendPos = "top", colors = c("black", "red
         } 
     }
     
-    rgSet <- new("RGChannelSet", annotation = "IlluminaHumanMethylation450k")
-    probeTypes <- rbind(data.frame(getProbeInfo(rgSet, type = "I")[, c("Name", "nCpG")], Type="I"),
-                        data.frame(getProbeInfo(rgSet, type = "II")[, c("Name", "nCpG")], Type="II"))
+    probeTypes <- rbind(data.frame(getProbeInfo(IlluminaHumanMethylation450kmanifest, type = "I")[, c("Name", "nCpG")], Type="I"),
+                        data.frame(getProbeInfo(IlluminaHumanMethylation450kmanifest, type = "II")[, c("Name", "nCpG")], Type="II"))
     
     ymax <- max(sapply(1:ncol(betas), function(x) max(density(betas[,x],na.rm=TRUE)$y)))
     betas <- matrix(betas[!is.na(betas),],ncol=1,dimnames=list(rownames(betas)[!is.na(betas)],colnames(betas)))
