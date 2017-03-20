@@ -7,7 +7,7 @@ SWAN.MethyLumiSet <- function(data, verbose = FALSE){
     M <- methylated(data)
     U <- unmethylated(data)
     
-    mSet <- new("MethylSet", Meth = M, Unmeth = U, phenoData = phenoData(data),
+    mSet <- MethylSet(Meth = M, Unmeth = U, colData = DataFrame(phenoData(data)@data),
                  annotation = annotation(data))
     mSet@preprocessMethod <- c(rg.norm = "Raw (no normalization or bg correction)",
                                 minfi = as.character(packageVersion("minfi")), 
@@ -58,7 +58,7 @@ SWAN.default <- function(data, verbose = FALSE){
         .normalizeTypes(unmethData[CpG.counts$Name[CpG.counts$Type=="I"], i],
                         unmethData[CpG.counts$Name[CpG.counts$Type=="II"], i], xNormSet)})
 
-    normSet <- new("MethylSet", Meth = normMethData, Unmeth = normUnmethData, phenoData = phenoData(data),
+    normSet <- MethylSet(Meth = normMethData, Unmeth = normUnmethData, colData = colData(data),
                   annotation = annotation(data))
  
     featureNames(normSet) <- featureNames(data)

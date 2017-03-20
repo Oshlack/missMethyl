@@ -1,8 +1,8 @@
 ---
 author: "Belinda Phipson and Jovana Maksimovic"
 title: "missMethyl: Analysing Illumina HumanMethylation BeadChip Data"
-date: "`r doc_date()`"
-package: "`r pkg_ver('BiocStyle')`"
+date: "`r BiocStyle::doc_date()`"
+package: "`r BiocStyle::pkg_ver('BiocStyle')`"
 vignette: >
   %\VignetteIndexEntry{missMethyl: Analysing Illumina HumanMethylation BeadChip Data}
   %\VignetteEngine{knitr::rmarkdown}
@@ -18,11 +18,11 @@ bibliography: bibliography.bib
 
 # Introduction
 
-The `r Biocpkg("missMethyl")` package contains functions to analyse methylation 
+The `r BiocStyle::Biocpkg("missMethyl")` package contains functions to analyse methylation 
 data from Illumina's HumanMethylation450 and MethylationEPIC beadchip. 
 These arrays are a cost-effective alternative to whole genome bisulphite 
 sequencing, and as such are widely used to profile DNA methylation. 
-Specifically, `r Biocpkg("missMethyl")` contains functions to perform SWAN 
+Specifically, `r BiocStyle::Biocpkg("missMethyl")` contains functions to perform SWAN 
 normalisation [@Maksimovic2012],
 perform differential methylation analysis using **RUVm** [@Maksimovic2015],
 differential variability analysis [@Phipson2014] and gene set analysis
@@ -31,24 +31,24 @@ these arrays continues we anticipate that the package will be
 continuously updated with new functions.
 
 Raw data files are in IDAT format, which can be read into R using the
-`r Biocpkg("minfi")` package [@Aryee2014]. Statistical analyses are usually 
+`r BiocStyle::Biocpkg("minfi")` package [@Aryee2014]. Statistical analyses are usually 
 performed on M-values, and $\beta$ values are used for visualisation, 
 both of which can be extracted from objects, which is a class of object created 
-by `r Biocpkg("minfi")`. For detecting differentially variable CpGs we recommend that the
+by `r BiocStyle::Biocpkg("minfi")`. For detecting differentially variable CpGs we recommend that the
 analysis is performed on M-values. All analyses described here are
 performed at the CpG site level.
 
 # Reading data into R
 
-We will use the data in the `r Biocpkg("minfiData")` package to demonstrate the 
-functions in `r Biocpkg("missMethyl")`.
+We will use the data in the `r BiocStyle::Biocpkg("minfiData")` package to demonstrate the 
+functions in `r BiocStyle::Biocpkg("missMethyl")`.
 The example dataset has 6 samples across two slides. The sample
 information is in the targets file. An essential column in the targets
 file is the `Basename` column which tells where the idat files to be
 read in are located. The R commands to read in the data are taken from
-the `r Biocpkg("minfi")` User's Guide. For additional details on how to read 
+the `r BiocStyle::Biocpkg("minfi")` User's Guide. For additional details on how to read 
 the IDAT files into R, as well as information regarding quality control please 
-refer to the `r Biocpkg("minfi")` User's Guide.
+refer to the `r BiocStyle::Biocpkg("minfi")` User's Guide.
 
 ```{r load-libs, message=FALSE}
 library(missMethyl)
@@ -154,7 +154,7 @@ this case, cancer and normal.
 
 # Testing for differential methylation using 
 
-To test for differential methylation we use the `r Biocpkg("limma")` 
+To test for differential methylation we use the `r BiocStyle::Biocpkg("limma")` 
 package [@Smyth2005], which employs an empirical Bayes framework based on 
 Guassian model theory. First we need to set up the design matrix. 
 There are a number of
@@ -163,11 +163,11 @@ file. There are a number of variables, with the `status` column indicating
 **cancer/normal** samples. From the `person` column of the targets file, we
 see that the **cancer/normal** samples are matched, with 3 individuals each
 contributing both a **cancer** and **normal** sample. Since the 
-`r Biocpkg("limma")` model framework can handle any experimental design which 
+`r BiocStyle::Biocpkg("limma")` model framework can handle any experimental design which 
 can be summarised by
 a design matrix, we can take into account the paired nature of the data
 in the analysis. For more complicated experimental designs, please refer
-to the `r Biocpkg("limma")` User's Guide.
+to the `r BiocStyle::Biocpkg("limma")` User's Guide.
 
 ```{r design}
 group <- factor(targets$status,levels=c("normal","cancer"))
@@ -177,7 +177,7 @@ design
 ```
 
 Now we can test for differential methylation using the `lmFit` and `eBayes` 
-functions from `r Biocpkg("limma")`. As input data we use the matrix of 
+functions from `r BiocStyle::Biocpkg("limma")`. As input data we use the matrix of 
 M-values.
 
 ```{r diffmeth}
@@ -186,7 +186,7 @@ fit.reduced <- eBayes(fit.reduced)
 ```
 
 The numbers of hyper-methylated (1) and hypo-methylated (-1) can be
-displayed using the `decideTests` function in `r Biocpkg("limma")` and the top 
+displayed using the `decideTests` function in `r BiocStyle::Biocpkg("limma")` and the top 
 10 differentially methylated CpGs for *cancer* versus *normal* extracted using 
 `topTable`.
 
@@ -223,8 +223,8 @@ and to increase the number of false discoveries. As such, when it is
 apparent that data is significantly affected by unwanted variation, it
 is advisable to perform an adjustment to mitigate its effects.
 
-`r Biocpkg("missMethyl")` provides a `r Biocpkg("limma")`-like interface to 
-functions from the CRAN package `r CRANpkg("ruv")` that
+`r BiocStyle::Biocpkg("missMethyl")` provides a `r BiocStyle::Biocpkg("limma")`-like interface to 
+functions from the CRAN package `r BiocStyle::CRANpkg("ruv")` that
 enables the removal of unwanted variation when performing a differential
 analysis [@Maksimovic2015]. All of the methods rely on negative control features
 to accurately estimate the components of unwanted variation. Negative
@@ -329,8 +329,8 @@ obtaining the absolute deviations, however it can be included in the
 linear modelling step. For methylation data, the function will take
 either a matrix of M-values, $\beta$ values or a object as input. If
 $\beta$ values are supplied, a logit transformation is performed. Note
-that as a default, `varFit` uses the robust setting in the `r Biocpkg("limma")` 
-framework, which requires the use of the `r CRANpkg("statmod")` package.
+that as a default, `varFit` uses the robust setting in the `r BiocStyle::Biocpkg("limma")` 
+framework, which requires the use of the `r BiocStyle::CRANpkg("statmod")` package.
 
 ```{r diffvar}
 fitvar <- varFit(Mval, design = design, coef = c(1,4))
@@ -390,11 +390,11 @@ we apply a `voom` transformation [@Law2014] to obtain observation weights, which
 are then used in the linear modelling step. For RNA-Seq data, the `varFit`
 function will take a `DGElist` object as input.
 
-To demonstrate this, we use data from the `r Biocpkg("tweeDEseqCountData")` 
+To demonstrate this, we use data from the `r BiocStyle::Biocpkg("tweeDEseqCountData")` 
 package. This data is part of the International HapMap project, consisting of 
 RNA-Seq profiles from 69 unrelated Nigerian individuals [@Pickrell2010]. The only 
 covariate is gender, so we can look at differentially variable expression between
-males and females. We follow the code from the `r Biocpkg("limma")` vignette to 
+males and females. We follow the code from the `r BiocStyle::Biocpkg("limma")` vignette to 
 read in and process the data before testing for differential variability.
 
 First we load up the data and extract the relevant information.
@@ -415,7 +415,7 @@ rm(annotEnsembl63)
 
 We now have the counts, gender of each sample and annotation (gene
 symbol and chromosome) for each Ensemble gene. We can form a `DGElist` object
-using the `r Biocpkg("edgeR")` package.
+using the `r BiocStyle::Biocpkg("edgeR")` package.
 
 ```{r dgelist}
 library(edgeR)
@@ -485,7 +485,7 @@ sites associated with the gene.
 One way to take into account this selection bias is to model the
 relationship between the number of probes per gene and the probability
 of being selected. This can be performed by adapting the 
-`r Biocpkg("goseq")` method of Young et al. [@Young2010]. Each gene then has a 
+`r BiocStyle::Biocpkg("goseq")` method of Young et al. [@Young2010]. Each gene then has a 
 prior probability associated
 with it, and a modified version of a hypergeometric test can be
 performed, testing for over-representation of the selected genes in each
@@ -549,7 +549,7 @@ For testing of GO terms, the `collection` argument takes the value
 "GO", which is the default setting. For KEGG pathway analysis, set
 `collection` to "KEGG". The function `topGO` shows the top enriched GO
 categories. For KEGG testing, use the `topKEGG` function. The functions 
-`r Biocpkg("goana")` and `r Biocpkg("kegga")` are
+`r BiocStyle::Biocpkg("goana")` and `r BiocStyle::Biocpkg("kegga")` are
 called by for GO and KEGG pathway analysis respectively.
 
 For GO testing on our example dataset:
@@ -566,7 +566,7 @@ be used. To display the top 20 pathways, `topGSA` can be called. `gsameth` can
 take a single gene set, or a list of gene sets. The gene identifiers in the
 gene set must be **Entrez Gene IDs**. To demonstrate `gsameth`, a toy example is 
 shown below, with gene sets made up of randomly selected genes from the
-`r Biocpkg("org.Hs.eg.db")` package.
+`r BiocStyle::Biocpkg("org.Hs.eg.db")` package.
 
 ```{r gsameth}
 library(org.Hs.eg.db)
