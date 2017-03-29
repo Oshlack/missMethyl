@@ -71,9 +71,9 @@ converted to a `MethylSet` object.
 # Subset-quantile within array normalization (SWAN)
 
 SWAN (subset-quantile within array normalization) is a within-array
-normalization method for Illumina 450k BeadChips. Technical differencs
+normalization method for Illumina 450k & EPIC BeadChips. Technical differencs
 have been demonstrated to exist between the Infinium I and Infinium II
-assays on a single 450K array [@Bibikova2011, @Dedeurwaerder2011]. Using the 
+assays on a single Illumina HumanMethylation array [@Bibikova2011, @Dedeurwaerder2011]. Using the 
 SWAN method
 substantially reduces the technical variability between the assay
 designs whilst maintaining important biological differences. The SWAN

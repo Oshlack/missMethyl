@@ -36,8 +36,13 @@ densityByProbeType <- function(data, legendPos = "top", colors = c("black", "red
         } 
     }
     
-    probeTypes <- rbind(data.frame(getProbeInfo(IlluminaHumanMethylation450kmanifest, type = "I")[, c("Name", "nCpG")], Type="I"),
-                        data.frame(getProbeInfo(IlluminaHumanMethylation450kmanifest, type = "II")[, c("Name", "nCpG")], Type="II"))
+  if(annotation(data)["array"] == "IlluminaHumanMethylation450k"){
+    manifest <- IlluminaHumanMethylation450kmanifest
+  } else if (annotation(data)["array"] == "IlluminaHumanMethylationEPIC") {
+    manifest <- IlluminaHumanMethylationEPICmanifest
+  }
+    probeTypes <- rbind(data.frame(getProbeInfo(manifest, type = "I")[, c("Name", "nCpG")], Type="I"),
+                        data.frame(getProbeInfo(manifest, type = "II")[, c("Name", "nCpG")], Type="II"))
     
     ymax <- max(sapply(1:ncol(betas), function(x) max(density(betas[,x],na.rm=TRUE)$y)))
     betas <- matrix(betas[!is.na(betas),],ncol=1,dimnames=list(rownames(betas)[!is.na(betas)],colnames(betas)))

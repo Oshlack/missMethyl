@@ -25,12 +25,25 @@ SWAN.RGChannelSet <- function(data, verbose = FALSE){
 SWAN.default <- function(data, verbose = FALSE){
   
     if(!is(data, "MethylSet")) stop("'data' should be a 'MethylSet'")
-  
+
     cat("[SWAN] Preparing normalization subset\n")
-    CpG.counts <- rbind(data.frame(getProbeInfo(IlluminaHumanMethylation450kmanifest, type = "I")[, c("Name", "nCpG")], Type="I"),
-                        data.frame(getProbeInfo(IlluminaHumanMethylation450kmanifest, type = "II")[, c("Name", "nCpG")], Type="II"))
+
+    if(annotation(data)["array"] == "IlluminaHumanMethylation450k"){
+      cat("450k\n")
+      manifest <- IlluminaHumanMethylation450kmanifest
+      manifestName <- "IlluminaHumanMethylation450kmanifest"
+      
+    } else if (annotation(data)["array"] == "IlluminaHumanMethylationEPIC") {
+      cat("EPIC\n")
+      manifest <- IlluminaHumanMethylationEPICmanifest
+      manifestName <- "IlluminaHumanMethylationEPICmanifest"
+      
+    }
     
-    inBoth <- intersect(getManifestInfo(IlluminaHumanMethylation450kmanifest,type="locusNames"), 
+    CpG.counts <- rbind(data.frame(getProbeInfo(manifest, type = "I")[, c("Name", "nCpG")], Type="I"),
+                        data.frame(getProbeInfo(manifest, type = "II")[, c("Name", "nCpG")], Type="II"))
+    
+    inBoth <- intersect(getManifestInfo(manifest,type="locusNames"), 
                         featureNames(data))
     CpG.counts <- CpG.counts[CpG.counts$Name %in% inBoth,]
                           
@@ -66,7 +79,7 @@ SWAN.default <- function(data, verbose = FALSE){
     normSet@preprocessMethod <- c(rg.norm = sprintf("SWAN (based on a MethylSet preprocessed as '%s')",
                                                       preprocessMethod(data)[1]),
                                     minfi = as.character(packageVersion("minfi")),
-                                    manifest = as.character(packageVersion("IlluminaHumanMethylation450kmanifest")))
+                                    manifest = as.character(packageVersion(manifestName)))
     normSet
 }
 
