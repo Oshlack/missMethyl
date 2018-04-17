@@ -84,6 +84,7 @@ Benjamini, Y., and Hochberg, Y. (1995). Controlling the false discovery rate: a 
 Belinda Phipson
 }
 \examples{
+\dontrun{ # to avoid timeout on Bioconductor build
 library(IlluminaHumanMethylation450kanno.ilmn12.hg19)
 library(limma)
 ann <- getAnnotation(IlluminaHumanMethylation450kanno.ilmn12.hg19)
@@ -118,4 +119,5 @@ kegg <- gometh(sig.cpg = sigcpgs, all.cpg = allcpgs, collection = "KEGG", prior.
 
 # Table of top KEGG results
 topKEGG(kegg)
+} # end dontrun
 }
