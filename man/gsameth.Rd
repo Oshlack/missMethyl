@@ -70,6 +70,7 @@ Benjamini, Y., and Hochberg, Y. (1995). Controlling the false discovery rate: a 
 Belinda Phipson
 }
 \examples{
+\dontrun{ # to avoid timeout on Bioconductor build
 library(IlluminaHumanMethylation450kanno.ilmn12.hg19)
 library(org.Hs.eg.db)
 library(limma)
@@ -104,4 +105,5 @@ topGSA(gst)
 # Testing ignoring bias
 gst.bias <- gsameth(sig.cpg = sigcpgs, all.cpg = allcpgs, collection = sets, prior.prob = FALSE)
 topGSA(gst.bias)
+}
 }

@@ -47,6 +47,7 @@ A list with the following elements
 Belinda Phipson
 }
 \examples{
+\dontrun{ # to avoid timeout on Bioconductor build
 library(IlluminaHumanMethylation450kanno.ilmn12.hg19)
 library(org.Hs.eg.db)
 library(limma)
@@ -63,4 +64,5 @@ mappedEz$sig.eg[1:10]
 mappedEz$universe[1:10]
 mappedEz$freq[1:10]
 mappedEz$de[1:10]
+}
 }

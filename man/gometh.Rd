@@ -119,5 +119,5 @@ kegg <- gometh(sig.cpg = sigcpgs, all.cpg = allcpgs, collection = "KEGG", prior.
 
 # Table of top KEGG results
 topKEGG(kegg)
-} # end dontrun
+}
 }
