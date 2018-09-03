@@ -1,3 +1,16 @@
+# Extract data corrected for unwanted variation 
+# Only to be used for visualisation!
+getAdjusted <- function(M, fit){
+  Y <- t(M)
+  W <- t(fit$W)
+  alpha <- t(fit$alpha)
+  correctedY <- Y - W %*% alpha
+  corrected <- t(correctedY)
+  
+  corrected
+}
+
+# Get Illumina negative control data
 getINCs <- function(rgSet){
     
     ctrls = getProbeInfo(rgSet, type = "Control")
@@ -10,7 +23,9 @@ getINCs <- function(rgSet){
     log2(M.Neg/U.Neg)
 }
 
-RUVfit <- function(data, design, coef=ncol(design), ctl, method=c("inv", "rinv", "ruv4", "ruv2"), k = NULL, ...){
+# Perform linear model fit using RUV
+RUVfit <- function(data, design, coef=ncol(design), ctl, 
+                   method=c("inv", "rinv", "ruv4", "ruv2"), k = NULL, ...){
     
   method <- match.arg(method)
   
@@ -132,17 +147,22 @@ RUVfit <- function(data, design, coef=ncol(design), ctl, method=c("inv", "rinv",
     obj
 }
 
+# Calculate rescaled variances, empirical variances, etc. 
+# For use with RUV model fits.
 RUVadj <- function(fit, ebayes = TRUE, evar = FALSE, rsvar = FALSE, ...){
     
-    fit <- variance_adjust(fit = .toList(fit), ebayes = ebayes, evar = evar, rsvar = rsvar, ...)
+    fit <- variance_adjust(fit = .toList(fit), ebayes = ebayes, evar = evar, 
+                           rsvar = rsvar, ...)
     
     return(.toMArrayLM(fit))
 }
 
 
 topRUV <- function (fit, number = 10, p.value.cut = 1,
-                         cut.on = c("p.ebayes.BH","p.BH","p.rsvar.BH","p.evar.BH","p.rsvar.ebayes.BH"),
-                         sort.by = c("p.ebayes.BH","p.BH","p.rsvar.BH","p.evar.BH","p.rsvar.ebayes.BH")){
+                         cut.on = c("p.ebayes.BH","p.BH","p.rsvar.BH",
+                                    "p.evar.BH","p.rsvar.ebayes.BH"),
+                         sort.by = c("p.ebayes.BH","p.BH","p.rsvar.BH",
+                                     "p.evar.BH","p.rsvar.ebayes.BH")){
   
   coefficients <- fit$coefficients
   t <- fit$t
@@ -188,41 +208,52 @@ topRUV <- function (fit, number = 10, p.value.cut = 1,
   if ("p.rsvar.ebayes.BH" %in% slots) 
     p.rsvar.ebayes.BH <- fit$p.rsvar.ebayes.BH
   
-  tab <- data.frame(row.names = ID, coefficients = coefficients, t = t, p = p, stringsAsFactors = FALSE, check.names=FALSE)
+  tab <- data.frame(row.names = ID, coefficients = coefficients, t = t, p = p, 
+                    stringsAsFactors = FALSE, check.names=FALSE)
   
   if (!is.null(p.BH)) 
-    tab <- data.frame(tab, p.BH = p.BH, stringsAsFactors = FALSE, check.names=FALSE)
+    tab <- data.frame(tab, p.BH = p.BH, stringsAsFactors = FALSE, 
+                      check.names=FALSE)
   
   if (!is.null(p.rsvar)) 
-    tab <- data.frame(tab, p.rsvar = p.rsvar, stringsAsFactors = FALSE, check.names=FALSE)
+    tab <- data.frame(tab, p.rsvar = p.rsvar, stringsAsFactors = FALSE, 
+                      check.names=FALSE)
   
   if (!is.null(p.rsvar.BH)) 
-    tab <- data.frame(tab, p.rsvar.BH = p.rsvar.BH, stringsAsFactors = FALSE, check.names=FALSE)
+    tab <- data.frame(tab, p.rsvar.BH = p.rsvar.BH, stringsAsFactors = FALSE, 
+                      check.names=FALSE)
   
   if (!is.null(p.evar)) 
-    tab <- data.frame(tab, p.evar = p.evar, stringsAsFactors = FALSE, check.names=FALSE)
+    tab <- data.frame(tab, p.evar = p.evar, stringsAsFactors = FALSE, 
+                      check.names=FALSE)
   
   if (!is.null(p.evar.BH)) 
-    tab <- data.frame(tab, p.evar.BH = p.evar.BH, stringsAsFactors = FALSE, check.names=FALSE)
+    tab <- data.frame(tab, p.evar.BH = p.evar.BH, stringsAsFactors = FALSE, 
+                      check.names=FALSE)
   
   if (!is.null(p.rsvar.ebayes)) 
-    tab <- data.frame(tab, p.rsvar.ebayes = p.rsvar.ebayes, stringsAsFactors = FALSE, check.names=FALSE)
+    tab <- data.frame(tab, p.rsvar.ebayes = p.rsvar.ebayes, 
+                      stringsAsFactors = FALSE, check.names=FALSE)
   
   if (!is.null(p.rsvar.ebayes.BH)) 
-    tab <- data.frame(tab, p.rsvar.ebayes.BH = p.rsvar.ebayes.BH, stringsAsFactors = FALSE, check.names=FALSE)
+    tab <- data.frame(tab, p.rsvar.ebayes.BH = p.rsvar.ebayes.BH, 
+                      stringsAsFactors = FALSE, check.names=FALSE)
   
   if (!is.null(p.ebayes)) 
-    tab <- data.frame(tab, p.ebayes = p.ebayes, stringsAsFactors = FALSE, check.names=FALSE)
+    tab <- data.frame(tab, p.ebayes = p.ebayes, stringsAsFactors = FALSE, 
+                      check.names=FALSE)
   
   if (!is.null(p.ebayes.BH)) 
-    tab <- data.frame(tab, p.ebayes.BH = p.ebayes.BH, stringsAsFactors = FALSE, check.names=FALSE)
+    tab <- data.frame(tab, p.ebayes.BH = p.ebayes.BH, stringsAsFactors = FALSE, 
+                      check.names=FALSE)
   
   if (p.value.cut < 1) {
     
     cut.on <- match.arg(cut.on)
     
     if (!(cut.on %in% slots))
-      cat(sprintf("Cannot threshold on '%s' because it is not in the 'fit' object.", cut.on))
+      cat(sprintf("Cannot threshold on '%s' because it is not in the 'fit' object.", 
+                  cut.on))
     
     adj.p.value <- get(cut.on, fit)
     
@@ -240,13 +271,18 @@ topRUV <- function (fit, number = 10, p.value.cut = 1,
   sort.by <- match.arg(sort.by)
   
   if (!(sort.by %in% slots))
-    stop(sprintf("Cannot sort by '%s' because it is not in the 'fit' object.", sort.by))
+    stop(sprintf("Cannot sort by '%s' because it is not in the 'fit' object.", 
+                 sort.by))
                  
-  ord <- switch(sort.by, p.ebayes.BH = order(tab$p.ebayes.BH, tab$p.ebayes, decreasing = FALSE), 
+  ord <- switch(sort.by, p.ebayes.BH = order(tab$p.ebayes.BH, tab$p.ebayes, 
+                                             decreasing = FALSE), 
                 p.BH = order(tab$p.BH, tab$p, decreasing=FALSE), 
-                p.rsvar.BH = order(tab$p.rsvar.BH, tab$p.rsvar, decreasing=FALSE), 
-                p.evar.BH = order(tab$p.evar.BH, tab$p.evar, decreasing=FALSE), 
-                p.rsvar.ebayes.BH = order(tab$p.rsvar.ebayes.BH, tab$p.rsvar.ebayes, decreasing=FALSE))
+                p.rsvar.BH = order(tab$p.rsvar.BH, tab$p.rsvar, 
+                                   decreasing=FALSE), 
+                p.evar.BH = order(tab$p.evar.BH, tab$p.evar, 
+                                  decreasing=FALSE), 
+                p.rsvar.ebayes.BH = order(tab$p.rsvar.ebayes.BH, 
+                                          tab$p.rsvar.ebayes, decreasing=FALSE))
   
   if (nrow(tab) < number)
     number <- nrow(tab)
