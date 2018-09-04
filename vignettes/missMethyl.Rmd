@@ -223,10 +223,18 @@ and to increase the number of false discoveries. As such, when it is
 apparent that data is significantly affected by unwanted variation, it
 is advisable to perform an adjustment to mitigate its effects.
 
-`r BiocStyle::Biocpkg("missMethyl")` provides a `r BiocStyle::Biocpkg("limma")`-like interface to 
-functions from the CRAN package `r BiocStyle::CRANpkg("ruv")` that
-enables the removal of unwanted variation when performing a differential
-analysis [@Maksimovic2015]. All of the methods rely on negative control features
+`r BiocStyle::Biocpkg("missMethyl")` provides a `r BiocStyle::Biocpkg("limma")`
+inspired interface to functions from the CRAN package 
+`r BiocStyle::CRANpkg("ruv")`, which enable the removal of unwanted variation 
+when performing a differential methylation analysis [@Maksimovic2015].  
+
+`RUVfit` uses the `RUV-inverse` method by default, as this does not require the
+user to specify a *k* parameter. The ridged version of `RUV-inverse` is also 
+available by setting `method = rinv`. The `RUV-2` and `RUV-4` functions can also
+be used by setting `method = ruv2` or `method = ruv4`, respectively, and 
+specifying an appropriate value for *k* where *0 < k < no. samples*.
+
+All of the methods rely on negative control features
 to accurately estimate the components of unwanted variation. Negative
 control features are probes/genes/etc. that are known *a priori* to not
 truly be associated with the biological factor of interest, but are
@@ -239,20 +247,19 @@ the data, they are adjusted for in the linear model that describes the
 differential analysis.
 
 If the negative control features are not known *a priori*, they can be
-identified empirically. This can be achieved using a 2-stage approach,
-**RUVm**, based on `RUV-inverse`. Stage 1 involves performing a
-differential methylation analysis using `RUV-inverse` and the 613
-Illumina negative controls (INCs) as negative control features. This
-will produce a list of CpGs ranked by p-value according to their level
-of association with the factor of interest. This list can then be used
-to identify a set of empirical control probes (ECPs), which will capture
-more of the unwanted variation than using the INCs alone. ECPs are
-selected by designating a proportion of the CpGs least associated with
+identified empirically. This can be achieved via a 2-stage approach,
+**RUVm**. Stage 1 involves performing a differential methylation analysis using 
+`RUV-inverse` (by default) and the 613 Illumina negative controls (INCs) as 
+negative control features. This will produce a list of CpGs ranked by p-value 
+according to their level of association with the factor of interest. 
+This list can then be used to identify a set of empirical control probes (ECPs), 
+which will capture more of the unwanted variation than using the INCs alone. 
+ECPs are selected by designating a proportion of the CpGs least associated with
 the factor of interest as negative control features; this can be done
 based on either an FDR cut-off or by taking a fixed percentage of probes
 from the bottom of the ranked list. Stage 2 involves performing a second
-differential methylation analysis on the original data using
-`RUV-inverse` and the ECPs. For simplicity, we are ignoring the paired
+differential methylation analysis on the original data using `RUV-inverse` 
+(by default) and the ECPs. For simplicity, we are ignoring the paired
 nature of the **cancer** and **normal** samples in this example.
 
 ```{r diffmeth2}
@@ -302,9 +309,14 @@ rfit2 <- RUVadj(rfit1)
 topRUV(rfit2)
 ```
 
-Note, at present does not support contrasts, so only one factor of
+Note, at present **RUVm** does not support contrasts, so only one factor of
 interest can be interrogated at a time using a design matrix with an
 intercept term.
+
+## Limma stage 1 example
+
+## Plotting corrected values
+
 
 # Testing for differential variability (DiffVar)
 
