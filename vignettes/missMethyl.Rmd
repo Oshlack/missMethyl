@@ -268,14 +268,18 @@ meth <- getMeth(mSet)
 unmeth <- getUnmeth(mSet)
 M <- log2((meth + 100)/(unmeth + 100))
 
+# setup design matrix
 grp <- factor(targets$status,levels=c("normal","cancer"))
 des <- model.matrix(~grp)
 des
 
+# extract Illumina negative control data
 INCs <- getINCs(rgSet)
 head(INCs)
 
+# add negative control data to M-values
 Mc <- rbind(M,INCs)
+# create vector marking negative controls in data matrix
 ctl <- rownames(Mc) %in% rownames(INCs)
 table(ctl)
 
@@ -313,9 +317,53 @@ Note, at present **RUVm** does not support contrasts, so only one factor of
 interest can be interrogated at a time using a design matrix with an
 intercept term.
 
-## Limma stage 1 example
+## Alternative approach for RUVm stage 1
 
-## Plotting corrected values
+If the number of samples in your experiment is *greater* than the number of 
+Illumina negative controls on the array platform used - 613 for 450k, 411 for 
+EPIC - stage 1 of **RUVm** will not work. In such cases, we recommend performing
+a standard `r BiocStyle::Biocpkg("limma")` analysis in stage 1. 
+
+```{r limmaruv}
+# get M-values for ALL probes
+meth <- getMeth(mSet)
+unmeth <- getUnmeth(mSet)
+M <- log2((meth + 100)/(unmeth + 100))
+
+# setup design matrix
+grp <- factor(targets$status,levels=c("normal","cancer"))
+des <- model.matrix(~grp)
+des
+
+# limma differential methylation analysis
+lfit1 <- lmFit(M, design=des)
+lfit2 <- eBayes(lfit1) # Stage 1 analysis
+
+# Look at table of top results
+topTable(lfit2)
+```
+The results of this can then be used to define ECPs for stage 2, as in the 
+previous example.
+
+```{r ruv1}
+topLm <- topTable(lfit2, num=Inf)
+head(topLm)
+
+ctl <- rownames(M) %in% rownames(topLm[topLm$adj.P.Val > 0.5,])
+table(ctl)
+```
+
+We can then use the ECPs to perform a second differential methylation
+with `RUV-inverse` as before.
+
+```{r ruv2}
+# Perform RUV adjustment and fit
+rfit1 <- RUVfit(data=M, design=des, coef=2, ctl=ctl) # Stage 2 analysis
+rfit2 <- RUVadj(rfit1)
+
+# Look at table of top results
+topRUV(rfit2)
+```
 
 
 # Testing for differential variability (DiffVar)
