@@ -7,19 +7,19 @@ Extract values adjusted for unwanted variation by RUVm
 Extract values adjusted for unwanted variation by RUVm.
 }
 \usage{
-getAdjusted(M, rgSet)
+getAdjusted(M, fit)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{M}{
 A matrix of M-values.
 }
-  \item{rgSet}{
-An object of class \code{RGChannelSet}.
+  \item{fit}{
+An object of class \code{MArrayLM}.
 }
 }
 \details{
-This function Extracts values adjusted for unwanted variation by RUVm. 
+This function extracts values adjusted for unwanted variation by RUVm. 
 These values are ONLY intendeded to be used for visualisation purposes. 
 It is NOT recommended that they are used for any further analysis.
 }
@@ -30,7 +30,7 @@ An matrix of M-values.
 Jovana Maksimovic \email{jovana.maksimovic@mcri.edu.au}
 }
 \seealso{
-\code{\linkS4class{RGChannelSet}}
+\code{\linkS4class{MArrayLM}}
 }
 \examples{
 if(require(minfi) & require(minfiData) & require(limma)) {
