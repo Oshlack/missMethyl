@@ -2,17 +2,13 @@
 author: "Belinda Phipson and Jovana Maksimovic"
 title: "missMethyl: Analysing Illumina HumanMethylation BeadChip Data"
 date: "`r BiocStyle::doc_date()`"
-package: "`r BiocStyle::pkg_ver('BiocStyle')`"
+package: "`r BiocStyle::pkg_ver('missMethyl')`"
+output: 
+  BiocStyle::html_document
 vignette: >
   %\VignetteIndexEntry{missMethyl: Analysing Illumina HumanMethylation BeadChip Data}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
-output: >
-  BiocStyle::html_document
-html_document:
-  fig_caption: yes
-  fig_retina: FALSE
-  keep_md: FALSE
 bibliography: bibliography.bib
 ---
 
@@ -93,10 +89,10 @@ the normalized intensities will be
 identical, if the normalization is repeated.
 
 The technical differences between Infinium I and II assay designs can
-result in aberrant beta value distributions (Figure 1, panel "Raw"). Using SWAN 
+result in aberrant beta value distributions (Figure @ref(fig:betasByType), panel "Raw"). Using SWAN 
 corrects for the technical differences between the
 Infinium I and II assay designs and produces a smoother overall $\beta$
-value distribution (Figure 1, panel "SWAN").
+value distribution (Figure @ref(fig:betasByType), panel "SWAN").
 
 ```{r ppraw}
 mSet <- preprocessRaw(rgSet)
@@ -106,7 +102,7 @@ mSet <- preprocessRaw(rgSet)
 mSetSw <- SWAN(mSet,verbose=TRUE)
 ```
 
-```{r betasByType,fig.height=5,fig.width=10,fig.retina=1,fig.cap="Density distributions of $\beta$ values before and after using SWAN."}
+```{r betasByType, fig.cap = "Beta value dustributions. Density distributions of beta values before and after using SWAN.", echo = TRUE, fig.width=10, fig.height=5}
 par(mfrow=c(1,2), cex=1.25)
 densityByProbeType(mSet[,1], main = "Raw")
 densityByProbeType(mSetSw[,1], main = "SWAN")
@@ -142,13 +138,13 @@ beta <- getBeta(mset_reduced)
 dim(Mval)
 ```
 
-```{r mdsplot,fig.height=5,fig.width=5,fig.cap="A multi-dimensional scaling (MDS) plot of cancer and normal samples."}
+```{r mdsplot, fig.cap = "MDS plot. A multi-dimensional scaling (MDS) plot of cancer and normal samples.", echo = TRUE, fig.small=TRUE}
 par(mfrow=c(1,1))
 plotMDS(Mval, labels=targets$Sample_Name, col=as.integer(factor(targets$status)))
 legend("topleft",legend=c("Cancer","Normal"),pch=16,cex=1.2,col=1:2)
 ```
 
-An MDS plot (Figure 2) is a good sanity check to make sure
+An MDS plot (Figure \@ref(fig:mdsplot)) is a good sanity check to make sure
 samples cluster together according to the main factor of interest, in
 this case, cancer and normal.
 
@@ -199,9 +195,9 @@ top
 Note that since we performed our analysis on M-values, the `logFC` and
 `AveExpr` columns are computed on the M-value scale. For interpretability
 and visualisation we can look at the $\beta$ values. The beta values for
-the top 4 differentially methylated CpGs shown in Figure 3.
+the top 4 differentially methylated CpGs shown in Figure \@ref(fig:top4).
 
-```{r top4,fig.width=10,fig.height=10,fig.cap="The $\beta$ values for the top 4 differentially methylated CpGs."}
+```{r top4, fig.cap = "Top DM CpGs. The beta values for the top 4 differentially methylated CpGs.", echo = TRUE, fig.width=10,fig.height=9}
 cpgs <- rownames(top)
 par(mfrow=c(2,2))
 for(i in 1:4){
@@ -228,12 +224,12 @@ inspired interface to functions from the CRAN package
 `r BiocStyle::CRANpkg("ruv")`, which enable the removal of unwanted variation 
 when performing a differential methylation analysis [@Maksimovic2015].  
 
-`RUVfit` uses the `RUV-inverse` method by default, as this does not require the
-user to specify a *k* parameter. The ridged version of `RUV-inverse` is also 
-available by setting `method = rinv`. The `RUV-2` and `RUV-4` functions can also
+`RUVfit` uses the *RUV-inverse* method by default, as this does not require the
+user to specify a $k$ parameter. The ridged version of *RUV-inverse* is also 
+available by setting `method = rinv`. The *RUV-2* and *RUV-4* functions can also
 be used by setting `method = ruv2` or `method = ruv4`, respectively, and 
 specifying an appropriate value for *k* (number of components of unwanted 
-variation to remove) where *0 <= k < no. samples*.
+variation to remove) where $0 \leq k < no. samples$.
 
 All of the methods rely on negative control features
 to accurately estimate the components of unwanted variation. Negative
@@ -250,7 +246,7 @@ differential analysis.
 If the negative control features are not known *a priori*, they can be
 identified empirically. This can be achieved via a 2-stage approach,
 **RUVm**. Stage 1 involves performing a differential methylation analysis using 
-`RUV-inverse` (by default) and the 613 Illumina negative controls (INCs) as 
+*RUV-inverse* (by default) and the 613 Illumina negative controls (INCs) as 
 negative control features. This will produce a list of CpGs ranked by p-value 
 according to their level of association with the factor of interest. 
 This list can then be used to identify a set of empirical control probes (ECPs), 
@@ -259,7 +255,7 @@ ECPs are selected by designating a proportion of the CpGs least associated with
 the factor of interest as negative control features; this can be done
 based on either an FDR cut-off or by taking a fixed percentage of probes
 from the bottom of the ranked list. Stage 2 involves performing a second
-differential methylation analysis on the original data using `RUV-inverse` 
+differential methylation analysis on the original data using *RUV-inverse* 
 (by default) and the ECPs. For simplicity, we are ignoring the paired
 nature of the **cancer** and **normal** samples in this example.
 
@@ -302,7 +298,7 @@ table(ctl2)
 ```
 
 We can then use the ECPs to perform a second differential methylation
-with `RUV-inverse`, which is adjusted for the unwanted variation
+with *RUV-inverse*, which is adjusted for the unwanted variation
 estimated from the data.
 
 ```{r ruv2}
@@ -373,17 +369,17 @@ the adjusted values from the **RUVm** fit object. NOTE: The adjusted values
 should only be used for plotting - it is NOT recommended that they are used in 
 any downstream analysis.
 
-```{r}
+```{r ruvadj}
 Madj <- getAdjusted(M, rfit6) # get adjusted values
 ```
 
 The MDS plots below show how the relationship between the samples changes with and 
-without RUVm adjustment. RUVm reduces the distance between the samples in
+without **RUVm** adjustment. **RUVm** reduces the distance between the samples in
 each group by removing unwanted variation. It can be useful to examine this
 type of plot when trying to decide on the best set of ECPs or to help select the 
-optimal value of *k*, if using `RUV-4` or `RUV-2`. 
+optimal value of $k$, if using *RUV-4* or *RUV-2*. 
 
-```{r mdsplotadj,fig.height=5,fig.width=9,fig.cap="An MDS plot of cancer and normal data, before and after RUVm adjustment."}
+```{r mdsplotadj, fig.cap = "RUVm adjusted data. An MDS plot of cancer and normal data, before and after RUVm adjustment.", echo = TRUE, fig.width=10, fig.height=5}
 par(mfrow=c(1,2))
 plotMDS(Mval, labels=targets$Sample_Name, col=as.integer(factor(targets$status)),
         main="Unadjusted")
@@ -395,10 +391,10 @@ legend("topleft",legend=c("Cancer","Normal"),pch=16,cex=1,col=1:2)
 ```
 
 To illustrate how the `getAdjusted` function can be used to help select an
-appropriate value for *k*, we will run the second stage of the **RUVm** analysis 
-using `RUV-4` with two different *k* values.
+appropriate value for $k$, we will run the second stage of the **RUVm** analysis 
+using *RUV-4* with two different $k$ values.
 
-```{r}
+```{r ruvadj1}
 # Use RUV-4 in stage 2 of RUVm with k=1 and k=2
 rfit7 <- RUVfit(data=M, design=des, coef=2, ctl=ctl3,
                 method = "ruv4", k=1) # Stage 2 with RUV-4, k=1
@@ -414,10 +410,10 @@ Madj2 <- getAdjusted(M, rfit10)
 ```
 
 The following MDS plots show how the relationship between the samples changes
-from the unadjusted data to data adjusted with `RUV-inverse` and `RUV-4` with 
-two different *k* values.
+from the unadjusted data to data adjusted with *RUV-inverse* and *RUV-4* with 
+two different $k$ values.
 
-```{r mdsplotadj1,fig.height=9,fig.width=9,fig.cap="MDS plots of cancer and normal data before an after adjustment with RUV-inverse and RUV-4"}
+```{r mdsplotadj1, fig.cap = "Effect of different adjustment methods and parameters. MDS plots of cancer and normal data before an after adjustment with RUV-inverse and RUV-4 with different k values.", echo = TRUE, fig.width=10, fig.height=9}
 par(mfrow=c(2,2))
 plotMDS(Mval, labels=targets$Sample_Name, col=as.integer(factor(targets$status)),
         main="Unadjusted")
@@ -434,8 +430,8 @@ legend("bottomleft",legend=c("Cancer","Normal"),pch=16,cex=1,col=1:2)
 plotMDS(Madj2, labels=targets$Sample_Name, col=as.integer(factor(targets$status)),
         main="Adjusted: RUV-4, k=2")
 legend("bottomright",legend=c("Cancer","Normal"),pch=16,cex=1,col=1:2)
-
 ```
+
 
 # Testing for differential variability (DiffVar)
 
@@ -497,9 +493,9 @@ topVar(fitvar.contr,coef=1)
 ```
 
 The $\beta$ values for the top 4 differentially variable CpGs can be
-seen in Figure 4.
+seen in Figure \@ref(fig:top4DV).
 
-```{r top4DV,fig.width=10,fig.height=10,fig.cap="The $\beta$ values for the top 4 differentially variable CpGs."}
+```{r top4DV,fig.cap="Top DV CpGs. The beta values for the top 4 differentially variable CpGs.", fig.width=10, fig.height=9}
 cpgsDV <- rownames(topDV)
 par(mfrow=c(2,2))
 for(i in 1:4){
@@ -584,9 +580,9 @@ topDV.hapmap
 ```
 
 The log counts per million for the top 4 differentially variable genes
-can be seen in Figure 5.
+can be seen in Figure \@ref(fig:top4DVhapmap).
 
-```{r top4DVhapmap,fig.width=10,fig.height=10,fig.cap="The log counts per million for the top 4 differentially variably expressed genes."}
+```{r top4DVhapmap,fig.cap="Top DV CpGs. The log counts per million for the top 4 differentially variably expressed genes.", fig.width=10, fig.height=9}
 genesDV <- rownames(topDV.hapmap)
 par(mfrow=c(2,2))
 for(i in 1:4){
@@ -636,8 +632,8 @@ To illustrate how to use `gometh`, consider the results from the differential
 methylation analysis with **RUVm**.
 
 ```{r gometh1}
-topRUV(rfit2)
-table(rfit2$p.ebayes.BH < 0.01)
+topRUV(rfit4)
+table(rfit4$p.ebayes.BH < 0.01)
 ```
 
 At a 1% false discovery rate cut-off, there are still tens of thousands
@@ -654,14 +650,14 @@ beta <- getBeta(mSet)
 beta_norm <- rowMeans(beta[,des[,2]==0])
 beta_can <- rowMeans(beta[,des[,2]==1])
 Delta_beta <- beta_can - beta_norm
-sigDM <- rfit2$p.ebayes.BH < 0.01 & abs(Delta_beta) > 0.25
+sigDM <- rfit4$p.ebayes.BH < 0.01 & abs(Delta_beta) > 0.25
 table(sigDM)
 ```
 
 Instead, we take the top 10000 CpG sites as input to `gometh`.
 
 ```{r gometh3}
-topCpGs<-topRUV(rfit2,number=10000)
+topCpGs<-topRUV(rfit4,number=10000)
 sigCpGs <- rownames(topCpGs)
 sigCpGs[1:10]
 ```
@@ -706,7 +702,7 @@ set1 <- sample(genes$gene_id,size=80)
 set2 <- sample(genes$gene_id,size=100)
 set3 <- sample(genes$gene_id,size=30)
 genesets <- list(set1,set2,set3)
-gsa <- gsameth(sig.cpg=sigCpGs, all.cpg=rownames(rfit2), collection=genesets)
+gsa <- gsameth(sig.cpg=sigCpGs, all.cpg=rownames(rfit4), collection=genesets)
 topGSA(gsa)
 ```
 
