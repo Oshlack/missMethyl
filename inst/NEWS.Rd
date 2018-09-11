@@ -2,6 +2,14 @@
 \title{missMethyl News}
 \encoding{UTF-8}
 
+\section{Version 1.15.1}{\itemize{
+
+\item Added getAdjusted function for extracting RUVm adjusted data for visualisation purposes
+\item Updated vignette to demonstrate use of getAdjusted function
+\item Vignette now includes an example of how to handle cases with RUVm where number of samples is greater than number of Illumina negative controls
+
+}}
+
 \section{Version 1.7.3}{\itemize{
 
 \item modified gene set testing functions gometh and gsameth to accommodate EPIC arrays
