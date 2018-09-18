@@ -2,6 +2,13 @@
 \title{missMethyl News}
 \encoding{UTF-8}
 
+\section{Version 1.15.2}{\itemize{
+
+\item Updated getMappedEntrezIDs, gometh and gsameth to to speed up execution by taking the array annotation in as an optional argument.
+\item missMethyl now uses the latest IlluminaHumanMethylationEPICanno.ilm10b2.hg19 annotation by default for EPIC arrays.
+}}
+
+
 \section{Version 1.15.1}{\itemize{
 
 \item Added getAdjusted function for extracting RUVm adjusted data for visualisation purposes

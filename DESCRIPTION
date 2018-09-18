@@ -1,7 +1,7 @@
 Package: missMethyl
 Type: Package
 Title: Analysing Illumina HumanMethylation BeadChip Data
-Version: 1.15.1
+Version: 1.15.2
 Date: 2018-04-17
 Author: Belinda Phipson and Jovana Maksimovic 
 Maintainer: Belinda Phipson <belinda.phipson@mcri.edu.au>, Jovana
@@ -12,7 +12,7 @@ Imports: limma, minfi, methylumi, IlluminaHumanMethylation450kmanifest,
         statmod, ruv, stringr, IlluminaHumanMethylation450kanno.ilmn12.hg19,
         org.Hs.eg.db, AnnotationDbi, BiasedUrn, GO.db,
         IlluminaHumanMethylationEPICmanifest,
-        IlluminaHumanMethylationEPICanno.ilm10b2.hg19
+        IlluminaHumanMethylationEPICanno.ilm10b4.hg19
 VignetteBuilder: knitr
 Suggests: minfiData, BiocStyle, knitr, rmarkdown, edgeR, tweeDEseqCountData
 Description: Normalisation and testing for differential variability and
