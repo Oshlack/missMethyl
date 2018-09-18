@@ -1,9 +1,10 @@
-gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"), array.type = c("450K","EPIC"), plot.bias=FALSE, prior.prob=TRUE)
-# Gene ontology testing or KEGG pathway analysis for 450K methylation arrays based on goseq
+gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"), array.type = c("450K","EPIC"), 
+                   plot.bias=FALSE, prior.prob=TRUE, anno=NULL)
+# Gene ontology testing or KEGG pathway analysis for Illumina methylation arrays based on goseq
 # Takes into account probability of differential methylation based on
 # numbers of probes on array per gene
 # Belinda Phipson
-# 28 January 2015. Last updated 7 July 2016.
+# 28 January 2015. Last updated 18 Sept 2018.
 # EPIC functionality contributed by Andrew Y.F. Li Yim
 {
     if(!is.vector(sig.cpg))
@@ -12,7 +13,12 @@ gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"), array.type 
     collection <- match.arg(toupper(collection),c("GO","KEGG"))    
     
     # Get mapped entrez gene IDs from CpG probe names
-    out <- getMappedEntrezIDs(sig.cpg=sig.cpg,all.cpg=all.cpg,array.type=array.type)
+    if(!is.null(anno)){
+      out <- getMappedEntrezIDs(sig.cpg=sig.cpg,all.cpg=all.cpg,array.type=array.type,
+                                anno=anno)
+    } else {
+      out <- getMappedEntrezIDs(sig.cpg=sig.cpg,all.cpg=all.cpg,array.type=array.type)
+    }
     sorted.eg.sig <- out$sig.eg
     eg.universe <- out$universe
     freq_genes <- out$freq
@@ -50,7 +56,8 @@ gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"), array.type 
     sumDM <- tapply(D[o],factor(splitf),sum)
     propDM <- sumDM/table(splitf)
     par(mar=c(5,5,2,2))
-    plot(avgbias,as.vector(propDM),xlab="Number of CpGs per gene (binned)", ylab="Proportion Differential Methylation",cex.lab=1.5,cex.axis=1.2)
+    plot(avgbias,as.vector(propDM),xlab="Number of CpGs per gene (binned)", 
+         ylab="Proportion Differential Methylation",cex.lab=1.5,cex.axis=1.2)
     lines(lowess(avgbias,propDM),col=4,lwd=2)
 }
 
@@ -65,53 +72,103 @@ gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"), array.type 
     prior.prob
 }
 
-.flattenAnn <- function(array.type)
-# flatten 450k or EPIC array annotation
-# Belinda Phipson
-# 10 February 2016
-# Updated 7 July 2016
+.getFlatAnnotation <- function(array.type=c("450K","EPIC"),anno=NULL)
+  # flatten 450k or EPIC array annotation
+  # Jovana Maksimovic
+  # 18 September 2018
+  # Updated 18 September 2018
+  # Modified version of Belida Phipson's .flattenAnn code
 {
-    if(array.type=="450K")    
-        anno <- getAnnotation(IlluminaHumanMethylation450kanno.ilmn12.hg19)
-    else
-        anno <- getAnnotation(IlluminaHumanMethylationEPICanno.ilm10b2.hg19)
-    
-    # get rid of the non-CpG sites
-    strlen<-str_length(rownames(anno))
-    ann.keep<-anno[strlen==10,]
-    
-    # get rid of CpGs that are not annotated
-    missing<-ann.keep$UCSC_RefGene_Name==""
-    ann.keep<-ann.keep[!missing,]
-    
-    # get individual gene names for each CpG
-    geneslist<-strsplit(ann.keep$UCSC_RefGene_Name,split=";")
-    names(geneslist)<-rownames(ann.keep)
-    
-    grouplist<-strsplit(ann.keep$UCSC_RefGene_Group,split=";")
-    names(grouplist)<-rownames(ann.keep)
-    
-    flat<-data.frame(symbol=unlist(geneslist),group=unlist(grouplist))
-    flat$symbol<-as.character(flat$symbol)
-    flat$group <- as.character(flat$group)
-    
-    flat$cpg<- substr(rownames(flat),1,10)
-        
-    flat$alias <- alias2SymbolTable(flat$symbol)
-    
-    eg <- toTable(org.Hs.egSYMBOL2EG)
-    m <- match(flat$alias,eg$symbol)
-    flat$entrezid <- eg$gene_id[m]
-    flat <- flat[!is.na(flat$entrezid),]
-    
-    # keep unique cpg by gene name annotation
-    id<-paste(flat$cpg,flat$entrezid,sep=".")
-    d <- duplicated(id)
-    flat.u <- flat[!d,]
-    flat.u
+  if(is.null(anno)){
+    if(array.type=="450K"){
+      require(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+      anno <- getAnnotation(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+    } else {
+      require(IlluminaHumanMethylationEPICanno.ilm10b4.hg19)
+      anno <- getAnnotation(IlluminaHumanMethylationEPICanno.ilm10b4.hg19)
+    }
+  }
+  
+  # get rid of the non-CpG sites
+  ann.keep<-anno[grepl("^cg",anno$Name),]
+  
+  # get rid of CpGs that are not annotated
+  missing<-ann.keep$UCSC_RefGene_Name==""
+  ann.keep<-ann.keep[!missing,]
+  
+  # get individual gene names for each CpG
+  geneslist<-strsplit(ann.keep$UCSC_RefGene_Name,split=";")
+  names(geneslist)<-rownames(ann.keep)
+  
+  grouplist<-strsplit(ann.keep$UCSC_RefGene_Group,split=";")
+  names(grouplist)<-rownames(ann.keep)
+  
+  flat<-data.frame(symbol=unlist(geneslist),group=unlist(grouplist))
+  flat$symbol<-as.character(flat$symbol)
+  flat$group <- as.character(flat$group)
+  
+  flat$cpg <- rownames(flat)
+  flat$alias <- alias2SymbolTable(flat$symbol)
+  
+  eg <- toTable(org.Hs.egSYMBOL2EG)
+  m <- match(flat$alias,eg$symbol)
+  flat$entrezid <- eg$gene_id[m]
+  flat <- flat[!is.na(flat$entrezid),]
+  
+  # keep unique cpg by gene name annotation
+  id<-paste(flat$cpg,flat$entrezid,sep=".")
+  d <- duplicated(id)
+  flat.u <- flat[!d,]
+  flat.u
 }
 
-getMappedEntrezIDs <- function(sig.cpg,all.cpg=NULL,array.type)
+# .flattenAnn <- function(array.type)
+# # flatten 450k or EPIC array annotation
+# # Belinda Phipson
+# # 10 February 2016
+# # Updated 7 July 2016
+# {
+#     if(array.type=="450K")    
+#         anno <- getAnnotation(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+#     else
+#         anno <- getAnnotation(IlluminaHumanMethylationEPICanno.ilm10b2.hg19)
+#     
+#     # get rid of the non-CpG sites
+#     strlen<-str_length(rownames(anno))
+#     ann.keep<-anno[strlen==10,]
+#     
+#     # get rid of CpGs that are not annotated
+#     missing<-ann.keep$UCSC_RefGene_Name==""
+#     ann.keep<-ann.keep[!missing,]
+#     
+#     # get individual gene names for each CpG
+#     geneslist<-strsplit(ann.keep$UCSC_RefGene_Name,split=";")
+#     names(geneslist)<-rownames(ann.keep)
+#     
+#     grouplist<-strsplit(ann.keep$UCSC_RefGene_Group,split=";")
+#     names(grouplist)<-rownames(ann.keep)
+#     
+#     flat<-data.frame(symbol=unlist(geneslist),group=unlist(grouplist))
+#     flat$symbol<-as.character(flat$symbol)
+#     flat$group <- as.character(flat$group)
+#     
+#     flat$cpg<- substr(rownames(flat),1,10)
+#         
+#     flat$alias <- alias2SymbolTable(flat$symbol)
+#     
+#     eg <- toTable(org.Hs.egSYMBOL2EG)
+#     m <- match(flat$alias,eg$symbol)
+#     flat$entrezid <- eg$gene_id[m]
+#     flat <- flat[!is.na(flat$entrezid),]
+#     
+#     # keep unique cpg by gene name annotation
+#     id<-paste(flat$cpg,flat$entrezid,sep=".")
+#     d <- duplicated(id)
+#     flat.u <- flat[!d,]
+#     flat.u
+# }
+
+getMappedEntrezIDs <- function(sig.cpg,all.cpg=NULL,array.type,anno=NULL)
 # From a list of CpG sites, obtain the Entrez Gene IDs that are used for testing pathway enrichment
 # Belinda Phipson
 # 10 February 2016
@@ -122,7 +179,12 @@ getMappedEntrezIDs <- function(sig.cpg,all.cpg=NULL,array.type)
     sig.cpg <- sig.cpg[!is.na(sig.cpg)]
     
     # Get annotaton in appropriate format
-    flat.u <- .flattenAnn(array.type)
+    #flat.u <- .flattenAnn(array.type)
+    if(is.null(anno)){
+      flat.u <- .getFlatAnnotation(array.type)
+    } else {
+      flat.u <- .getFlatAnnotation(array.type,anno)
+    }
     
     if(is.null(all.cpg))
         all.cpg <- unique(flat.u$cpg)

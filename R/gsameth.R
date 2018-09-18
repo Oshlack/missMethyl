@@ -1,11 +1,12 @@
-gsameth <- function(sig.cpg, all.cpg=NULL, collection, array.type = c("450K","EPIC"), plot.bias=FALSE, prior.prob=TRUE)
+gsameth <- function(sig.cpg, all.cpg=NULL, collection, array.type = c("450K","EPIC"), 
+                    plot.bias=FALSE, prior.prob=TRUE, anno=NULL)
 # Generalised version of gometh with user-specified gene sets 
 # Gene sets collections must be Entrez Gene ID
 # Can take into account probability of differential methylation 
 # based on numbers of probes on array per gene.
 # Belinda Phipson
 # 10 February 2016
-# Updated 7 July 2016
+# Updated 18 September 2018
 {
     
     if(!is.vector(sig.cpg))
@@ -13,7 +14,12 @@ gsameth <- function(sig.cpg, all.cpg=NULL, collection, array.type = c("450K","EP
     array.type <- match.arg(toupper(array.type),c("450K","EPIC"))
      
     # Get mapped entrez gene IDs from CpG probe names
-    out <- getMappedEntrezIDs(sig.cpg=sig.cpg,all.cpg=all.cpg,array.type=array.type)
+    if(!is.null(anno)){
+      out <- getMappedEntrezIDs(sig.cpg=sig.cpg,all.cpg=all.cpg,array.type=array.type,
+                                anno)
+    } else {
+      out <- getMappedEntrezIDs(sig.cpg=sig.cpg,all.cpg=all.cpg,array.type=array.type)
+    }
     sorted.eg.sig <- out$sig.eg
     eg.universe <- out$universe
     freq_genes <- out$freq
