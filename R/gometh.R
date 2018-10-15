@@ -107,7 +107,7 @@ gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"), array.type 
 
   flat$cpg<- substr(rownames(flat),1,10)
 
-  flat$cpg <- rownames(flat)
+  #flat$cpg <- rownames(flat)
   flat$alias <- alias2SymbolTable(flat$symbol)
 
   eg <- toTable(org.Hs.egSYMBOL2EG)
