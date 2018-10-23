@@ -119,7 +119,23 @@ gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"), array.type 
   id<-paste(flat$cpg,flat$entrezid,sep=".")
   d <- duplicated(id)
   flat.u <- flat[!d,]
-  flat.u
+  #flat.u
+  .reduceMultiMap(flat.u)
+}
+
+.reduceMultiMap <- function(flat){
+  mm <- table(flat$cpg)
+  mm <- names(mm[mm > 2])
+  red <- tapply(flat$entrezid[flat$cpg %in% mm],
+                 flat$cpg[flat$cpg %in% mm], sample, 1)
+  key <- paste(flat$cpg,flat$entrezid,sep=".")
+  rkey <- paste(names(red),red,sep = ".")
+  w <- which(key %in% rkey)
+  
+  newmm <- flat[w,] 
+  newflat <- flat[-which(flat$cpg %in% mm),]
+  newflat <- rbind(newflat, newmm)
+  newflat
 }
 
 # .flattenAnn <- function(array.type)
@@ -169,46 +185,94 @@ gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"), array.type 
 # }
 
 getMappedEntrezIDs <- function(sig.cpg,all.cpg=NULL,array.type,anno=NULL)
-# From a list of CpG sites, obtain the Entrez Gene IDs that are used for testing pathway enrichment
-# Belinda Phipson
-# 10 February 2016
-# Updated 7 July 2016
+  # From a list of CpG sites, obtain the Entrez Gene IDs that are used for testing pathway enrichment
+  # Belinda Phipson
+  # 10 February 2016
+  # Updated 7 July 2016
 {
-    # check input
-    sig.cpg <- as.character(sig.cpg)
-    sig.cpg <- sig.cpg[!is.na(sig.cpg)]
+  # check input
+  sig.cpg <- as.character(sig.cpg)
+  sig.cpg <- sig.cpg[!is.na(sig.cpg)]
 
-    # Get annotaton in appropriate format
-    #flat.u <- .flattenAnn(array.type)
-    if(is.null(anno)){
-      flat.u <- .getFlatAnnotation(array.type)
-    } else {
-      flat.u <- .getFlatAnnotation(array.type,anno)
-    }
+  # Get annotaton in appropriate format
+  #flat.u <- .flattenAnn(array.type)
+  if(is.null(anno)){
+    flat.u <- .getFlatAnnotation(array.type)
+  } else {
+    flat.u <- .getFlatAnnotation(array.type,anno)
+  }
 
-    if(is.null(all.cpg))
-        all.cpg <- unique(flat.u$cpg)
-    else{
-        all.cpg <- as.character(all.cpg)
-        all.cpg <- all.cpg[!is.na(all.cpg)]
-        all.cpg <- unique(all.cpg)
-    }
+  if(is.null(all.cpg))
+    all.cpg <- unique(flat.u$cpg)
+  else{
+    all.cpg <- as.character(all.cpg)
+    all.cpg <- all.cpg[!is.na(all.cpg)]
+    all.cpg <- unique(all.cpg)
+  }
 
-    # map CpG sites to entrez gene id's
-    sig.cpg <- unique(sig.cpg)
-    m1 <- match(flat.u$cpg,sig.cpg)
-    eg.sig <- flat.u$entrezid[!is.na(m1)]
-    eg.sig <- unique(eg.sig)
+  # map CpG sites to entrez gene id's
+  sig.cpg <- unique(sig.cpg)
+  m1 <- match(flat.u$cpg,sig.cpg)
+  eg.sig <- flat.u$entrezid[!is.na(m1)]
+  eg.sig <- unique(eg.sig)
 
-    m2 <- match(flat.u$cpg,all.cpg)
-    eg.all <- flat.u$entrezid[!is.na(m2)]
+  m2 <- match(flat.u$cpg,all.cpg)
+  eg.all <- flat.u$entrezid[!is.na(m2)]
 
-    freq_genes <- table(eg.all)
-    eg.universe <- names(freq_genes)
+  freq_genes <- table(eg.all)
+  eg.universe <- names(freq_genes)
 
-    test.de <- as.integer(eg.universe %in% eg.sig)
+  test.de <- as.integer(eg.universe %in% eg.sig)
 
-    sorted.eg.sig <- eg.universe[test.de==1]
-    out <- list(sig.eg=sorted.eg.sig, universe=eg.universe, freq=freq_genes, de=test.de)
-    out
+  sorted.eg.sig <- eg.universe[test.de==1]
+  out <- list(sig.eg=sorted.eg.sig, universe=eg.universe, freq=freq_genes, de=test.de)
+  out
 }
+
+# getMappedEntrezIDs <- function(sig.cpg,all.cpg=NULL,array.type,anno=NULL)
+# # From a list of CpG sites, obtain the Entrez Gene IDs that are used for testing pathway enrichment
+# # Belinda Phipson
+# # 10 February 2016
+# # Updated 7 July 2016
+# {
+#    cat("new fun!")
+#     # check input
+#     sig.cpg <- as.character(sig.cpg)
+#     sig.cpg <- sig.cpg[!is.na(sig.cpg)]
+# 
+#     txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
+#     txby <- transcriptsBy(txdb, by="gene")
+# 
+#     gr <- unlist(reduce(txby))
+#     elementMetadata(gr)$entrezid <- names(gr)
+# 
+#     cpgs <- GRanges(seqnames = anno$chr,
+#                     ranges = IRanges(start = anno$pos, end = anno$pos),
+#                     name = anno$Name)
+#     f <- findOverlapPairs(cpgs,gr)
+#     d <- duplicated(first(f))
+#     uq <- f[!d]
+# 
+#     flat.u <- data.frame(cpg = first(uq)$name, entrezid = second(uq)$entrezid)
+# 
+#     if(is.null(all.cpg))
+#         all.cpg <- unique(flat.u$cpg)
+#     else{
+#         all.cpg <- as.character(all.cpg)
+#         all.cpg <- all.cpg[!is.na(all.cpg)]
+#         all.cpg <- unique(all.cpg)
+#     }
+# 
+#     sig.cpg <- unique(sig.cpg)
+#     eg.sig <- flat.u$entrezid[flat.u$cpg %in% sig.cpg]
+#     eg.all <- flat.u$entrezid
+# 
+#     freq_genes <- table(eg.all)
+#     eg.universe <- names(freq_genes)
+# 
+#     test.de <- as.integer(eg.universe %in% eg.sig)
+# 
+#     sorted.eg.sig <- eg.universe[test.de==1]
+#     out <- list(sig.eg=sorted.eg.sig, universe=eg.universe, freq=freq_genes, de=test.de)
+#     out
+# }
