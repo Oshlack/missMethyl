@@ -1,3 +1,33 @@
+getGO <- function(){
+  orgPkg <- paste0("org.Hs.eg.db")
+  obj <- paste0("org.Hs.egGO2ALLEGS")
+  egGO2ALLEGS <- tryCatch(getFromNamespace(obj, orgPkg), 
+                          error = function(e) FALSE)
+  GeneID.PathID <- AnnotationDbi::toTable(egGO2ALLEGS)[, 
+                                                       c("gene_id", "go_id", "Ontology")]
+  d <- !duplicated(GeneID.PathID[, c("gene_id", "go_id")])
+  GeneID.PathID <- GeneID.PathID[d, ]
+  GeneID.PathID$db <- suppressMessages(AnnotationDbi::select(GO.db::GO.db, 
+                                                             keys = GeneID.PathID$go_id, 
+                                                             columns = "TERM"))
+  go <- tapply(GeneID.PathID$gene_id, GeneID.PathID$go_id, list)
+  list(GOlist=go, GOtable=GeneID.PathID)
+}
+
+getKEGG <- function(){
+  GeneID.PathID <- getGeneKEGGLinks(species.KEGG = "hsa", convert = TRUE)
+  isna <- rowSums(is.na(GeneID.PathID[, 1:2])) > 0.5
+  GeneID.PathID <- GeneID.PathID[!isna, ]
+  ID.ID <- paste(GeneID.PathID[, 1], GeneID.PathID[, 2], sep = ".")
+  d <- !duplicated(ID.ID)
+  GeneID.PathID <- GeneID.PathID[d, ]
+  PathID.PathName <- getKEGGPathwayNames(species.KEGG = "Hsa", 
+                                         remove.qualifier = TRUE)
+  GeneID.PathID <- merge(GeneID.PathID, PathID.PathName, by="PathwayID")
+  kegg <- tapply(GeneID.PathID$GeneID, GeneID.PathID$PathwayID, list)
+  list(KEGGlist = kegg, KEGGtable = PathID.PathName)
+}  
+
 gsameth <- function(sig.cpg, all.cpg=NULL, collection, array.type = c("450K","EPIC"), 
                     plot.bias=FALSE, prior.prob=TRUE, anno=NULL)
 # Generalised version of gometh with user-specified gene sets 
