@@ -1,13 +1,16 @@
 \name{densityByProbeType}
 \alias{densityByProbeType}
 \title{
-Plot the beta value distributions of the Infinium I and II probe types relative to the overall beta value distribution. 
+Plot the beta value distributions of the Infinium I and II probe types 
+relative to the overall beta value distribution. 
 }
 \description{
-Plot the overall density distribution of beta values and the density distributions of the Infinium I and II probe types.
+Plot the overall density distribution of beta values and the density 
+distributions of the Infinium I and II probe types.
 }
 \usage{
-densityByProbeType(data, legendPos = "top", colors = c("black", "red", "blue"), main = "", lwd = 3, cex.legend = 1)
+densityByProbeType(data, legendPos = "top", colors = c("black", "red", "blue"), 
+main = "", lwd = 3, cex.legend = 1)
 }
 \arguments{
   \item{data}{A \code{MethylSet} or a \code{matrix} or a \code{vector}.
