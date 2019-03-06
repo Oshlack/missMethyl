@@ -701,6 +701,7 @@ shown below, with gene sets made up of randomly selected genes from the
 
 ```{r gsameth}
 library(AnnotationDbi)
+library(org.Hs.eg.db)
 genes <- select(org.Hs.eg.db, columns=c("ENTREZID"), keys = keys(org.Hs.eg.db))
 set1 <- sample(genes$ENTREZID,size=80)
 set2 <- sample(genes$ENTREZID,size=100)
