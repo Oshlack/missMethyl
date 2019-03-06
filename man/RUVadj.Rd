@@ -2,103 +2,67 @@
 \alias{RUVadj}
 
 \title{
-Adjust estimated variances
+RUV adjust
 }
 
 \description{
-Calculate rescaled variances, empirical variances, etc. For use with RUV model 
-fits produced using \code{RUVfit}.
+Post-process and summarize the results of call to \code{\link{RUVfit}}.
 }
 
 \usage{
-RUVadj(fit, ebayes = TRUE, evar = FALSE, rsvar = FALSE, ...)
+RUVadj(Y, fit, var.type=c("ebayes", "standard", "pooled"),
+       p.type=c("standard", "rsvar", "evar"), cpginfo=NULL, ...)
 }
 
 \arguments{
+\item{Y}{
+The original data matrix used in the call to \code{\link{RUVfit}}.
+}
 \item{fit}{
-An object of class \code{MArrayLM} as returned by \code{RUVfit}.
+A RUV model fit (a \code{list}) as returned by \code{RUVfit}.
 }
-\item{ebayes}{
-A logical variable.  Should empirical bayes estimates be calculated?
-}
-\item{evar}{
-A logical variable.  Should empirical variance estimates be calculated?
-}
-\item{rsvar}{
-A logical variable.  Should rescaled variance estimates be calculated?
-}
-\item{...}{
-additional arguments that can be passed to \code{\link{variance_adjust}}. See 
-linked function documentation for details.
-}
+\item{var.type}	Which type of estimate for sigma2 should be used 
+from the call to \code{\link{variance_adjust}}? The options are "ebayes", 
+"standard", or "pooled." See \code{\link{variance_adjust}} for details.
+
+\item{p.type}	Which type of p-values should be used from the call to 
+\code{\link{variance_adjust}}? The options are "standard", "rsvar", or "evar".
+
+\item{cpginfo} A matrix or dataframe containing information about the CpGs. 
+This information is included in the summary that is returned.
+
+\item{...} Other parameters that can be passed to \code{\link{ruv}} function
+\code{\link{ruv_summary}}.
 }
 
 \details{
-Adjust variance. By default only the empirical bayes method of Smyth (2004) is 
-performed.
+This function post-processes the results of a call to \code{\link{RUVfit}} 
+and then summarizes the output. The post-processing step primarily 
+consists of a call to \code{\link{ruv_summary}} and \code{\link{variance_adjust}}, 
+which computes various adjustments to variances, t-statistics, and and p-values. 
+See \code{\link{variance_adjust}} for details. The \code{var.type} and 
+\code{p.type} options determine which of these adjustments are used. 
+
+After post-processing, the results are summarized into a list containing 
+4 objects: 1) the data matrix Y; 2) a dataframe R containing information 
+about the rows (samples); 3) a dataframe C containing information about 
+the columns (features, e.g. genes), and 4) a list misc of other information 
+returned by \code{\link{RUVfit}}.
 }
 
 \value{
-An object of class \code{MArrayLM} containing:
-\item{coefficients}{The estimated coefficients of the factor(s) of interest.
+An \code{list} containing:
+\item{Y}{The original data matrix..
 }
-\item{sigma2}{Estimates of the features' variances.
+\item{R}{A dataframe of sample-wise information, including X, Z, and any 
+other data passed in with \code{rowinfo}.
 }
-\item{t}{t statistics for the factor(s) of interest.
+\item{C}{A dataframe of cpg-wise information, including p-values, 
+estimated regression coefficients, estimated variances, column means, 
+an index of the negative controls, and any other data passed in with 
+\code{cpginfo}.
 }
-\item{p}{P-values for the factor(s) of interest.
-}
-\item{multiplier}{The constant by which \code{sigma2} must be multiplied in order 
-to get an estimate of the variance of \code{coefficients}
-}
-\item{df}{The number of residual degrees of freedom.
-}
-\item{W}{The estimated unwanted factors.
-}
-\item{alpha}{The estimated coefficients of W.
-}
-\item{byx}{The coefficients in a regression of Y on X (after both Y and X have 
-been "adjusted" for Z).  Useful for projection plots.
-}
-\item{bwx}{The coefficients in a regression of W on X (after X has been 
-"adjusted" for Z). Useful for projection plots.
-}
-\item{X}{\code{X}. Included for reference.
-}
-\item{k}{\code{k}. Included for reference.
-}
-\item{ctl}{\code{ctl}. Included for reference.
-}
-\item{Z}{\code{Z}. Included for reference.
-}
-\item{fullW0}{Can be used to speed up future calls of \code{RUVfit}.
-}
-
-The following items may or may not be present depending on the options 
-selected when \code{RUVadj} was run:
-\item{p.rsvar}{P-values, after applying the method of rescaled variances.
-}
-\item{p.evar}{P-values, after applying the method of empirical variances.
-}
-\item{p.ebayes}{P-values, after applying the empirical bayes method of Smyth (2004).
-}
-\item{p.rsvar.ebayes}{P-values, after applying the empirical bayes method of 
-Smyth (2004) and the method of rescaled variances.
-}
-\item{p.BH}{P-values adjusted for false discovery rate (FDR) using the method
-of Benjamini and Hochberg (1995).
-}
-\item{p.rsvar.BH}{FDR-adjusted p-values, after applying the method of rescaled 
-variances.
-}
-\item{p.evar.BH}{FDR-adjusted p-values, after applying the method of empirical 
-variances.
-}
-\item{p.ebayes.BH}{FDR-adjusted p-values, after applying the empirical bayes 
-method of Smyth (2004).
-}
-\item{p.rsvar.ebayes.BH}{FDR-adjusted p-values, after applying the empirical 
-bayes method of Smyth (2004) and the method of rescaled variances.
+\item{misc}{A list of additional information returned by \code{\link{RUVfit}}.
 }
 }
 
@@ -151,14 +115,14 @@ lTop = topTable(lFit2,coef=2,num=Inf)
 
 # The negative control features should *not* be associated with factor of interest
 # but *should* be affected by unwanted variation 
-ctl = rownames(Mval) \%in\% rownames(lTop[lTop$adj.P.Val > 0.5,])
+ctl <- rownames(Mval) \%in\% rownames(lTop[lTop$adj.P.Val > 0.5,])
 
 # Perform RUV adjustment and fit
-fit = RUVfit(data=Mval, design=design, coef=2, ctl=ctl)
-fit2 = RUVadj(fit)
+fit <- RUVfit(Y=Mval, X=group, ctl=ctl)
+fit2 <- RUVadj(Y=Mval, fit=fit)
 
 # Look at table of top results
-top = topRUV(fit2)
+top <- topRUV(fit2)
 }
 }
 
