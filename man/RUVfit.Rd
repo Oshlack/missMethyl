@@ -42,7 +42,7 @@ integer, required if \code{method} is "ruv2" or "ruv4". Indicates the number of
 unwanted factors to use. Can be 0.
 }
 \item{method}{
-character string, indicates which \coed{\link{ruv}} method should be used.
+character string, indicates which \code{\link{ruv}} method should be used.
 } 
 \item{...}{
 additional arguments that can be passed to \code{\link{RUV2}}, \code{\link{RUV4}}, 
@@ -135,14 +135,14 @@ meth <- getMeth(MsetEx)
 unmeth <- getUnmeth(MsetEx)
 Mval <- log2((meth + 100)/(unmeth + 100))
 
-group<-factor(pData(MsetEx)$Sample_Group)
-design<-model.matrix(~group)
+group <- factor(pData(MsetEx)$Sample_Group)
+design <- model.matrix(~group)
 
 # Perform initial analysis to empirically identify negative control features 
 # when not known a priori
-lFit = lmFit(Mval,design)
-lFit2 = eBayes(lFit)
-lTop = topTable(lFit2,coef=2,num=Inf)
+lFit <- lmFit(Mval,design)
+lFit2 <- eBayes(lFit)
+lTop <- topTable(lFit2,coef=2,num=Inf)
 
 # The negative control features should *not* be associated with factor of interest
 # but *should* be affected by unwanted variation 
