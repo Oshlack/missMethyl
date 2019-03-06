@@ -1,5 +1,5 @@
-\name{getAdjusted}
-\alias{getAdjusted}
+\name{getAdj}
+\alias{getAdj}
 \title{
 Extract values adjusted for unwanted variation by RUVm
 }
@@ -7,15 +7,15 @@ Extract values adjusted for unwanted variation by RUVm
 Extract values adjusted for unwanted variation by RUVm.
 }
 \usage{
-getAdjusted(M, fit)
+getAdjusted(Y, fit)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
-  \item{M}{
+  \item{Y}{
 A matrix of M-values.
 }
   \item{fit}{
-An object of class \code{MArrayLM}.
+The list \code{list} object produced by \code{RUVfit}.
 }
 }
 \details{
@@ -40,7 +40,7 @@ meth <- getMeth(MsetEx)
 unmeth <- getUnmeth(MsetEx)
 Mval <- log2((meth + 100)/(unmeth + 100))
 
-group <- factor(pData(MsetEx)$Sample_Group)
+group <- factor(pData(MsetEx)$Sample_Group, labels=c(0,1))
 design <- model.matrix(~group)
 
 # Perform initial analysis to empirically identify negative control features 
@@ -54,11 +54,11 @@ lTop <- topTable(lFit2,coef=2,num=Inf)
 ctl <- rownames(Mval) \%in\% rownames(lTop[lTop$adj.P.Val > 0.5,])
 
 # Perform RUV adjustment and fit
-fit <- RUVfit(data=Mval, design=design, coef=2, ctl=ctl)
-fit2 <- RUVadj(fit)
+fit <- RUVfit(Y=Mval, X=group, ctl=ctl)
+fit2 <- RUVadj(Y=Mval, fit=fit)
 
 # get adjusted values
-Madj <- getAdjusted(Mval,fit2)
+Madj <- getAdj(Y=Mval,fit=fit)
 }
 }
 
