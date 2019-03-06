@@ -8,8 +8,7 @@ getAdj <- function(Y, fit){
     stop("'Y' must be a numeric matrix.")
   
   Y <- t(Y)
-  
-  Y <- t(Y)
+
   W <- fit$W
   alpha <- fit$alpha
   Ya <- Y - W %*% alpha
@@ -118,8 +117,7 @@ RUVadj <- function(Y, fit, var.type=c("ebayes", "standard", "pooled"),
   
   var.type <- match.arg(var.type)
   p.type <- match.arg(p.type)
-  sort.by <- match.arg(sort.by)
-  
+
   fitsum <- ruv_summary(Y, fit, rowinfo=NULL, colinfo=geneinfo, colsubset=NULL, sort.by="F.p", 
                         var.type=var.type, p.type=p.type, min.p.cutoff=10e-25)
   
@@ -217,7 +215,7 @@ RUVadj <- function(Y, fit, var.type=c("ebayes", "standard", "pooled"),
 #     return(.toMArrayLM(fit))
 # }
 
-topRUV <- function (fitsum, number = 10, sort.by = c("p","F.p"), p.BH = 0.05){
+topRUV <- function (fitsum, number = 10, sort.by = c("p","F.p"), p.BH = 1){
   
   tab <- fitsum$C
   
