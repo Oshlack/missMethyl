@@ -7,112 +7,64 @@ differential methylation analysis using RUV
 
 \description{
 Extract a table of the top-ranked CpGs from a linear model fit after 
-performing a differential methylation analysis using \code{RUVfit}.	
+performing a differential methylation analysis using \code{RUVfit} 
+and \code{RUVadj}.	
 }
 
 \usage{
-topRUV(fit, number=10, p.value.cut = 1, 
-cut.on = c("p.ebayes.BH","p.BH","p.rsvar.BH","p.evar.BH","p.rsvar.ebayes.BH"),
-sort.by = c("p.ebayes.BH","p.BH","p.rsvar.BH","p.evar.BH","p.rsvar.ebayes.BH"))
+topRUV(fitsum, number = 10, sort.by = c("p","F.p"), p.BH = 1)
 }
 
 \arguments{
-\item{fit}{
-An object containing a linear model fit produced by \code{RUVfit}, followed by
-\code{RUVadj}. The fit object should be of class \code{MArrayLM}.
+\item{fitsum}{
+An object containing the summary fit object produced by \code{RUVadj}. 
+The object should be a \code{list}.
 }
 
 \item{number}{
 integer, maximum number of genes to list. Default is 10.
 }
 
-\item{p.value.cut}{
-numeric, cutoff value for adjusted p-values. Only features with lower p-values 
-are listed. Must ve between 0 and 1. Default is 1.
-}
-
-\item{cut.on}{
-numeric, the type of adjusted p-value that the cutoff should be applied to. 
-Default is \code{p.ebayes.BH}. Other options are: \code{p.BH}, \code{p.rsvar.BH},
-\code{p.evar.BH} or \code{p.rsvar.ebayes.BH}.
-}
-
 \item{sort.by}{
-character string, the type of adjusted p-value that should be used for sorting. 
-Default is \code{p.ebayes.BH}. Other options are: \code{p.BH}, \code{p.rsvar.BH}, 
-\code{p.evar.BH} or \code{p.rsvar.ebayes.BH}. 
+character string, what the results should be sorted by. Default is unadjusted p-value. 
 }
+
+\item{p.BH}{
+numeric, cutoff value for Benjamini-Hochberg adjusted p-values. Only features with 
+lower p-values are listed. Must be between 0 and 1. Default is 1.
+}
+
 }
 
 \details{
 This function summarises the results of a differential methylation analysis 
 performed using \code{RUVfit}, followed by \code{RUVadj}. The top ranked CpGs 
-are selected by first ranking the adjusted p-values (Default: \code{p.ebayes.BH}), 
-then ranking the raw p-values (Default: \code{p.ebayes}). 
+are sorted by p-value. 
 }
 
 \value{
 Produces a dataframe with rows corresponding to the top \code{number} CpGs and 
 the following columns:
-\item{coefficients}{The estimated coefficients of the factor(s) of interest.
-}
-\item{sigma2}{Estimates of the features' variances.
-}
-\item{t}{t statistics for the factor(s) of interest.
-}
-\item{p}{P-values for the factor(s) of interest.
-}
-\item{multiplier}{The constant by which \code{sigma2} must be multiplied in order 
-to get an estimate of the variance of \code{coefficients}
-}
-\item{df}{The number of residual degrees of freedom.
-}
-\item{W}{The estimated unwanted factors.
-}
-\item{alpha}{The estimated coefficients of W.
-}
-\item{byx}{The coefficients in a regression of Y on X (after both Y and X have 
-been "adjusted" for Z).  Useful for projection plots.
-}
-\item{bwx}{The coefficients in a regression of W on X (after X has been 
-"adjusted" for Z). Useful for projection plots.
-}
-\item{X}{\code{X}. Included for reference.
-}
-\item{k}{\code{k}. Included for reference.
-}
-\item{ctl}{\code{ctl}. Included for reference.
-}
-\item{Z}{\code{Z}. Included for reference.
-}
-\item{fullW0}{Can be used to speed up future calls of \code{RUVfit}.
-}
+F.p	F.p.BH	p_X1	p.BH_X1	b_X1	sigma2	var.b_X1	fit.ctl	mean
 
-The following columns may or may not be present depending on the options 
-selected when \code{RUVadj} was run:
-\item{p.rsvar}{P-values, after applying the method of rescaled variances.
+\item{F.p}{P-values for testing all of the factors of interest simultaneously.
 }
-\item{p.evar}{P-values, after applying the method of empirical variances.
+\item{F.p.BH}{Benjamini-Hochberg adjusted p-values for testing all of the 
+factors of interest simultaneously.
 }
-\item{p.ebayes}{P-values, after applying the empirical bayes method of Smyth (2004).
+\item{p_X1}{p-values for the factor of interest.
 }
-\item{p.rsvar.ebayes}{P-values, after applying the empirical bayes method of 
-Smyth (2004) and the method of rescaled variances.
+\item{p.BH_X1}{Benjamini-Hochberg adjusted p-values for the factor of interest.
 }
-\item{p.BH}{P-values adjusted for false discovery rate (FDR) using the method
-of Benjamini and Hochberg (1995).
+\item{b_X1}{The estimated coefficients of the factor of interest.
 }
-\item{p.rsvar.BH}{FDR-adjusted p-values, after applying the method of rescaled 
-variances.
+\item{sigma2}{Estimate of the methylation variance.
 }
-\item{p.evar.BH}{FDR-adjusted p-values, after applying the method of empirical 
-variances.
+\item{var.b_X1}{Variance estimate of \code{betahat}.
 }
-\item{p.ebayes.BH}{FDR-adjusted p-values, after applying the empirical bayes 
-method of Smyth (2004).
+\item{fit.ctl}{logical, indicating whether CpG was designated as a negative control. 
 }
-\item{p.rsvar.ebayes.BH}{FDR-adjusted p-values, after applying the empirical 
-bayes method of Smyth (2004) and the method of rescaled variances.
+\item{mean}{The mean methylation (M-value).
 }
 }
 
@@ -154,14 +106,14 @@ lTop = topTable(lFit2,coef=2,num=Inf)
 
 # The negative control features should *not* be associated with factor of interest
 # but *should* be affected by unwanted variation 
-ctl = rownames(Mval) \%in\% rownames(lTop[lTop$adj.P.Val > 0.5,])
+ctl <- rownames(Mval) \%in\% rownames(lTop[lTop$adj.P.Val > 0.5,])
 
 # Perform RUV adjustment and fit
-fit = RUVfit(data=Mval, design=design, coef=2, ctl=ctl)
-fit2 = RUVadj(fit)
+fit <- RUVfit(Y=Mval, X=group, ctl=ctl)
+fit2 <- RUVadj(Y=Mval, fit=fit)
 
 # Look at table of top results
-top = topRUV(fit2)
+top <- topRUV(fit2)
 }
 }
 
