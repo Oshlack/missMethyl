@@ -265,10 +265,8 @@ meth <- getMeth(mSet)
 unmeth <- getUnmeth(mSet)
 M <- log2((meth + 100)/(unmeth + 100))
 
-# setup design matrix
-grp <- factor(targets$status,levels=c("normal","cancer"))
-des <- model.matrix(~grp)
-des
+# setup the factor of interest
+grp <- factor(targets$status, labels=c(0,1))
 
 # extract Illumina negative control data
 INCs <- getINCs(rgSet)
@@ -280,8 +278,8 @@ Mc <- rbind(M,INCs)
 ctl1 <- rownames(Mc) %in% rownames(INCs)
 table(ctl1)
 
-rfit1 <- RUVfit(data=Mc, design=des, coef=2, ctl=ctl1) # Stage 1 analysis
-rfit2 <- RUVadj(rfit1)
+rfit1 <- RUVfit(Y = Mc, X = grp, ctl = ctl1) # Stage 1 analysis
+rfit2 <- RUVadj(Y = Mc, fit = rfit1)
 ```
 
 Now that we have performed an initial differential methylation analysis
@@ -290,10 +288,10 @@ interest, we can designate the CpGs that are least associated with the
 factor of interest based on FDR-adjusted p-value as ECPs.
 
 ```{r ruv1}
-top1 <- topRUV(rfit2, num=Inf)
+top1 <- topRUV(rfit2, num=Inf, p.BH = 1)
 head(top1)
 
-ctl2 <- rownames(M) %in% rownames(top1[top1$p.ebayes.BH > 0.5,])
+ctl2 <- rownames(M) %in% rownames(top1[top1$p.BH_X1.1 > 0.5,])
 table(ctl2)
 ```
 
@@ -303,16 +301,16 @@ estimated from the data.
 
 ```{r ruv2}
 # Perform RUV adjustment and fit
-rfit3 <- RUVfit(data=M, design=des, coef=2, ctl=ctl2) # Stage 2 analysis
-rfit4 <- RUVadj(rfit3)
+rfit3 <- RUVfit(Y = M, X = grp, ctl = ctl2) # Stage 2 analysis
+rfit4 <- RUVadj(Y = M, fit = rfit3)
 
 # Look at table of top results
 topRUV(rfit4)
 ```
 
-Note, at present **RUVm** does not support contrasts, so only one factor of
-interest can be interrogated at a time using a design matrix with an
-intercept term.
+<!-- Note, at present **RUVm** does not support contrasts, so only one factor of -->
+<!-- interest can be interrogated at a time using a design matrix with an -->
+<!-- intercept term. -->
 
 ## Alternative approach for RUVm stage 1
 
@@ -322,13 +320,7 @@ EPIC - stage 1 of **RUVm** will not work. In such cases, we recommend performing
 a standard `r BiocStyle::Biocpkg("limma")` analysis in stage 1. 
 
 ```{r limmaruv}
-# get M-values for ALL probes
-meth <- getMeth(mSet)
-unmeth <- getUnmeth(mSet)
-M <- log2((meth + 100)/(unmeth + 100))
-
 # setup design matrix
-grp <- factor(targets$status,levels=c("normal","cancer"))
 des <- model.matrix(~grp)
 des
 
@@ -355,8 +347,8 @@ with `RUV-inverse` as before.
 
 ```{r limmaruv2}
 # Perform RUV adjustment and fit
-rfit5 <- RUVfit(data=M, design=des, coef=2, ctl=ctl3) # Stage 2 analysis
-rfit6 <- RUVadj(rfit5)
+rfit5 <- RUVfit(Y = M, X = grp, ctl = ctl3) # Stage 2 analysis
+rfit6 <- RUVadj(Y = M, fit = rfit5)
 
 # Look at table of top results
 topRUV(rfit6)
@@ -364,13 +356,13 @@ topRUV(rfit6)
 ## Visualising the effect of RUVm adjustment
 
 To visualise the effect that the **RUVm** adjustment is having on the data, 
-using an MDS plot for example, the `getAdjusted` function can be used to extract 
-the adjusted values from the **RUVm** fit object. NOTE: The adjusted values 
-should only be used for plotting - it is NOT recommended that they are used in 
-any downstream analysis.
+using an MDS plot for example, the `getAdj` function can be used to extract 
+the adjusted values from the **RUVm** fit object produced by `RUVfit`. 
+NOTE: The adjusted values should only be used for visualisations - it is NOT 
+recommended that they are used in any downstream analysis.
 
 ```{r ruvadj}
-Madj <- getAdjusted(M, rfit6) # get adjusted values
+Madj <- getAdj(M, rfit5) # get adjusted values
 ```
 
 The MDS plots below show how the relationship between the samples changes with and 
@@ -381,56 +373,66 @@ optimal value of $k$, if using *RUV-4* or *RUV-2*.
 
 ```{r mdsplotadj, fig.cap = "RUVm adjusted data. An MDS plot of cancer and normal data, before and after RUVm adjustment.", echo = TRUE, fig.width=10, fig.height=5}
 par(mfrow=c(1,2))
-plotMDS(Mval, labels=targets$Sample_Name, col=as.integer(factor(targets$status)),
-        main="Unadjusted")
+plotMDS(M, labels=targets$Sample_Name, col=as.integer(factor(targets$status)),
+        main="Unadjusted", gene.selection = "common")
 legend("topleft",legend=c("Cancer","Normal"),pch=16,cex=1,col=1:2)
 
 plotMDS(Madj, labels=targets$Sample_Name, col=as.integer(factor(targets$status)),
-        main="Adjusted: RUV-inverse")
+        main="Adjusted: RUV-inverse", gene.selection = "common")
 legend("topleft",legend=c("Cancer","Normal"),pch=16,cex=1,col=1:2)
 ```
 
-To illustrate how the `getAdjusted` function can be used to help select an
+To illustrate how the `getAdj` function can be used to help select an
 appropriate value for $k$, we will run the second stage of the **RUVm** analysis 
 using *RUV-4* with two different $k$ values.
 
 ```{r ruvadj1}
 # Use RUV-4 in stage 2 of RUVm with k=1 and k=2
-rfit7 <- RUVfit(data=M, design=des, coef=2, ctl=ctl3,
+rfit7 <- RUVfit(Y = M, X = grp, ctl = ctl3,
                 method = "ruv4", k=1) # Stage 2 with RUV-4, k=1
-rfit8 <- RUVadj(rfit7)
 
-rfit9 <- RUVfit(data=M, design=des, coef=2, ctl=ctl3,
+rfit9 <- RUVfit(Y = M, X = grp, ctl = ctl3,
                 method = "ruv4", k=2) # Stage 2 with RUV-4, k=2
-rfit10 <- RUVadj(rfit9)
 
 # get adjusted values
-Madj1 <- getAdjusted(M, rfit8)
-Madj2 <- getAdjusted(M, rfit10)
+Madj1 <- getAdj(M, rfit7)
+Madj2 <- getAdj(M, rfit9)
 ```
 
 The following MDS plots show how the relationship between the samples changes
 from the unadjusted data to data adjusted with *RUV-inverse* and *RUV-4* with 
-two different $k$ values.
+two different $k$ values. For this small dataset, *RUV-inverse* appears to be
+removing far too much variation as we can see the samples in each group are 
+completely overlapping. Using *RUV-4* and choosing a smaller value for $k$
+produces more sensible results.
 
 ```{r mdsplotadj1, fig.cap = "Effect of different adjustment methods and parameters. MDS plots of cancer and normal data before an after adjustment with RUV-inverse and RUV-4 with different k values.", echo = TRUE, fig.width=10, fig.height=9}
 par(mfrow=c(2,2))
-plotMDS(Mval, labels=targets$Sample_Name, col=as.integer(factor(targets$status)),
-        main="Unadjusted")
+plotMDS(M, labels=targets$Sample_Name, col=as.integer(factor(targets$status)),
+        main="Unadjusted", gene.selection = "common")
 legend("topleft",legend=c("Cancer","Normal"),pch=16,cex=1,col=1:2)
 
 plotMDS(Madj, labels=targets$Sample_Name, col=as.integer(factor(targets$status)),
-        main="Adjusted: RUV-inverse")
+        main="Adjusted: RUV-inverse", gene.selection = "common")
 legend("topleft",legend=c("Cancer","Normal"),pch=16,cex=1,col=1:2)
 
 plotMDS(Madj1, labels=targets$Sample_Name, col=as.integer(factor(targets$status)),
-        main="Adjusted: RUV-4, k=1")
+        main="Adjusted: RUV-4, k=1", gene.selection = "common")
 legend("bottomleft",legend=c("Cancer","Normal"),pch=16,cex=1,col=1:2)
 
 plotMDS(Madj2, labels=targets$Sample_Name, col=as.integer(factor(targets$status)),
-        main="Adjusted: RUV-4, k=2")
+        main="Adjusted: RUV-4, k=2", gene.selection = "common")
 legend("bottomright",legend=c("Cancer","Normal"),pch=16,cex=1,col=1:2)
 ```
+
+More information about the various RUV methods can be found at 
+[http://www-personal.umich.edu/~johanngb/ruv/](http://www-personal.umich.edu/~johanngb/ruv/),
+including links to all relevant publications. Further examples of
+RUV analyses, with code, can be found at [https://github.com/johanngb/ruv-useR2018](https://github.com/johanngb/ruv-useR2018). 
+The tutorials demonstrate how the various plotting functions
+available in the `r BiocStyle::CRANpkg("ruv")` package (which are not 
+covered in this vignette) can be used to select sensible parameters and assess 
+if the adjustment is "helping" your analysis.
 
 
 # Testing for differential variability (DiffVar)
@@ -632,8 +634,8 @@ To illustrate how to use `gometh`, consider the results from the differential
 methylation analysis with **RUVm**.
 
 ```{r gometh1}
-topRUV(rfit4)
-table(rfit4$p.ebayes.BH < 0.01)
+top <- topRUV(rfit4, number = Inf, p.BH = 1)
+table(top$p.BH_X1.1 < 0.01)
 ```
 
 At a 1% false discovery rate cut-off, there are still tens of thousands
@@ -647,10 +649,12 @@ differentially methylated.
 
 ```{r gometh2}
 beta <- getBeta(mSet)
-beta_norm <- rowMeans(beta[,des[,2]==0])
-beta_can <- rowMeans(beta[,des[,2]==1])
+# make sure that order of beta values matches orer after analysis
+beta <- beta[match(rownames(top),rownames(beta)),]
+beta_norm <- rowMeans(beta[,grp==0])
+beta_can <- rowMeans(beta[,grp==1])
 Delta_beta <- beta_can - beta_norm
-sigDM <- rfit4$p.ebayes.BH < 0.01 & abs(Delta_beta) > 0.25
+sigDM <- top$p.BH_X1.1 < 0.01 & abs(Delta_beta) > 0.25
 table(sigDM)
 ```
 
@@ -683,7 +687,7 @@ For GO testing on our example dataset:
 
 ```{r gometh4}
 library(IlluminaHumanMethylation450kanno.ilmn12.hg19)
-gst <- gometh(sig.cpg=sigCpGs, all.cpg=rownames(rfit2), collection="GO")
+gst <- gometh(sig.cpg=sigCpGs, all.cpg=rownames(top), collection="GO")
 topGO(gst)
 ```
 
@@ -696,13 +700,13 @@ shown below, with gene sets made up of randomly selected genes from the
 `r BiocStyle::Biocpkg("org.Hs.eg.db")` package.
 
 ```{r gsameth}
-library(org.Hs.eg.db)
-genes <- toTable(org.Hs.egSYMBOL2EG)
-set1 <- sample(genes$gene_id,size=80)
-set2 <- sample(genes$gene_id,size=100)
-set3 <- sample(genes$gene_id,size=30)
+library(AnnotationDbi)
+genes <- select(org.Hs.eg.db, columns=c("ENTREZID"), keys = keys(org.Hs.eg.db))
+set1 <- sample(genes$ENTREZID,size=80)
+set2 <- sample(genes$ENTREZID,size=100)
+set3 <- sample(genes$ENTREZID,size=30)
 genesets <- list(set1,set2,set3)
-gsa <- gsameth(sig.cpg=sigCpGs, all.cpg=rownames(rfit4), collection=genesets)
+gsa <- gsameth(sig.cpg=sigCpGs, all.cpg=rownames(top), collection=genesets)
 topGSA(gsa)
 ```
 
