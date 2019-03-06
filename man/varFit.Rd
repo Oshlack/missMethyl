@@ -7,32 +7,41 @@
 Testing for differential variability
 }
 \description{
-Fit linear model on mean absolute or squared deviations for each CpG given a series of methylation arrays
+Fit linear model on mean absolute or squared deviations for each CpG given a series of 
+methylation arrays
 }
 \usage{
-varFit(data, design = NULL, coef = NULL, type = NULL, trend = TRUE, robust = TRUE, weights = NULL)
+varFit(data, design = NULL, coef = NULL, type = NULL, trend = TRUE, robust = TRUE, 
+weights = NULL)
 }
 \arguments{
   \item{data}{
-	object of class \code{MethylSet} or \code{matrix} with rows corresponding to the features of interest such as CpG sites and columns corresponding to samples or arrays
+	object of class \code{MethylSet} or \code{matrix} with rows corresponding to the 
+	features of interest such as CpG sites and columns corresponding to samples or arrays
 }
   \item{design}{
-	the design matrix of the experiment, with rows corresponding to arrays/samples and columns to coefficients to be estimated. Defaults to the unit vector.
+	the design matrix of the experiment, with rows corresponding to arrays/samples and 
+	columns to coefficients to be estimated. Defaults to the unit vector.
 }
   \item{coef}{
-  	The columns of the design matrix containing the comparisons to test for differential variability. 
+  	The columns of the design matrix containing the comparisons to test for differential 
+  	variability. 
  }
   \item{type}{
-	character string, \code{"AD"} for absolute residuals or \code{"SQ"} for squared residuals. Default is absolute.
+	character string, \code{"AD"} for absolute residuals or \code{"SQ"} for squared 
+	residuals. Default is absolute.
 }
   \item{trend}{
 	logical, if true fits a mean variance trend on the absolute or squared deviations
 }
   \item{robust}{
-	logical, if true performs robust empirical Bayes shrinkage of the variances for the moderated t statistics	
+	logical, if true performs robust empirical Bayes shrinkage of the variances for the 
+	moderated t statistics	
 }
   \item{weights}{
-  	non-negative observation weights. Can be a numeric matrix of individual weights, of same size as the object matrix, or a numeric vector of array weights, or a numeric vector of gene/feature weights. 
+  	non-negative observation weights. Can be a numeric matrix of individual weights, of 
+  	same size as the object matrix, or a numeric vector of array weights, or a numeric 
+  	vector of gene/feature weights. 
 }  
 }
 \details{
@@ -47,7 +56,10 @@ For testing differential variability on RNA-Seq data, a \code{DGEList} object ca
 Since the output is of class \code{MArrayLM}, any functions that can be applied to fit objects from \code{lmFit} and \code{eBayes} can be applied, for example, \code{topTable} and \code{decideTests}. 
 }
 \value{
-	produces an object of class \code{MArrayLM} (see \code{\link{MArrayLM-class}}) containing everything found in a fitted model object produced by \code{lmFit} and \code{eBayes} as well as a vector containing the sample CpG-wise variances and a matrix of LogVarRatios corresponding to the differential variability analysis.
+	produces an object of class \code{MArrayLM} (see \code{\link{MArrayLM-class}}) 
+	containing everything found in a fitted model object produced by \code{lmFit} and 
+	\code{eBayes} as well as a vector containing the sample CpG-wise variances and a matrix 
+	of LogVarRatios corresponding to the differential variability analysis.
 }
 \references{
 Phipson, B., and Oshlack, A. (2014). A method for detecting differential variability in methylation data shows CpG islands are highly variably methylated in cancers. \emph{Genome Biology}, \bold{15}:465.
@@ -65,7 +77,8 @@ Benjamini, Y., and Hochberg, Y. (1995). Controlling the false discovery rate: a 
 	Belinda Phipson
 }
 \examples{
-# Randomly generate data for a 2 group problem with 100 CpG sites and 5 arrays in each group. 
+# Randomly generate data for a 2 group problem with 100 CpG sites and 5 arrays in each 
+group. 
 
 y<-matrix(rnorm(1000),ncol=10)
 
