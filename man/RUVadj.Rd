@@ -21,18 +21,19 @@ The original data matrix used in the call to \code{\link{RUVfit}}.
 \item{fit}{
 A RUV model fit (a \code{list}) as returned by \code{RUVfit}.
 }
-\item{var.type}	Which type of estimate for sigma2 should be used 
+\item{var.type}{Which type of estimate for sigma2 should be used 
 from the call to \code{\link{variance_adjust}}? The options are "ebayes", 
 "standard", or "pooled." See \code{\link{variance_adjust}} for details.
-
-\item{p.type}	Which type of p-values should be used from the call to 
+}
+\item{p.type}{Which type of p-values should be used from the call to 
 \code{\link{variance_adjust}}? The options are "standard", "rsvar", or "evar".
-
-\item{cpginfo} A matrix or dataframe containing information about the CpGs. 
+}
+\item{cpginfo}{A matrix or dataframe containing information about the CpGs. 
 This information is included in the summary that is returned.
-
-\item{...} Other parameters that can be passed to \code{\link{ruv}} function
+}
+\item{...}{Other parameters that can be passed to \code{\link{ruv}} function
 \code{\link{ruv_summary}}.
+}
 }
 
 \details{
@@ -109,9 +110,9 @@ design<-model.matrix(~group)
 
 # Perform initial analysis to empirically identify negative control features 
 # when not known a priori
-lFit = lmFit(Mval,design)
-lFit2 = eBayes(lFit)
-lTop = topTable(lFit2,coef=2,num=Inf)
+lFit <- lmFit(Mval,design)
+lFit2 <- eBayes(lFit)
+lTop <- topTable(lFit2,coef=2,num=Inf)
 
 # The negative control features should *not* be associated with factor of interest
 # but *should* be affected by unwanted variation 
