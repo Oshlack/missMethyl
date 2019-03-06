@@ -4,7 +4,8 @@
 Get table of top 20 enriched pathways 
 }
 \description{
-After using \code{gsameth}, calling topGSA will output the top 20 most significantly enriched pathways.
+After using \code{gsameth}, calling topGSA will output the top 20 most significantly 
+enriched pathways.
 }
 \usage{
 topGSA(gsa, number = 20, sort = TRUE)
@@ -21,7 +22,8 @@ topGSA(gsa, number = 20, sort = TRUE)
   }      
 }
 \details{
-    This function will output the top 20 most significant pathways from a pathway analysis using the \code{gsameth} function. The output is ordered by p-value.
+    This function will output the top 20 most significant pathways from a pathway analysis 
+    using the \code{gsameth} function. The output is ordered by p-value.
 }
 \value{
 A matrix ordered by P.DE, with a row for each gene set and the following columns:
@@ -73,10 +75,12 @@ names(sets) <- c(setname1,setname2)
 
 # Testing with prior probabilities taken into account
 # Plot of bias due to differing numbers of CpG sites per gene
-gst <- gsameth(sig.cpg = sigcpgs, all.cpg = allcpgs, collection = sets, plot.bias = TRUE, prior.prob = TRUE)
+gst <- gsameth(sig.cpg = sigcpgs, all.cpg = allcpgs, collection = sets, plot.bias = TRUE, 
+                prior.prob = TRUE)
 topGSA(gst)
 
 # Testing ignoring bias
-gst.bias <- gsameth(sig.cpg = sigcpgs, all.cpg = allcpgs, collection = sets, prior.prob = FALSE)
+gst.bias <- gsameth(sig.cpg = sigcpgs, all.cpg = allcpgs, collection = sets, 
+                    prior.prob = FALSE)
 topGSA(gst.bias)
 }
