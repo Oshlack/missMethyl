@@ -7,7 +7,7 @@ Extract values adjusted for unwanted variation by RUVm
 Extract values adjusted for unwanted variation by RUVm.
 }
 \usage{
-getAdjusted(Y, fit)
+getAdj(Y, fit)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
