@@ -105,7 +105,7 @@ RUVfit <- function(Y, X, ctl, Z = 1, k = NULL,
 # Calculate rescaled variances, empirical variances, etc. 
 # For use with RUV model fits.
 RUVadj <- function(Y, fit, var.type=c("ebayes", "standard", "pooled"),
-                   p.type=c("standard", "rsvar", "evar"), geneinfo=NULL){
+                   p.type=c("standard", "rsvar", "evar"), cpginfo=NULL, ...){
   
   if (is.data.frame(Y)) 
     Y <- data.matrix(Y)
@@ -118,8 +118,7 @@ RUVadj <- function(Y, fit, var.type=c("ebayes", "standard", "pooled"),
   var.type <- match.arg(var.type)
   p.type <- match.arg(p.type)
 
-  fitsum <- ruv_summary(Y, fit, rowinfo=NULL, colinfo=geneinfo, colsubset=NULL, sort.by="F.p", 
-                        var.type=var.type, p.type=p.type, min.p.cutoff=10e-25)
+  fitsum <- ruv_summary(Y, fit, colinfo=cpginfo, var.type=var.type, p.type=p.type, ...)
   
   return(fitsum)
 }
