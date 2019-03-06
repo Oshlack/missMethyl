@@ -95,14 +95,14 @@ meth <- getMeth(MsetEx)
 unmeth <- getUnmeth(MsetEx)
 Mval <- log2((meth + 100)/(unmeth + 100))
 
-group<-factor(pData(MsetEx)$Sample_Group)
-design<-model.matrix(~group)
+group <- factor(pData(MsetEx)$Sample_Group)
+design <- model.matrix(~group)
 
 # Perform initial analysis to empirically identify negative control features 
 # when *not* known a priori
-lFit = lmFit(Mval,design)
-lFit2 = eBayes(lFit)
-lTop = topTable(lFit2,coef=2,num=Inf)
+lFit <- lmFit(Mval,design)
+lFit2 <- eBayes(lFit)
+lTop <- topTable(lFit2,coef=2,num=Inf)
 
 # The negative control features should *not* be associated with factor of interest
 # but *should* be affected by unwanted variation 
