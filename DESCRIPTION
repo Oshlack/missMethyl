@@ -1,13 +1,8 @@
 Package: missMethyl
 Type: Package
 Title: Analysing Illumina HumanMethylation BeadChip Data
-<<<<<<< HEAD
-Version: 1.15.5
-Date: 2018-10-15
-=======
 Version: 1.17.1
 Date: 2019-03-04
->>>>>>> ef64f13... Bumped version to 1.17.1.
 Author: Belinda Phipson and Jovana Maksimovic 
 Maintainer: Belinda Phipson <belinda.phipson@mcri.edu.au>, Jovana
         Maksimovic <jovana.maksimovic@mcri.edu.au>,
