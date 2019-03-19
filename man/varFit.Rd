@@ -12,7 +12,7 @@ methylation arrays
 }
 \usage{
 varFit(data, design = NULL, coef = NULL, type = NULL, trend = TRUE, robust = TRUE, 
-weights = NULL)
+        weights = NULL)
 }
 \arguments{
   \item{data}{
@@ -55,12 +55,14 @@ For testing differential variability on RNA-Seq data, a \code{DGEList} object ca
 
 Since the output is of class \code{MArrayLM}, any functions that can be applied to fit objects from \code{lmFit} and \code{eBayes} can be applied, for example, \code{topTable} and \code{decideTests}. 
 }
+
 \value{
 	produces an object of class \code{MArrayLM} (see \code{\link{MArrayLM-class}}) 
 	containing everything found in a fitted model object produced by \code{lmFit} and 
 	\code{eBayes} as well as a vector containing the sample CpG-wise variances and a matrix 
 	of LogVarRatios corresponding to the differential variability analysis.
 }
+
 \references{
 Phipson, B., and Oshlack, A. (2014). A method for detecting differential variability in methylation data shows CpG islands are highly variably methylated in cancers. \emph{Genome Biology}, \bold{15}:465.
 
@@ -78,7 +80,7 @@ Benjamini, Y., and Hochberg, Y. (1995). Controlling the false discovery rate: a 
 }
 \examples{
 # Randomly generate data for a 2 group problem with 100 CpG sites and 5 arrays in each 
-group. 
+# group. 
 
 y<-matrix(rnorm(1000),ncol=10)
 
