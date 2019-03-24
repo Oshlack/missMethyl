@@ -36,7 +36,7 @@ gsameth <- function(sig.cpg, all.cpg=NULL, collection, array.type = c("450K","EP
 # based on numbers of probes on array per gene.
 # Belinda Phipson
 # 10 February 2016
-# Updated 18 September 2018
+# Updated 21 March 2019
 {
     
     if(!is.vector(sig.cpg))
@@ -87,7 +87,7 @@ gsameth <- function(sig.cpg, all.cpg=NULL, collection, array.type = c("450K","EP
             pw.red <- sum(pwf[InSet])/results[i,"N"]
             pw.white <- sum(pwf[!InSet])/(Nuniverse-results[i,"N"])
             odds <- pw.red/pw.white
-            results[i,"P.DE"] <- BiasedUrn::pWNCHypergeo(results[i,"DE"],results[i,"N"],Nuniverse-results[i,"N"],m,odds,lower.tail=FALSE,precision=1E-32) 
+            results[i,"P.DE"] <- BiasedUrn::pWNCHypergeo(results[i,"DE"],results[i,"N"],Nuniverse-results[i,"N"],m,odds,lower.tail=FALSE,precision=1E-32) + BiasedUrn::pWNCHypergeo(results[i,"DE"],results[i,"N"],Nuniverse-results[i,"N"],m,odds)
         }
     }
     # Hypergeometric test without prior probabilities

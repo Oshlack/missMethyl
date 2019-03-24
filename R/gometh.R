@@ -119,8 +119,9 @@ gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"), array.type 
   id<-paste(flat$cpg,flat$entrezid,sep=".")
   d <- duplicated(id)
   flat.u <- flat[!d,]
-  #flat.u
-  .reduceMultiMap(flat.u)
+  flat.u
+  # This randomly samples only 1 gene ID for multimapping CpGs
+  #.reduceMultiMap(flat.u)
 }
 
 .reduceMultiMap <- function(flat){
@@ -138,64 +139,17 @@ gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"), array.type 
   newflat
 }
 
-# .flattenAnn <- function(array.type)
-# # flatten 450k or EPIC array annotation
-# # Belinda Phipson
-# # 10 February 2016
-# # Updated 7 July 2016
-# {
-#     if(array.type=="450K")
-#         anno <- getAnnotation(IlluminaHumanMethylation450kanno.ilmn12.hg19)
-#     else
-#         anno <- getAnnotation(IlluminaHumanMethylationEPICanno.ilm10b2.hg19)
-#
-#     # get rid of the non-CpG sites
-#     strlen<-str_length(rownames(anno))
-#     ann.keep<-anno[strlen==10,]
-#
-#     # get rid of CpGs that are not annotated
-#     missing<-ann.keep$UCSC_RefGene_Name==""
-#     ann.keep<-ann.keep[!missing,]
-#
-#     # get individual gene names for each CpG
-#     geneslist<-strsplit(ann.keep$UCSC_RefGene_Name,split=";")
-#     names(geneslist)<-rownames(ann.keep)
-#
-#     grouplist<-strsplit(ann.keep$UCSC_RefGene_Group,split=";")
-#     names(grouplist)<-rownames(ann.keep)
-#
-#     flat<-data.frame(symbol=unlist(geneslist),group=unlist(grouplist))
-#     flat$symbol<-as.character(flat$symbol)
-#     flat$group <- as.character(flat$group)
-#
-#     flat$cpg<- substr(rownames(flat),1,10)
-#
-#     flat$alias <- alias2SymbolTable(flat$symbol)
-#
-#     eg <- toTable(org.Hs.egSYMBOL2EG)
-#     m <- match(flat$alias,eg$symbol)
-#     flat$entrezid <- eg$gene_id[m]
-#     flat <- flat[!is.na(flat$entrezid),]
-#
-#     # keep unique cpg by gene name annotation
-#     id<-paste(flat$cpg,flat$entrezid,sep=".")
-#     d <- duplicated(id)
-#     flat.u <- flat[!d,]
-#     flat.u
-# }
-
 getMappedEntrezIDs <- function(sig.cpg,all.cpg=NULL,array.type,anno=NULL)
   # From a list of CpG sites, obtain the Entrez Gene IDs that are used for testing pathway enrichment
   # Belinda Phipson
   # 10 February 2016
-  # Updated 7 July 2016
+  # Updated 21 March 2019
 {
   # check input
   sig.cpg <- as.character(sig.cpg)
   sig.cpg <- sig.cpg[!is.na(sig.cpg)]
 
   # Get annotaton in appropriate format
-  #flat.u <- .flattenAnn(array.type)
   if(is.null(anno)){
     flat.u <- .getFlatAnnotation(array.type)
   } else {
@@ -225,54 +179,21 @@ getMappedEntrezIDs <- function(sig.cpg,all.cpg=NULL,array.type,anno=NULL)
   test.de <- as.integer(eg.universe %in% eg.sig)
 
   sorted.eg.sig <- eg.universe[test.de==1]
-  out <- list(sig.eg=sorted.eg.sig, universe=eg.universe, freq=freq_genes, de=test.de)
+  
+  multimap <- data.frame(table(flat.u$cpg))
+  multimap$Var1 <- as.character(multimap$Var1)
+  m3 <- match(flat.u$cpg, multimap$Var1)
+  flat.u$multimap <- multimap$Freq[m3]
+  
+  sig.flat <- flat.u[!is.na(m1),]
+  
+  fract <- data.frame(weight=pmin(tapply(1/sig.flat$multimap,sig.flat$entrezid,sum),1))
+  
+  m4 <- match(sorted.eg.sig,rownames(fract))
+  fract.counts <- fract$weight[m4]
+  
+  out <- list(sig.eg = sorted.eg.sig, universe = eg.universe, 
+              freq = freq_genes, de = test.de, fract.counts = data.frame(sigid=sorted.eg.sig,frac=fract.counts))
   out
 }
 
-# getMappedEntrezIDs <- function(sig.cpg,all.cpg=NULL,array.type,anno=NULL)
-# # From a list of CpG sites, obtain the Entrez Gene IDs that are used for testing pathway enrichment
-# # Belinda Phipson
-# # 10 February 2016
-# # Updated 7 July 2016
-# {
-#    cat("new fun!")
-#     # check input
-#     sig.cpg <- as.character(sig.cpg)
-#     sig.cpg <- sig.cpg[!is.na(sig.cpg)]
-# 
-#     txdb <- TxDb.Hsapiens.UCSC.hg19.knownGene
-#     txby <- transcriptsBy(txdb, by="gene")
-# 
-#     gr <- unlist(reduce(txby))
-#     elementMetadata(gr)$entrezid <- names(gr)
-# 
-#     cpgs <- GRanges(seqnames = anno$chr,
-#                     ranges = IRanges(start = anno$pos, end = anno$pos),
-#                     name = anno$Name)
-#     f <- findOverlapPairs(cpgs,gr)
-#     d <- duplicated(first(f))
-#     uq <- f[!d]
-# 
-#     flat.u <- data.frame(cpg = first(uq)$name, entrezid = second(uq)$entrezid)
-# 
-#     if(is.null(all.cpg))
-#         all.cpg <- unique(flat.u$cpg)
-#     else{
-#         all.cpg <- as.character(all.cpg)
-#         all.cpg <- all.cpg[!is.na(all.cpg)]
-#         all.cpg <- unique(all.cpg)
-#     }
-# 
-#     sig.cpg <- unique(sig.cpg)
-#     eg.sig <- flat.u$entrezid[flat.u$cpg %in% sig.cpg]
-#     eg.all <- flat.u$entrezid
-# 
-#     freq_genes <- table(eg.all)
-#     eg.universe <- names(freq_genes)
-# 
-#     test.de <- as.integer(eg.universe %in% eg.sig)
-# 
-#     sorted.eg.sig <- eg.universe[test.de==1]
-#     out <- list(sig.eg=sorted.eg.sig, universe=eg.universe, freq=freq_genes, de=test.de)
-#     out
-# }

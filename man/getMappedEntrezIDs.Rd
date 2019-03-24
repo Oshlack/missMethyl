@@ -45,6 +45,9 @@ A list with the following elements
   \item{de}{
   	a vector of ones and zeroes of the same length of universe indicating which genes in the universe are significantly differentially methylated.
   }
+  \item{fract.counts}{
+    a dataframe with 2 columns corresponding to the Entrez Gene IDS for the significant probes and the associated weight to account for multi-mapping probes.
+  }
 }
 \seealso{
 \code{\link{gometh},\link{gsameth}}
