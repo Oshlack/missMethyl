@@ -54,6 +54,7 @@ gsameth <- function(sig.cpg, all.cpg=NULL, collection, array.type = c("450K","EP
     eg.universe <- out$universe
     freq_genes <- out$freq
     test.de <- out$de
+    frac <- out$fract.counts
     
     # Check collection is a list with character vectors
     if(!is.list(collection))
@@ -76,7 +77,7 @@ gsameth <- function(sig.cpg, all.cpg=NULL, collection, array.type = c("450K","EP
     colnames(results) <- c("N","DE","P.DE","FDR")
     rownames(results) <- names(collection)
     results[,"N"] <- unlist(lapply(collection,length))
-    results[,"DE"] <- unlist(lapply(collection, function(x) sum(sorted.eg.sig %in% x)))
+    results[,"DE"] <- unlist(lapply(collection, function(x) sum((sorted.eg.sig %in% x) * frac$frac)))
     Nuniverse <- length(eg.universe)
     m <- length(sorted.eg.sig)
         
