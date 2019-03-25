@@ -88,7 +88,7 @@ gsameth <- function(sig.cpg, all.cpg=NULL, collection, array.type = c("450K","EP
             pw.red <- sum(pwf[InSet])/results[i,"N"]
             pw.white <- sum(pwf[!InSet])/(Nuniverse-results[i,"N"])
             odds <- pw.red/pw.white
-            results[i,"P.DE"] <- BiasedUrn::pWNCHypergeo(results[i,"DE"],results[i,"N"],Nuniverse-results[i,"N"],m,odds,lower.tail=FALSE,precision=1E-32) + BiasedUrn::pWNCHypergeo(results[i,"DE"],results[i,"N"],Nuniverse-results[i,"N"],m,odds)
+            results[i,"P.DE"] <- BiasedUrn::pWNCHypergeo(results[i,"DE"],results[i,"N"],Nuniverse-results[i,"N"],m,odds,lower.tail=FALSE) + BiasedUrn::pWNCHypergeo(results[i,"DE"],results[i,"N"],Nuniverse-results[i,"N"],m,odds)
         }
     }
     # Hypergeometric test without prior probabilities
