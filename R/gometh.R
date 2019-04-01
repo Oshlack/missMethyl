@@ -30,16 +30,16 @@ gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"), array.type 
         if(plot.bias)
             .plotBias(D=test.de,bias=as.vector(freq_genes))
         if(collection=="GO")
-            gst <- goana(sorted.eg.sig,universe=eg.universe,prior.prob=pwf)
+            gst <- limma:::goana(sorted.eg.sig,universe=eg.universe,prior.prob=pwf)
         if(collection=="KEGG")
-            gst <- kegga(sorted.eg.sig,universe=eg.universe,prior.prob=pwf)
+            gst <- limma:::kegga(sorted.eg.sig,universe=eg.universe,prior.prob=pwf)
         }
     # Perform GO or KEGG testing without correcting for CpG density bias
     else{
         if(collection=="GO")
-            gst <- goana(sorted.eg.sig,universe=eg.universe)
+            gst <- limma:::goana(sorted.eg.sig,universe=eg.universe)
         if(collection=="KEGG")
-            gst <- kegga(sorted.eg.sig,universe=eg.universe)
+            gst <- limma:::kegga(sorted.eg.sig,universe=eg.universe)
     }
     gst$FDR<-p.adjust(gst$P.DE,method="BH")
     gst
@@ -68,7 +68,7 @@ gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"), array.type 
 {
     prior.prob <- bias
     o <- order(bias)
-    prior.prob[o] <- tricubeMovingAverage(D[o],span=0.5)
+    prior.prob[o] <- limma:::tricubeMovingAverage(D[o],span=0.5)
     prior.prob
 }
 
@@ -108,7 +108,7 @@ gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"), array.type 
   flat$cpg<- substr(rownames(flat),1,10)
 
   #flat$cpg <- rownames(flat)
-  flat$alias <- alias2SymbolTable(flat$symbol)
+  flat$alias <- limma:::alias2SymbolTable(flat$symbol)
 
   eg <- toTable(org.Hs.egSYMBOL2EG)
   m <- match(flat$alias,eg$symbol)

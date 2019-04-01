@@ -29,7 +29,7 @@ getKEGG <- function(){
 }  
 
 gsameth <- function(sig.cpg, all.cpg=NULL, collection, array.type = c("450K","EPIC"), 
-                    plot.bias=FALSE, prior.prob=TRUE, anno=NULL)
+                    plot.bias=FALSE, prior.prob=TRUE, anno=NULL, equiv.cpg = TRUE)
 # Generalised version of gometh with user-specified gene sets 
 # Gene sets collections must be Entrez Gene ID
 # Can take into account probability of differential methylation 
@@ -55,6 +55,7 @@ gsameth <- function(sig.cpg, all.cpg=NULL, collection, array.type = c("450K","EP
     freq_genes <- out$freq
     test.de <- out$de
     frac <- out$fract.counts
+    equiv <- out$equiv
     
     # Check collection is a list with character vectors
     if(!is.list(collection))
@@ -68,9 +69,16 @@ gsameth <- function(sig.cpg, all.cpg=NULL, collection, array.type = c("450K","EP
 
     # Estimate prior probabilities
     if(prior.prob){
+      if(equiv.cpg){
+        pwf <- .estimatePWF(D=test.de,bias=as.vector(equiv))
+        if(plot.bias)
+            .plotBias(D=test.de,bias=as.vector(equiv))
+      }
+      else{
         pwf <- .estimatePWF(D=test.de,bias=as.vector(freq_genes))
         if(plot.bias)
-            .plotBias(D=test.de,bias=as.vector(freq_genes))
+          .plotBias(D=test.de,bias=as.vector(freq_genes))
+      }
     }
         
     results <- matrix(NA,ncol=4,nrow=length(collection))
@@ -88,7 +96,7 @@ gsameth <- function(sig.cpg, all.cpg=NULL, collection, array.type = c("450K","EP
             pw.red <- sum(pwf[InSet])/results[i,"N"]
             pw.white <- sum(pwf[!InSet])/(Nuniverse-results[i,"N"])
             odds <- pw.red/pw.white
-            results[i,"P.DE"] <- BiasedUrn::pWNCHypergeo(results[i,"DE"],results[i,"N"],Nuniverse-results[i,"N"],m,odds,lower.tail=FALSE) + BiasedUrn::pWNCHypergeo(results[i,"DE"],results[i,"N"],Nuniverse-results[i,"N"],m,odds)
+            results[i,"P.DE"] <- BiasedUrn::pWNCHypergeo(results[i,"DE"],results[i,"N"],Nuniverse-results[i,"N"],m,odds,lower.tail=FALSE) + BiasedUrn::dWNCHypergeo(results[i,"DE"],results[i,"N"],Nuniverse-results[i,"N"],m,odds)
         }
     }
     # Hypergeometric test without prior probabilities
