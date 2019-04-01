@@ -1,10 +1,10 @@
 gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"), array.type = c("450K","EPIC"),
-                   plot.bias=FALSE, prior.prob=TRUE, anno=NULL)
+                   plot.bias=FALSE, prior.prob=TRUE, anno=NULL, equiv.cpg = TRUE)
 # Gene ontology testing or KEGG pathway analysis for Illumina methylation arrays based on goseq
 # Takes into account probability of differential methylation based on
 # numbers of probes on array per gene
 # Belinda Phipson
-# 28 January 2015. Last updated 18 Sept 2018.
+# 28 January 2015. Last updated 29 March 2019.
 # EPIC functionality contributed by Andrew Y.F. Li Yim
 {
     if(!is.vector(sig.cpg))
@@ -23,17 +23,29 @@ gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"), array.type 
     eg.universe <- out$universe
     freq_genes <- out$freq
     test.de <- out$de
+    equiv <- out$equiv
 
     # get gene-wise prior probabilities and perform testing
     if(prior.prob){
-        pwf <- .estimatePWF(D=test.de,bias=as.vector(freq_genes))
+      if(equiv.cpg){
+        pwf <- .estimatePWF(D=test.de,bias=as.vector(equiv))
         if(plot.bias)
-            .plotBias(D=test.de,bias=as.vector(freq_genes))
+            .plotBias(D=test.de,bias=as.vector(equiv))
         if(collection=="GO")
             gst <- limma:::goana(sorted.eg.sig,universe=eg.universe,prior.prob=pwf)
         if(collection=="KEGG")
             gst <- limma:::kegga(sorted.eg.sig,universe=eg.universe,prior.prob=pwf)
-        }
+      }
+      else{
+        pwf <- .estimatePWF(D=test.de,bias=as.vector(freq_genes))
+        if(plot.bias)
+          .plotBias(D=test.de,bias=as.vector(freq_genes))
+        if(collection=="GO")
+          gst <- limma:::goana(sorted.eg.sig,universe=eg.universe,prior.prob=pwf)
+        if(collection=="KEGG")
+          gst <- limma:::kegga(sorted.eg.sig,universe=eg.universe,prior.prob=pwf)
+      }
+    }
     # Perform GO or KEGG testing without correcting for CpG density bias
     else{
         if(collection=="GO")
@@ -108,7 +120,7 @@ gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"), array.type 
   flat$cpg<- substr(rownames(flat),1,10)
 
   #flat$cpg <- rownames(flat)
-  flat$alias <- limma:::alias2SymbolTable(flat$symbol)
+  flat$alias <- suppressWarnings(limma:::alias2SymbolTable(flat$symbol))
 
   eg <- toTable(org.Hs.egSYMBOL2EG)
   m <- match(flat$alias,eg$symbol)
@@ -143,7 +155,7 @@ getMappedEntrezIDs <- function(sig.cpg,all.cpg=NULL,array.type,anno=NULL)
   # From a list of CpG sites, obtain the Entrez Gene IDs that are used for testing pathway enrichment
   # Belinda Phipson
   # 10 February 2016
-  # Updated 21 March 2019
+  # Updated 29 March 2019
 {
   # check input
   sig.cpg <- as.character(sig.cpg)
@@ -185,6 +197,12 @@ getMappedEntrezIDs <- function(sig.cpg,all.cpg=NULL,array.type,anno=NULL)
   m3 <- match(flat.u$cpg, multimap$Var1)
   flat.u$multimap <- multimap$Freq[m3]
   
+  flat.u$inv.multimap <- 1/flat.u$multimap
+  
+  equivN <- tapply(flat.u$inv.multimap,flat.u$entrezid,sum)
+  mm <- match(eg.universe,names(equivN))
+  equivN <- equivN[mm]
+  
   sig.flat <- flat.u[!is.na(m1),]
   
   fract <- data.frame(weight=pmin(tapply(1/sig.flat$multimap,sig.flat$entrezid,sum),1))
@@ -193,7 +211,7 @@ getMappedEntrezIDs <- function(sig.cpg,all.cpg=NULL,array.type,anno=NULL)
   fract.counts <- fract$weight[m4]
   
   out <- list(sig.eg = sorted.eg.sig, universe = eg.universe, 
-              freq = freq_genes, de = test.de, fract.counts = data.frame(sigid=sorted.eg.sig,frac=fract.counts))
+              freq = freq_genes, equiv =  equivN, de = test.de, fract.counts = data.frame(sigid=sorted.eg.sig,frac=fract.counts))
   out
 }
 
