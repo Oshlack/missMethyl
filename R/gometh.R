@@ -10,18 +10,23 @@ gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"), array.type 
   collection <- match.arg(toupper(collection),c("GO","KEGG"))
   
   if(collection == "GO"){
-    collection <- .getGO()
-    
+    go <- .getGO()
+    result <- gsameth(sig.cpg=sig.cpg, all.cpg=all.cpg, collection=go$idList, 
+                      array.type=array.type, plot.bias=plot.bias, prior.prob=prior.prob, 
+                      anno=anno, equiv.cpg=equiv.cpg)
+    result <- merge(go$idTable,result,by.x="GOID",by.y="row.names")
+    rownames(result) <- result$GOID
+
   } else if(collection == "KEGG"){
-    collection <- .getKEGG()
-    
+    kegg <- .getKEGG()
+    result <- gsameth(sig.cpg=sig.cpg, all.cpg=all.cpg, collection=kegg$idList, 
+                      array.type=array.type, plot.bias=plot.bias, prior.prob=prior.prob, 
+                      anno=anno, equiv.cpg=equiv.cpg)
+    result <- merge(kegg$idTable,result,by.x="PathwayID",by.y="row.names")
+    rownames(result) <- result$PathwayID
   }
   
-  result <- gsameth(sig.cpg=sig.cpg, all.cpg=all.cpg, collection=collection$idList, 
-                    array.type=array.type, plot.bias=plot.bias, prior.prob=prior.prob, 
-                    anno=anno, equiv.cpg=equiv.cpg)
-  
-  result
+  result[,-1]
 }  
 
 .getGO <- function(){
@@ -30,11 +35,13 @@ gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"), array.type 
                                            columns=c("ENTREZID","GO","ONTOLOGY"), 
                                            keytype="ENTREZID"))
   d <- !duplicated(GeneID.PathID[, c("ENTREZID", "GO")])
-  GeneID.PathID <- GeneID.PathID[d, ]
-  GeneID.PathID$GO.db <- suppressMessages(select(GO.db, keys=GeneID.PathID$GO, 
-                                                 columns=c("TERM"), keytype="GOID"))
+  GeneID.PathID <- GeneID.PathID[d, c(1,2,4)]
+  GOID.TERM <- suppressMessages(select(GO.db, keys=unique(GeneID.PathID$GO), 
+                                       columns=c("GOID","ONTOLOGY","TERM"), 
+                                       keytype="GOID"))
   go <- tapply(GeneID.PathID$ENTREZID, GeneID.PathID$GO, list)
-  list(idList=go, idTable=GeneID.PathID)
+  
+  list(idList=go, idTable=GOID.TERM)
 }
 
 .getKEGG <- function(){
@@ -48,6 +55,7 @@ gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"), array.type 
                                          remove.qualifier = TRUE)
   GeneID.PathID <- merge(GeneID.PathID, PathID.PathName, by="PathwayID")
   kegg <- tapply(GeneID.PathID$GeneID, GeneID.PathID$PathwayID, list)
+  
   list(idList = kegg, idTable = PathID.PathName)
 }  
 
