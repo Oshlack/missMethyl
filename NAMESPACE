@@ -11,7 +11,7 @@ import(BiasedUrn)
 import(GO.db)
 import(IlluminaHumanMethylationEPICanno.ilm10b4.hg19)
 import(IlluminaHumanMethylationEPICmanifest)
-importMethodsFrom(AnnotationDbi, toTable)
+import(AnnotationDbi)
 
 export(SWAN, densityByProbeType, varFit, topVar, getLeveneResiduals,
        SWAN.MethyLumiSet, SWAN.RGChannelSet, SWAN.default, varFit.MethylSet,
