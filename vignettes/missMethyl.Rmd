@@ -612,11 +612,10 @@ sites associated with the gene.
 One way to take into account this selection bias is to model the
 relationship between the number of probes per gene and the probability
 of being selected. This can be performed by adapting the 
-`r BiocStyle::Biocpkg("goseq")` method of Young et al. [@Young2010]. Each gene then has a 
-prior probability associated
-with it, and a modified version of a hypergeometric test can be
-performed, testing for over-representation of the selected genes in each
-gene set.
+`r BiocStyle::Biocpkg("goseq")` method of Young et al. [@Young2010]. Each gene 
+then has a prior probability associated with it, and a modified version of a 
+hypergeometric test can be performed, testing for over-representation of the 
+selected genes in each gene set.
 
 The `gometh` function performs gene set testing on GO categories or KEGG pathways
 [@Phipson2016]. The `gsameth` function is a more generalised gene set testing
@@ -674,17 +673,16 @@ gene will be displayed.
 
 For testing of GO terms, the `collection` argument takes the value
 "GO", which is the default setting. For KEGG pathway analysis, set
-`collection` to "KEGG". The function `topGO` shows the top enriched GO
-categories. For KEGG testing, use the `topKEGG` function. The functions 
-`r BiocStyle::Biocpkg("goana")` and `r BiocStyle::Biocpkg("kegga")` are
-called by for GO and KEGG pathway analysis respectively.
+`collection` to "KEGG". The function `topGSA` shows the top enriched GO
+categories or KEGG pathways. The function `r BiocStyle::Biocpkg("gsameth")` is 
+called to perform GO and KEGG pathway analysis.
 
 For GO testing on our example dataset:
 
 ```{r gometh4}
 library(IlluminaHumanMethylation450kanno.ilmn12.hg19)
 gst <- gometh(sig.cpg=sigCpGs, all.cpg=rownames(rfit2), collection="GO")
-topGO(gst)
+topGSA(gst)
 ```
 
 For a more generalised version of gene set testing in methylation data
