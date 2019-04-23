@@ -126,4 +126,3 @@ fit2 <- RUVadj(Y=Mval, fit=fit)
 top <- topRUV(fit2)
 }
 }
-

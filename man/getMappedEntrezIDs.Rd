@@ -27,7 +27,7 @@ getMappedEntrezIDs(sig.cpg, all.cpg = NULL, array.type, anno = NULL)
 
 }
 \details{
-This function is used by the gene set testing functions \code{gometh} and \code{gsameth}. It maps the significant CpG probe names to Entrez Gene IDs, as well as all the CpG sites tested. It also calculated the numbers of probes for gene.
+This function is used by the gene set testing functions \code{gometh} and \code{gsameth}. It maps the significant CpG probe names to Entrez Gene IDs, as well as all the CpG sites tested. It also calculates the numbers of probes for gene.
 
 Genes associated with each CpG site are obtained from the annotation package \code{IlluminaHumanMethylation450kanno.ilmn12.hg19} if the array type is "450K". For the EPIC array, the annotation package \code{IlluminaHumanMethylationEPICanno.ilm10b4.hg19} is used. To use a different annotation package, please supply it using the \code{anno} argument.
 }
@@ -44,6 +44,9 @@ A list with the following elements
   }
   \item{de}{
   	a vector of ones and zeroes of the same length of universe indicating which genes in the universe are significantly differentially methylated.
+  }
+  \item{fract.counts}{
+    a dataframe with 2 columns corresponding to the Entrez Gene IDS for the significant probes and the associated weight to account for multi-mapping probes.
   }
 }
 \seealso{

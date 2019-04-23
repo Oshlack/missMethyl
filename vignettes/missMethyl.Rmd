@@ -264,20 +264,16 @@ nature of the **cancer** and **normal** samples in this example.
 meth <- getMeth(mSet)
 unmeth <- getUnmeth(mSet)
 M <- log2((meth + 100)/(unmeth + 100))
-
 # setup the factor of interest
 grp <- factor(targets$status, labels=c(0,1))
-
 # extract Illumina negative control data
 INCs <- getINCs(rgSet)
 head(INCs)
-
 # add negative control data to M-values
 Mc <- rbind(M,INCs)
 # create vector marking negative controls in data matrix
 ctl1 <- rownames(Mc) %in% rownames(INCs)
 table(ctl1)
-
 rfit1 <- RUVfit(Y = Mc, X = grp, ctl = ctl1) # Stage 1 analysis
 rfit2 <- RUVadj(Y = Mc, fit = rfit1)
 ```
@@ -290,7 +286,6 @@ factor of interest based on FDR-adjusted p-value as ECPs.
 ```{r ruv1}
 top1 <- topRUV(rfit2, num=Inf, p.BH = 1)
 head(top1)
-
 ctl2 <- rownames(M) %in% rownames(top1[top1$p.BH_X1.1 > 0.5,])
 table(ctl2)
 ```
@@ -303,7 +298,6 @@ estimated from the data.
 # Perform RUV adjustment and fit
 rfit3 <- RUVfit(Y = M, X = grp, ctl = ctl2) # Stage 2 analysis
 rfit4 <- RUVadj(Y = M, fit = rfit3)
-
 # Look at table of top results
 topRUV(rfit4)
 ```
@@ -323,11 +317,9 @@ a standard `r BiocStyle::Biocpkg("limma")` analysis in stage 1.
 # setup design matrix
 des <- model.matrix(~grp)
 des
-
 # limma differential methylation analysis
 lfit1 <- lmFit(M, design=des)
 lfit2 <- eBayes(lfit1) # Stage 1 analysis
-
 # Look at table of top results
 topTable(lfit2)
 ```
@@ -337,7 +329,6 @@ previous example.
 ```{r limmaruv1}
 topl1 <- topTable(lfit2, num=Inf)
 head(topl1)
-
 ctl3 <- rownames(M) %in% rownames(topl1[topl1$adj.P.Val > 0.5,])
 table(ctl3)
 ```
@@ -349,7 +340,6 @@ with `RUV-inverse` as before.
 # Perform RUV adjustment and fit
 rfit5 <- RUVfit(Y = M, X = grp, ctl = ctl3) # Stage 2 analysis
 rfit6 <- RUVadj(Y = M, fit = rfit5)
-
 # Look at table of top results
 topRUV(rfit6)
 ```
@@ -376,7 +366,6 @@ par(mfrow=c(1,2))
 plotMDS(M, labels=targets$Sample_Name, col=as.integer(factor(targets$status)),
         main="Unadjusted", gene.selection = "common")
 legend("topleft",legend=c("Cancer","Normal"),pch=16,cex=1,col=1:2)
-
 plotMDS(Madj, labels=targets$Sample_Name, col=as.integer(factor(targets$status)),
         main="Adjusted: RUV-inverse", gene.selection = "common")
 legend("topleft",legend=c("Cancer","Normal"),pch=16,cex=1,col=1:2)
@@ -390,10 +379,8 @@ using *RUV-4* with two different $k$ values.
 # Use RUV-4 in stage 2 of RUVm with k=1 and k=2
 rfit7 <- RUVfit(Y = M, X = grp, ctl = ctl3,
                 method = "ruv4", k=1) # Stage 2 with RUV-4, k=1
-
 rfit9 <- RUVfit(Y = M, X = grp, ctl = ctl3,
                 method = "ruv4", k=2) # Stage 2 with RUV-4, k=2
-
 # get adjusted values
 Madj1 <- getAdj(M, rfit7)
 Madj2 <- getAdj(M, rfit9)
@@ -411,15 +398,12 @@ par(mfrow=c(2,2))
 plotMDS(M, labels=targets$Sample_Name, col=as.integer(factor(targets$status)),
         main="Unadjusted", gene.selection = "common")
 legend("topleft",legend=c("Cancer","Normal"),pch=16,cex=1,col=1:2)
-
 plotMDS(Madj, labels=targets$Sample_Name, col=as.integer(factor(targets$status)),
         main="Adjusted: RUV-inverse", gene.selection = "common")
 legend("topleft",legend=c("Cancer","Normal"),pch=16,cex=1,col=1:2)
-
 plotMDS(Madj1, labels=targets$Sample_Name, col=as.integer(factor(targets$status)),
         main="Adjusted: RUV-4, k=1", gene.selection = "common")
 legend("bottomleft",legend=c("Cancer","Normal"),pch=16,cex=1,col=1:2)
-
 plotMDS(Madj2, labels=targets$Sample_Name, col=as.integer(factor(targets$status)),
         main="Adjusted: RUV-4, k=2", gene.selection = "common")
 legend("bottomright",legend=c("Cancer","Normal"),pch=16,cex=1,col=1:2)
@@ -678,17 +662,16 @@ gene will be displayed.
 
 For testing of GO terms, the `collection` argument takes the value
 "GO", which is the default setting. For KEGG pathway analysis, set
-`collection` to "KEGG". The function `topGO` shows the top enriched GO
-categories. For KEGG testing, use the `topKEGG` function. The functions 
-`r BiocStyle::Biocpkg("goana")` and `r BiocStyle::Biocpkg("kegga")` are
-called by for GO and KEGG pathway analysis respectively.
+`collection` to "KEGG". The function `topGSA` shows the top enriched GO
+categories. The function `r BiocStyle::Biocpkg("gsameth")` is
+called for GO and KEGG pathway analysis with the appropriate inputs.
 
 For GO testing on our example dataset:
 
 ```{r gometh4}
 library(IlluminaHumanMethylation450kanno.ilmn12.hg19)
 gst <- gometh(sig.cpg=sigCpGs, all.cpg=rownames(top), collection="GO")
-topGO(gst)
+topGSA(gst)
 ```
 
 For a more generalised version of gene set testing in methylation data
@@ -721,4 +704,3 @@ sessionInfo()
 ```
 
 # References
-

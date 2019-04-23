@@ -61,5 +61,3 @@ fit2 <- RUVadj(Y=Mval, fit=fit)
 Madj <- getAdj(Y=Mval,fit=fit)
 }
 }
-
-

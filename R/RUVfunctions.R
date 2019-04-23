@@ -8,7 +8,7 @@ getAdj <- function(Y, fit){
     stop("'Y' must be a numeric matrix.")
   
   Y <- t(Y)
-
+  
   W <- fit$W
   alpha <- fit$alpha
   Ya <- Y - W %*% alpha
@@ -18,15 +18,15 @@ getAdj <- function(Y, fit){
 
 # Get Illumina negative control data
 getINCs <- function(rgSet){
-    
-    ctrls = getProbeInfo(rgSet, type = "Control")
-    M.Neg = getGreen(rgSet)[ctrls$Address[ctrls$Type == "NEGATIVE"], ]
-    U.Neg = getRed(rgSet)[ctrls$Address[ctrls$Type == "NEGATIVE"], ]
-    
-    M.Neg[M.Neg == 0] = min(M.Neg[M.Neg != 0])
-    U.Neg[U.Neg == 0] = min(U.Neg[U.Neg != 0])
-    
-    log2(M.Neg/U.Neg)
+  
+  ctrls = getProbeInfo(rgSet, type = "Control")
+  M.Neg = getGreen(rgSet)[ctrls$Address[ctrls$Type == "NEGATIVE"], ]
+  U.Neg = getRed(rgSet)[ctrls$Address[ctrls$Type == "NEGATIVE"], ]
+  
+  M.Neg[M.Neg == 0] = min(M.Neg[M.Neg != 0])
+  U.Neg[U.Neg == 0] = min(U.Neg[U.Neg != 0])
+  
+  log2(M.Neg/U.Neg)
 }
 
 # # Perform linear model fit using RUV
@@ -117,7 +117,7 @@ RUVadj <- function(Y, fit, var.type=c("ebayes", "standard", "pooled"),
   
   var.type <- match.arg(var.type)
   p.type <- match.arg(p.type)
-
+  
   fitsum <- ruv_summary(Y, fit, colinfo=cpginfo, var.type=var.type, p.type=p.type, ...)
   
   return(fitsum)
@@ -384,5 +384,3 @@ topRUV <- function (fitsum, number = 10, sort.by = c("p","F.p"), p.BH = 1){
 #   
 #   tab[top,]
 # }
-
-

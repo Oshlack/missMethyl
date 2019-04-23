@@ -107,53 +107,41 @@ been "adjusted" for Z).  Useful for projection plots.
 Included for reference.
 }
 }
-
 \references{
 Gagnon-Bartsch JA, Speed TP. (2012). Using control genes to correct for unwanted 
 variation in microarray data. \emph{Biostatistics}. \bold{13}(3), 539-52. 
 Available at: \url{http://biostatistics.oxfordjournals.org/content/13/3/539.full}.
-
 Gagnon-Bartsch, Jacob, and Speed. {2013}. Removing Unwanted Variation from High 
 Dimensional Data with Negative Controls. Available at: 
 \url{http://statistics.berkeley.edu/tech-reports/820}.
 }
-
 \seealso{
 \code{\link{RUV2}}, \code{\link{RUV4}}, \code{\link{RUVinv}}, \code{\link{RUVrinv}}, 
 \code{\link{topRUV}}
 }
-
 \author{
 Jovana Maksimovic \email{jovana.maksimovic@mcri.edu.au}
 }
-
 \examples{
 if(require(minfi) & require(minfiData) & require(limma)) {
-
 # Get methylation data for a 2 group comparison
 meth <- getMeth(MsetEx)
 unmeth <- getUnmeth(MsetEx)
 Mval <- log2((meth + 100)/(unmeth + 100))
-
 group <- factor(pData(MsetEx)$Sample_Group)
 design <- model.matrix(~group)
-
 # Perform initial analysis to empirically identify negative control features 
 # when not known a priori
 lFit <- lmFit(Mval,design)
 lFit2 <- eBayes(lFit)
 lTop <- topTable(lFit2,coef=2,num=Inf)
-
 # The negative control features should *not* be associated with factor of interest
 # but *should* be affected by unwanted variation 
 ctl <- rownames(Mval) \%in\% rownames(lTop[lTop$adj.P.Val > 0.5,])
-
 # Perform RUV adjustment and fit
 fit <- RUVfit(Y=Mval, X=group, ctl=ctl)
 fit2 <- RUVadj(Y=Mval, fit=fit)
-
 # Look at table of top results
 top <- topRUV(fit2)
 }
 }
-
