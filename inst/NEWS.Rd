@@ -4,6 +4,14 @@
 
 \section{Version 1.15.2}{\itemize{
 
+\item Updated gsameth to take into account that some CpGs map to multiple genes. For a small number of gene families, this previously caused their associated GO categories/gene sets to be erroneously overrepresented and thus highly significant.    
+\item Updated gometh to call gsameth to perform statistical testing for GO categories and KEGG pathways; goana and kegga are no longer used.
+\item Replaced use of the AnnotationDbi 'toTable' function with 'select' to speed up execution.
+\item The 'topGSA' function is now used to look at the top ranked results from both gometh and gsameth. The vignette has been modified accordingly. 
+}}
+
+\section{Version 1.15.2}{\itemize{
+
 \item Updated getMappedEntrezIDs, gometh and gsameth to to speed up execution by taking the array annotation in as an optional argument.
 \item missMethyl now uses the latest IlluminaHumanMethylationEPICanno.ilm10b2.hg19 annotation by default for EPIC arrays.
 }}
