@@ -2,7 +2,13 @@
 \title{missMethyl News}
 \encoding{UTF-8}
 
-\section{Version 1.15.2}{\itemize{
+\section{Version 1.17.3}{\itemize{
+
+\item Added frac.count parameter to gometh, gsameth and associated manuals.    
+}}
+
+
+\section{Version 1.17.2}{\itemize{
 
 \item Updated gsameth to take into account that some CpGs map to multiple genes. For a small number of gene families, this previously caused their associated GO categories/gene sets to be erroneously overrepresented and thus highly significant.    
 \item Updated gometh to call gsameth to perform statistical testing for GO categories and KEGG pathways; goana and kegga are no longer used.

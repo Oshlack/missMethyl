@@ -1,6 +1,7 @@
 gsameth <- function(sig.cpg, all.cpg=NULL, collection, 
                     array.type = c("450K","EPIC"), plot.bias=FALSE, 
-                    prior.prob=TRUE, anno=NULL, equiv.cpg = TRUE)
+                    prior.prob=TRUE, anno=NULL, equiv.cpg = TRUE, 
+                    frac.count=TRUE)
   # Generalised version of gometh with user-specified gene sets 
   # Gene sets collections must be Entrez Gene ID
   # Can take into account probability of differential methylation 
@@ -56,7 +57,15 @@ gsameth <- function(sig.cpg, all.cpg=NULL, collection,
   colnames(results) <- c("N","DE","P.DE","FDR")
   rownames(results) <- names(collection)
   results[,"N"] <- unlist(lapply(collection,length))
-  results[,"DE"] <- unlist(lapply(collection, function(x) sum((sorted.eg.sig %in% x) * frac$frac)))
+  
+  if(frac.count){
+    results[,"DE"] <- unlist(lapply(collection, function(x) sum((sorted.eg.sig %in% x) * frac$frac)))
+    
+  } else {
+    results[,"DE"] <- unlist(lapply(collection, function(x) sum((sorted.eg.sig %in% x))))
+    
+  }
+  
   Nuniverse <- length(eg.universe)
   m <- length(sorted.eg.sig)
   

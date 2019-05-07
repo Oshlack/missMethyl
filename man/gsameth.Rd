@@ -8,7 +8,8 @@ Given a user specified list of gene sets to test, \code{gsameth} tests whether s
 }
 \usage{
 gsameth(sig.cpg, all.cpg = NULL, collection, array.type=c("450K","EPIC"),
-        plot.bias = FALSE, prior.prob = TRUE, anno = NULL, equiv.cpg = TRUE)
+        plot.bias = FALSE, prior.prob = TRUE, anno = NULL, equiv.cpg = TRUE,
+        , frac.count=TRUE)
 }
 \arguments{
   \item{sig.cpg}{
@@ -36,6 +37,9 @@ gsameth(sig.cpg, all.cpg = NULL, collection, array.type=c("450K","EPIC"),
   }
   \item{equiv.cpg}{
         logical, if true then equivalent numbers of cpgs are used for odds calculation rather than total              number cpgs.
+  }
+  \item{frac.count}{
+        logical, if true then fractional counting is performed.
   }
 }
 \details{
