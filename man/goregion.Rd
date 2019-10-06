@@ -7,11 +7,11 @@ Gene ontology testing for Ilumina methylation array data
 Tests gene ontology or KEGG pathway enrichment for differentially methylated regions (DMRs) identified from Illumina's Infinium HumanMethylation450 or MethylationEPIC array, taking into account the differing number of probes per gene present on the array. 
 }
 \usage{
-gometh(sig.cpg, all.cpg = NULL, collection = c("GO","KEGG"), array.type = c("450K","EPIC"), plot.bias = FALSE, prior.prob = TRUE, anno = NULL, equiv.cpg = TRUE)
+goregion(regions, all.cpg = NULL, collection = c("GO","KEGG"), array.type = c("450K","EPIC"), plot.bias = FALSE, prior.prob = TRUE, anno = NULL, equiv.cpg = TRUE)
 }
 \arguments{
   \item{regions}{
-      \code{\link{GRanges}} object of DMR coordinates to test for GO term enrichment.
+      \code{GRanges} object of DMR coordinates to test for GO term enrichment.
   }
   \item{all.cpg}{
       character vector of all CpG sites tested. Defaults to all CpG sites on the array.
@@ -38,7 +38,7 @@ gometh(sig.cpg, all.cpg = NULL, collection = c("GO","KEGG"), array.type = c("450
   }
 }
 \details{
-This function takes a \code{\link{GRanges}} object of DMR coordinates, maps them to CpG sites on the array and then to Entrez Gene IDs, and tests for GO term or KEGG pathway enrichment using a hypergeometric test, taking into account the number of CpG sites per gene on the 450K/EPIC array. 
+This function takes a \code{GRanges} object of DMR coordinates, maps them to CpG sites on the array and then to Entrez Gene IDs, and tests for GO term or KEGG pathway enrichment using a hypergeometric test, taking into account the number of CpG sites per gene on the 450K/EPIC array. 
 Geeleher et al. (2013) showed that a severe bias exists when performing gene set analysis for genome-wide methylation data that occurs due to the differing numbers of CpG sites profiled for each gene. \code{gometh} is based on the \code{goseq} method (Young et al., 2010) and calls the \code{goana} function for GO testing, or the \code{kegga} function for KEGG testing, both of which are from the \code{limma} package (Ritchie et al. 2015). If \code{prior.prob} is set to FALSE, then prior probabilities are not used and it is assumed that each gene is equally likely to have a significant CpG site associated with it.
 Genes associated with each CpG site are obtained from the annotation package \code{IlluminaHumanMethylation450kanno.ilmn12.hg19} if the array type is "450K". For the EPIC array, the annotation package \code{IlluminaHumanMethylationEPICanno.ilm10b4.hg19} is used. To use a different annotation package, please supply it using the \code{anno} argument.
 In order to get a list which contains the mapped Entrez gene IDS, please use the \code{getMappedEntrezIDs} function.

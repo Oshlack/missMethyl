@@ -1,5 +1,5 @@
-\name{gsameth}
-\alias{gsameth}
+\name{gsaregion}
+\alias{gsaregion}
 \title{
 Generalised gene set testing for Illumina's methylation array data
 }
@@ -7,12 +7,12 @@ Generalised gene set testing for Illumina's methylation array data
 Given a user specified list of gene sets to test, \code{gsameth} tests whether differentially methylated regions (DMRs) identified from Illumina's Infinium HumanMethylation450 or MethylationEPIC array are enriched, taking into account the differing number of probes per gene present on the array. 
 }
 \usage{
-gsameth(regions, all.cpg = NULL, collection, array.type=c("450K","EPIC"),
+gsaregion(regions, all.cpg = NULL, collection, array.type=c("450K","EPIC"),
         plot.bias = FALSE, prior.prob = TRUE, anno = NULL, equiv.cpg = TRUE)
 }
 \arguments{
   \item{regions}{
-      \code{\link{GRanges}} object of DMR coordinates to test for GO term enrichment.
+      \code{GRanges} object of DMR coordinates to test for GO term enrichment.
   }
   \item{all.cpg}{
       character vector of all CpG sites tested. Defaults to all CpG sites on the array.
@@ -39,7 +39,7 @@ gsameth(regions, all.cpg = NULL, collection, array.type=c("450K","EPIC"),
   }
 }
 \details{
-This function extends \code{gometh}, which only tests GO and KEGG pathways. \code{gsameth} can take a list of user specified gene sets and test whether the significant DMRs are enriched in these pathways. This function takes a \code{\link{GRanges}} object of DMR coordinates, maps them to CpG sites on the array and then to Entrez Gene IDs, and tests for enrichment using a hypergeometric test, taking into account the number of CpG sites per gene on the 450K/EPIC array. 
+This function extends \code{gometh}, which only tests GO and KEGG pathways. \code{gsameth} can take a list of user specified gene sets and test whether the significant DMRs are enriched in these pathways. This function takes a \code{GRanges} object of DMR coordinates, maps them to CpG sites on the array and then to Entrez Gene IDs, and tests for enrichment using a hypergeometric test, taking into account the number of CpG sites per gene on the 450K/EPIC array. 
 Geeleher et al. (2013) showed that a severe bias exists when performing gene set analysis for genome-wide methylation data that occurs due to the differing numbers of CpG sites profiled for each gene. \code{gsameth} and \code{gometh} is based on the \code{goseq} method (Young et al., 2010). If \code{prior.prob} is set to FALSE, then prior probabilities are not used and it is assumed that each gene is equally likely to have a significant CpG site associated with it.
 Genes associated with each CpG site are obtained from the annotation package \code{IlluminaHumanMethylation450kanno.ilmn12.hg19} if the array type is "450K". For the EPIC array, the annotation package \code{IlluminaHumanMethylationEPICanno.ilm10b4.hg19} is used. To use a different annotation package, please supply it using the \code{anno} argument.
 In order to get a list which contains the mapped Entrez gene IDS, please use the \code{getMappedEntrezIDs} function.
