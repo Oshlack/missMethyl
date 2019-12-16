@@ -7,17 +7,36 @@ Author: Belinda Phipson and Jovana Maksimovic
 Maintainer: Belinda Phipson <belinda.phipson@mcri.edu.au>, Jovana
         Maksimovic <jovana.maksimovic@mcri.edu.au>,
         Andrew Lonsdale <andrew.lonsdale@mcri.edu.au>
-Depends: R (>= 2.3.0)
-Imports: limma, minfi, methylumi, IlluminaHumanMethylation450kmanifest,
-        statmod, ruv, stringr, IlluminaHumanMethylation450kanno.ilmn12.hg19,
-        org.Hs.eg.db, AnnotationDbi, BiasedUrn, GO.db,
-        IlluminaHumanMethylationEPICmanifest,
-        IlluminaHumanMethylationEPICanno.ilm10b4.hg19
+Depends: 
+    R (>= 2.3.0),
+    org.Hs.eg.db
+Imports:
+    AnnotationDbi, 
+    BiasedUrn,
+    GenomicRanges,
+    GO.db,
+    IlluminaHumanMethylation450kmanifest,
+    IlluminaHumanMethylation450kanno.ilmn12.hg19,
+    IlluminaHumanMethylationEPICmanifest,
+    IlluminaHumanMethylationEPICanno.ilm10b4.hg19,
+    limma, 
+    methylumi,
+    minfi,
+    org.Hs.eg.db,
+    ruv,
+    statmod, 
+    stringr 
 VignetteBuilder: knitr
-Suggests: minfiData, BiocStyle, knitr, rmarkdown, edgeR, tweeDEseqCountData
-Description: Normalisation and testing for differential variability and
-	differential methylation for data from Illumina's Infinium 
-	HumanMethylation450 array. The normalisation procedure is 
+Suggests: 
+    BiocStyle, 
+    edgeR,
+    knitr,
+    minfiData, 
+    rmarkdown, 
+    tweeDEseqCountData
+Description: Normalisation, testing for differential variability and
+	differential methylation and gene set testing for data from Illumina's 
+	Infinium HumanMethylation arrays. The normalisation procedure is 
 	subset-quantile within-array normalisation (SWAN), which allows 
 	Infinium I and II type probes on a single array to be normalised 
 	together. The test for differential variability is based on an 
@@ -31,3 +50,5 @@ License: GPL-2
 biocViews: Normalization, DNAMethylation, MethylationArray,
         GenomicVariation, GeneticVariability, DifferentialMethylation,
         GeneSetEnrichment
+RoxygenNote: 7.0.2
+Encoding: UTF-8
