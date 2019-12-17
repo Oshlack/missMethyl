@@ -45,7 +45,7 @@ densityByProbeType <- function(data, legendPos = "top",
             stop("'data' must only contain one sample")
             
         } else {
-            betas <- matrix(getBeta(data), ncol=1, 
+            betas <- matrix(minfi::getBeta(data), ncol=1, 
                             dimnames=list(featureNames(data), 
                                           sampleNames(data)))
             
@@ -83,20 +83,20 @@ densityByProbeType <- function(data, legendPos = "top",
     }
     
   if(annotation(data)["array"] == "IlluminaHumanMethylation450k"){
-    manifest <- IlluminaHumanMethylation450kmanifest
+    manifest <- IlluminaHumanMethylation450kmanifest::IlluminaHumanMethylation450kmanifest
   } else if (annotation(data)["array"] == "IlluminaHumanMethylationEPIC") {
-    manifest <- IlluminaHumanMethylationEPICmanifest
+    manifest <- IlluminaHumanMethylationEPICmanifest::IlluminaHumanMethylationEPICmanifest
   }
-    probeTypes <- rbind(data.frame(getProbeInfo(manifest, 
+    probeTypes <- rbind(data.frame(minfi::getProbeInfo(manifest, 
                                                 type = "I")[, c("Name", 
                                                                 "nCpG")], 
                                    Type="I"),
-                        data.frame(getProbeInfo(manifest, 
+                        data.frame(minfi::getProbeInfo(manifest, 
                                                 type = "II")[, c("Name", 
                                                                  "nCpG")], 
                                    Type="II"))
     
-    ymax <- max(sapply(1:ncol(betas), function(x) max(density(betas[,x],
+    ymax <- max(sapply(1:ncol(betas), function(x) max(stats::density(betas[,x],
                                                               na.rm=TRUE)$y)))
     betas <- matrix(betas[!is.na(betas),],ncol=1,
                     dimnames=list(rownames(betas)[!is.na(betas)],
@@ -105,17 +105,17 @@ densityByProbeType <- function(data, legendPos = "top",
     type1 <- sum(probeTypes$Type=="I" & probeTypes$Name %in% rownames(betas))
     type2 <- sum(probeTypes$Type=="II" & probeTypes$Name %in% rownames(betas))
 
-    plot(density(betas), main=main, xlab="Beta values", ylim=c(0,ymax), lwd=lwd, 
-         col=colors[1])
-    lines(suppressWarnings(density(betas[rownames(betas) %in% 
+    graphics::plot(stats::density(betas), main=main, xlab="Beta values", 
+                   ylim=c(0,ymax), lwd=lwd, col=colors[1])
+    graphics::lines(suppressWarnings(stats::density(betas[rownames(betas) %in% 
                                     probeTypes$Name[probeTypes$Type=="I"]],
                                    weights=rep(1/total,type1))), col=colors[2], 
           lty=2, lwd=lwd)
-    lines(suppressWarnings(density(betas[rownames(betas) %in% 
+    graphics::lines(suppressWarnings(stats::density(betas[rownames(betas) %in% 
                                     probeTypes$Name[probeTypes$Type=="II"]],
                                    weights=rep(1/total,type2))), col=colors[3], 
           lty=2, lwd=lwd)
-    legend(legendPos, c("All probes", "Infinium I", "Infinium II"), col=colors, 
-           lwd=lwd, bg="white",
-           cex=cex.legend, lty=c(1,2,2))
+    graphics::legend(legendPos, c("All probes", "Infinium I", "Infinium II"), 
+                     col=colors, lwd=lwd, bg="white", cex=cex.legend, 
+                     lty=c(1,2,2))
 }

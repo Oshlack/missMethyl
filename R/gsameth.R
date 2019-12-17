@@ -198,11 +198,11 @@ gsameth <- function(sig.cpg, all.cpg=NULL, collection,
   # Hypergeometric test without prior probabilities
   else{
     for(i in 1:length(collection)){
-      results[i,"P.DE"] <- phyper(q=results[i,"DE"]-0.5,m=m,n=Nuniverse-m,
+      results[i,"P.DE"] <- stats::phyper(q=results[i,"DE"]-0.5,m=m,n=Nuniverse-m,
                                   k=results[i,"N"],lower.tail=FALSE)    
     }
   }
-  results[,"FDR"] <- p.adjust(results[,"P.DE"],method="BH")
+  results[,"FDR"] <- stats::p.adjust(results[,"P.DE"],method="BH")
   data.frame(results)
 }
 

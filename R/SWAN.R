@@ -51,6 +51,11 @@
 #' }
 #' 
 #' @rdname SWAN
+#' @import Biobase
+#' @import BiocGenerics
+#' @importMethodsFrom S4Vectors from
+#' @importClassesFrom S4Vectors DataFrame
+#' @importMethodsFrom SummarizedExperiment colData
 #' @export SWAN
 SWAN <- function(data, verbose = FALSE)
 UseMethod("SWAN")
@@ -67,12 +72,12 @@ SWAN.MethyLumiSet <- function(data, verbose = FALSE){
     U <- methylumi::unmethylated(data)
     
     mSet <- minfi::MethylSet(Meth = M, Unmeth = U, 
-                      colData = DataFrame(phenoData(data)@data),
+                      colData = S4Vectors::DataFrame(phenoData(data)@data),
                       annotation = annotation(data))
     mSet@preprocessMethod <- c(rg.norm = "Raw (no normalization or bg 
                                correction)",
-                                minfi = as.character(packageVersion("minfi")), 
-manifest = as.character(packageVersion("IlluminaHumanMethylation450kmanifest")))
+                        minfi = as.character(utils::packageVersion("minfi")), 
+manifest = as.character(utils::packageVersion("IlluminaHumanMethylation450kmanifest")))
     SWAN.default(data = mSet, verbose = verbose)
 }
 
@@ -101,12 +106,12 @@ SWAN.default <- function(data, verbose = FALSE){
 
     if(annotation(data)["array"] == "IlluminaHumanMethylation450k"){
       cat("450k\n")
-      manifest <- minfi::IlluminaHumanMethylation450kmanifest
+      manifest <- IlluminaHumanMethylation450kmanifest::IlluminaHumanMethylation450kmanifest
       manifestName <- "IlluminaHumanMethylation450kmanifest"
       
     } else if (annotation(data)["array"] == "IlluminaHumanMethylationEPIC") {
       cat("EPIC\n")
-      manifest <- minfi::IlluminaHumanMethylationEPICmanifest
+      manifest <- IlluminaHumanMethylationEPICmanifest::IlluminaHumanMethylationEPICmanifest
       manifestName <- "IlluminaHumanMethylationEPICmanifest"
       
     }
@@ -156,16 +161,16 @@ SWAN.default <- function(data, verbose = FALSE){
                         xNormSet)})
 
     normSet <- minfi::MethylSet(Meth = normMethData, Unmeth = normUnmethData, 
-                         colData = colData(data),
-                  annotation = annotation(data))
+                                colData = colData(data),
+                                annotation = annotation(data))
  
     featureNames(normSet) <- featureNames(data)
     sampleNames(normSet) <- sampleNames(data)
     normSet@preprocessMethod <- c(rg.norm = sprintf("SWAN (based on a MethylSet 
                                                     preprocessed as '%s')",
-                                                    preprocessMethod(data)[1]),
-                                minfi = as.character(packageVersion("minfi")),
-                        manifest = as.character(packageVersion(manifestName)))
+                                            minfi::preprocessMethod(data)[1]),
+                minfi = as.character(utils::packageVersion("minfi")),
+                manifest = as.character(utils::packageVersion(manifestName)))
     normSet
 }
 
@@ -204,7 +209,7 @@ SWAN.default <- function(data, verbose = FALSE){
           if (nobs < maxNbrOfObservations) {
               ## tt <- !is.na(Xcc)
               bins <- (0:(nobs - 1))/(nobs - 1)
-              Scc <- approx(x = bins, y = Scc, xout = quantiles,
+              Scc <- stats::approx(x = bins, y = Scc, xout = quantiles,
                             ties = "ordered")$y
           }
           xTarget <- xTarget + Scc
@@ -231,7 +236,7 @@ SWAN.default <- function(data, verbose = FALSE){
          r <- rank(x[xNormSet[,i], i])
          xNew <-(r - 1)/(nNormSet - 1)
          xNew <- xNew[order(xNew)]
-         xNorm <- approx(x = targetQuantiles, y = xTarget, xout = xNew, 
+         xNorm <- stats::approx(x = targetQuantiles, y = xTarget, xout = xNew, 
                          ties = "ordered", rule = 2)$y
      } else {
          
@@ -248,7 +253,7 @@ SWAN.default <- function(data, verbose = FALSE){
      kmin<- which(xNew < min(quantiles))
      offsets.max <- x[[i]][kmax] - xmax
      offsets.min <- x[[i]][kmin] - xmin
-     x[[i]] <- approx(x = quantiles, y = xNorm, xout = xNew, 
+     x[[i]] <- stats::approx(x = quantiles, y = xNorm, xout = xNew, 
                       ties = "ordered")$y #interpolate
      x[[i]][kmax] <- max(xNorm) + offsets.max
      x[[i]][kmin] <- min(xNorm) + offsets.min

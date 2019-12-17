@@ -54,7 +54,6 @@ summary(decideTests(vfit.contr))
 # Look at top table of results for first contrast
 topVar(vfit.contr,coef=1)
 
-
 }
 \seealso{
 \code{varFit}, \code{contrasts.fit}, \code{makeContrasts}

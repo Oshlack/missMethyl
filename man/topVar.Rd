@@ -58,7 +58,6 @@ vfit<-varFit(y,design)
 # Look at top table of results
 topVar(vfit,coef=2)
 
-
 }
 \references{
 Phipson, B., and Oshlack, A. (2014). A method for detecting

@@ -154,12 +154,12 @@ goregion <- function(regions, all.cpg=NULL, collection=c("GO","KEGG"),
   }
   
   cpgs <- GenomicRanges::GRanges(seqnames = anno$chr, 
-                  ranges = IRanges(start = anno$pos, 
+                  ranges = IRanges::IRanges(start = anno$pos, 
                                    end = anno$pos),
                   strand = anno$strand,
                   name = anno$Name)
   
-  overlaps <- findOverlaps(cpgs,regions)
+  overlaps <- GenomicRanges::findOverlaps(cpgs,regions)
   sig.cpg <- cpgs$name[from(overlaps)]
   
   result <- gometh(sig.cpg=sig.cpg, all.cpg=all.cpg, collection=collection, 
@@ -315,12 +315,12 @@ gsaregion <- function(regions, all.cpg=NULL, collection,
   }
   
   cpgs <- GenomicRanges::GRanges(seqnames = anno$chr, 
-                  ranges = IRanges(start = anno$pos, 
+                  ranges = IRanges::IRanges(start = anno$pos, 
                                    end = anno$pos),
                   strand = anno$strand,
                   name = anno$Name)
   
-  overlaps <- findOverlaps(cpgs,regions)
+  overlaps <- GenomicRanges::findOverlaps(cpgs,regions)
   sig.cpg <- cpgs$name[from(overlaps)]
   
   result <- gsameth(sig.cpg=sig.cpg, all.cpg=all.cpg, collection=collection, 

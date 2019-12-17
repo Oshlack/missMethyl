@@ -114,8 +114,8 @@ varFit.MethylSet <- function(data,design=NULL,coef=NULL,type=NULL,trend=TRUE,
                              robust=TRUE,weights=NULL)
 {
     message("Extracting M values from MethylSet object.")
-    meth<-getMeth(data)
-    unmeth<-getUnmeth(data)
+    meth<-minfi::getMeth(data)
+    unmeth<-minfi::getUnmeth(data)
     Mval<-log2((meth+100)/(unmeth+100))
     varFit.default(data=Mval,design=design,coef=coef,type=type,trend=trend,
                    robust=robust,weights=weights)
@@ -130,7 +130,7 @@ varFit.DGEList <- function(data,design=NULL,coef=NULL,type=NULL,trend=TRUE,
                            robust=TRUE,weights=NULL)
 {
     message("Converting counts to log counts-per-million using voom.")
-    v <- voom(data,design)
+    v <- limma::voom(data,design)
     varFit.default(data=v$E,design=design,coef=coef,type=type,trend=trend,
                    robust=robust,weights=v$weights)
 }
@@ -176,11 +176,11 @@ varFit.default <- function(data,design=NULL,coef=NULL,type=NULL,trend=TRUE,
         z <- getLeveneResiduals(data,design=design[,coef],type=type)
     }
         
-    fit <- lmFit(z$data,design,weights=weights)
+    fit <- limma::lmFit(z$data,design,weights=weights)
     if(is.null(fit$Amean)) 
         fit$Amean <- rowMeans(z$data, na.rm = TRUE)
 
-    fit <- eBayes(fit,trend=trend,robust=robust)
+    fit <- limma::eBayes(fit,trend=trend,robust=robust)
      
     fit$AvgVar <- z$AvgVar
     fit$LogVarRatio <- matrix(0,ncol=ncol(design),nrow=nrow(fit))
@@ -237,7 +237,6 @@ varFit.default <- function(data,design=NULL,coef=NULL,type=NULL,trend=TRUE,
 #' # Look at top table of results for first contrast
 #' topVar(vfit.contr,coef=1)
 #' 
-#' 
 #' @export contrasts.varFit
 contrasts.varFit <- function(fit, contrasts=NULL)
 {
@@ -249,8 +248,8 @@ contrasts.varFit <- function(fit, contrasts=NULL)
         robust <- TRUE
     else
     	robust <- FALSE
-    fit.contr <- contrasts.fit(fit, contrasts=contrasts)
-    fit.contr <- eBayes(fit.contr, trend=trend, robust=robust)
+    fit.contr <- limma::contrasts.fit(fit, contrasts=contrasts)
+    fit.contr <- limma::eBayes(fit.contr, trend=trend, robust=robust)
     
     fit.contr$AvgVar <- fit$AvgVar
     fit.contr$LogVarRatio <- fit$LogVarRatio %*% contrasts
@@ -314,12 +313,11 @@ contrasts.varFit <- function(fit, contrasts=NULL)
 #' # Look at top table of results
 #' topVar(vfit,coef=2)
 #' 
-#' 
 #' @export topVar
 topVar <- function(fit,coef = NULL,number=10,sort=TRUE)
 {
     if(is.null(coef)) coef = ncol(fit)
-    p.adj <- p.adjust(fit$p.value[,coef],method="BH")
+    p.adj <- stats::p.adjust(fit$p.value[,coef],method="BH")
     if(!is.null(fit$genes)){
         if(is.null(fit$LogVarRatio))
             out <- data.frame(fit$genes, SampleVar = fit$AvgVar, 

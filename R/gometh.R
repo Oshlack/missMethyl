@@ -117,6 +117,8 @@
 #' topGSA(kegg)
 #' }
 #' 
+#' @import org.Hs.eg.db
+#' @importFrom methods is
 #' @export gometh
 gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"), 
                    array.type = c("450K","EPIC"), plot.bias=FALSE, 
@@ -154,13 +156,15 @@ gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"),
 .getGO <- function(){
 
     keys <- AnnotationDbi::keys(org.Hs.eg.db, keytype = "ENTREZID")
-    GeneID.PathID <- suppressMessages(select(org.Hs.eg.db, keys=keys, 
-                                           columns=c("ENTREZID","GO",
-                                                     "ONTOLOGY"), 
+    GeneID.PathID <- suppressMessages(AnnotationDbi::select(org.Hs.eg.db, 
+                                                            keys=keys, 
+                                                    columns=c("ENTREZID","GO",
+                                                    "ONTOLOGY"), 
                                            keytype="ENTREZID"))
     d <- !duplicated(GeneID.PathID[, c("ENTREZID", "GO")])
     GeneID.PathID <- GeneID.PathID[d, c(1,2,4)]
-    GOID.TERM <- suppressMessages(select(GO.db::GO.db, keys=unique(GeneID.PathID$GO), 
+    GOID.TERM <- suppressMessages(AnnotationDbi::select(GO.db::GO.db, 
+                                         keys=unique(GeneID.PathID$GO), 
                                        columns=c("GOID","ONTOLOGY","TERM"), 
                                        keytype="GOID"))
     go <- tapply(GeneID.PathID$ENTREZID, GeneID.PathID$GO, list)
@@ -252,10 +256,12 @@ gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"),
   avgbias <- tapply(bias[o],factor(splitf),mean)
   sumDM <- tapply(D[o],factor(splitf),sum)
   propDM <- sumDM/table(splitf)
-  par(mar=c(5,5,2,2))
-  plot(avgbias,as.vector(propDM),xlab="Number of CpGs per gene (binned)",
-       ylab="Proportion Differential Methylation",cex.lab=1.5,cex.axis=1.2)
-  lines(lowess(avgbias,propDM),col=4,lwd=2)
+  graphics::par(mar=c(5,5,2,2))
+  graphics::plot(avgbias,as.vector(propDM),
+                 xlab="Number of CpGs per gene (binned)",
+                 ylab="Proportion Differential Methylation",cex.lab=1.5,
+                 cex.axis=1.2)
+  graphics::lines(stats::lowess(avgbias,propDM),col=4,lwd=2)
 }
 
 .estimatePWF <- function(D,bias)
@@ -310,7 +316,7 @@ gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"),
   flat$alias <- suppressWarnings(limma::alias2SymbolTable(flat$symbol))
   
   #eg <- toTable(org.Hs.egSYMBOL2EG)
-  eg <- suppressMessages(select(org.Hs.eg.db, 
+  eg <- suppressMessages(AnnotationDbi::select(org.Hs.eg.db, 
                                 keys=AnnotationDbi::keys(org.Hs.eg.db), 
                                 columns=c("ENTREZID","SYMBOL"), 
                                 keytype="ENTREZID"))
