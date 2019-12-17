@@ -25,7 +25,7 @@
 #' @author Jovana Maksimovic
 #' @seealso \code{\link{densityPlot}}, \code{\link{densityBeanPlot}},
 #' \code{\link[graphics]{par}}, \code{\link[graphics]{legend}}
-#' @references No return value. Plot is produced as a side-effect.
+#' @return No return value. Plot is produced as a side-effect.
 #' @examples
 #' 
 #' if (require(minfi) & require(minfiData)) {

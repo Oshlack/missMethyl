@@ -34,6 +34,9 @@ distributions.}
 
 \item{cex.legend}{The character expansion factor for the legend text.}
 }
+\value{
+No return value. Plot is produced as a side-effect.
+}
 \description{
 Plot the overall density distribution of beta values and the density
 distributions of the Infinium I and II probe types.
@@ -54,9 +57,6 @@ if (require(minfi) & require(minfiData)) {
   densityByProbeType(datSwan[,1], main="SWAN")
 }
 
-}
-\references{
-No return value. Plot is produced as a side-effect.
 }
 \seealso{
 \code{\link{densityPlot}}, \code{\link{densityBeanPlot}},

@@ -117,7 +117,7 @@
 #' topGSA(kegg)
 #' }
 #' 
-#' @import org.Hs.eg.db
+#' @import org.Hs.eg.db statmod stringr
 #' @importFrom methods is
 #' @export gometh
 gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"), 
