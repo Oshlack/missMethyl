@@ -154,21 +154,20 @@ gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"),
 }  
 
 .getGO <- function(){
-
-    keys <- AnnotationDbi::keys(org.Hs.eg.db, keytype = "ENTREZID")
-    GeneID.PathID <- suppressMessages(AnnotationDbi::select(org.Hs.eg.db, 
-                                                            keys=keys, 
-                                                    columns=c("ENTREZID","GO",
-                                                    "ONTOLOGY"), 
-                                           keytype="ENTREZID"))
-    d <- !duplicated(GeneID.PathID[, c("ENTREZID", "GO")])
-    GeneID.PathID <- GeneID.PathID[d, c(1,2,4)]
+    
+    if(!requireNamespace("org.Hs.eg.db", quietly = TRUE))
+        stop("org.Hs.eg.db package required but not installed.")
+    egGO2ALLEGS <- utils::getFromNamespace("org.Hs.egGO2ALLEGS", "org.Hs.eg.db")
+    GeneID.PathID <- AnnotationDbi::toTable(egGO2ALLEGS)[, 
+                                                         c("gene_id", "go_id", "Ontology")]
+    d <- !duplicated(GeneID.PathID[, c("gene_id", "go_id")])
+    GeneID.PathID <- GeneID.PathID[d, ]
     GOID.TERM <- suppressMessages(AnnotationDbi::select(GO.db::GO.db, 
-                                         keys=unique(GeneID.PathID$GO), 
-                                       columns=c("GOID","ONTOLOGY","TERM"), 
-                                       keytype="GOID"))
-    go <- tapply(GeneID.PathID$ENTREZID, GeneID.PathID$GO, list)
-  
+                                                        keys=unique(GeneID.PathID$go_id), 
+                                                        columns=c("GOID","ONTOLOGY","TERM"), 
+                                                        keytype="GOID"))
+    go <- tapply(GeneID.PathID$gene_id, GeneID.PathID$go_id, list)
+    
     list(idList=go, idTable=GOID.TERM)
 }
 
