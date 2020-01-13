@@ -1,5 +1,7 @@
-goregion <- function(regions, all.cpg=NULL, collection=c("GO","KEGG"), array.type = c("450K","EPIC"),
-                     plot.bias=FALSE, prior.prob=TRUE, anno=NULL, equiv.cpg = TRUE)
+goregion <- function(regions, all.cpg=NULL, collection=c("GO","KEGG"), 
+                     array.type = c("450K","EPIC"), plot.bias=FALSE, 
+                     prior.prob=TRUE, anno=NULL, equiv.cpg = TRUE,
+                     fract.counts = TRUE)
   # Gene ontology testing or KEGG pathway analysis for differentially methylated regions
   # Takes into account probability of differential methylation based on
   # numbers of probes on array per gene
@@ -30,13 +32,15 @@ goregion <- function(regions, all.cpg=NULL, collection=c("GO","KEGG"), array.typ
   sig.cpg <- cpgs$name[from(overlaps)]
   
   result <- gometh(sig.cpg=sig.cpg, all.cpg=all.cpg, collection=collection, 
-                      array.type=array.type, plot.bias=plot.bias, prior.prob=prior.prob, 
-                      anno=anno, equiv.cpg=equiv.cpg)
+                  array.type=array.type, plot.bias=plot.bias, prior.prob=prior.prob, 
+                  anno=anno, equiv.cpg=equiv.cpg, fract.counts=fract.counts)
   result
 }  
 
-gsaregion <- function(regions, all.cpg=NULL, collection, array.type = c("450K","EPIC"),
-                   plot.bias=FALSE, prior.prob=TRUE, anno=NULL, equiv.cpg = TRUE)
+gsaregion <- function(regions, all.cpg=NULL, collection, 
+                      array.type = c("450K","EPIC"), plot.bias=FALSE, 
+                      prior.prob=TRUE, anno=NULL, equiv.cpg = TRUE, 
+                      fract.counts=TRUE)
   # Generalised version of goregion with user-specified gene sets 
   # Gene sets collections must be Entrez Gene ID
   # Takes into account probability of differential methylation based on
@@ -66,7 +70,8 @@ gsaregion <- function(regions, all.cpg=NULL, collection, array.type = c("450K","
   sig.cpg <- cpgs$name[from(overlaps)]
   
   result <- gsameth(sig.cpg=sig.cpg, all.cpg=all.cpg, collection=collection, 
-                   array.type=array.type, plot.bias=plot.bias, prior.prob=prior.prob, 
-                   anno=anno, equiv.cpg=equiv.cpg)
+                   array.type=array.type, plot.bias=plot.bias, 
+                   prior.prob=prior.prob, anno=anno, equiv.cpg=equiv.cpg,
+                   fract.counts=fract.counts)
   result
 }

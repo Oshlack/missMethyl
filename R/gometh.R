@@ -1,6 +1,9 @@
-gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"), array.type = c("450K","EPIC"),
-                   plot.bias=FALSE, prior.prob=TRUE, anno=NULL, equiv.cpg = TRUE)
-  # Gene ontology testing or KEGG pathway analysis for Illumina methylation arrays based on goseq
+gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"), 
+                   array.type = c("450K","EPIC"), plot.bias=FALSE, 
+                   prior.prob=TRUE, anno=NULL, equiv.cpg = TRUE, 
+                   fract.counts = TRUE)
+  # Gene ontology testing or KEGG pathway analysis for Illumina methylation 
+  # arrays based on goseq
   # Takes into account probability of differential methylation based on
   # numbers of probes on array per gene
   # Belinda Phipson
@@ -12,16 +15,18 @@ gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"), array.type 
   if(collection == "GO"){
     go <- .getGO()
     result <- gsameth(sig.cpg=sig.cpg, all.cpg=all.cpg, collection=go$idList, 
-                      array.type=array.type, plot.bias=plot.bias, prior.prob=prior.prob, 
-                      anno=anno, equiv.cpg=equiv.cpg)
+                      array.type=array.type, plot.bias=plot.bias, 
+                      prior.prob=prior.prob, anno=anno, equiv.cpg=equiv.cpg,
+                      fract.counts=fract.counts)
     result <- merge(go$idTable,result,by.x="GOID",by.y="row.names")
     rownames(result) <- result$GOID
 
   } else if(collection == "KEGG"){
     kegg <- .getKEGG()
     result <- gsameth(sig.cpg=sig.cpg, all.cpg=all.cpg, collection=kegg$idList, 
-                      array.type=array.type, plot.bias=plot.bias, prior.prob=prior.prob, 
-                      anno=anno, equiv.cpg=equiv.cpg)
+                      array.type=array.type, plot.bias=plot.bias, 
+                      prior.prob=prior.prob, anno=anno, equiv.cpg=equiv.cpg,
+                      fract.counts=fract.counts)
     result <- merge(kegg$idTable,result,by.x="PathwayID",by.y="row.names")
     rownames(result) <- result$PathwayID
   }

@@ -1,6 +1,7 @@
 gsameth <- function(sig.cpg, all.cpg=NULL, collection, 
                     array.type = c("450K","EPIC"), plot.bias=FALSE, 
-                    prior.prob=TRUE, anno=NULL, equiv.cpg = TRUE)
+                    prior.prob=TRUE, anno=NULL, equiv.cpg = TRUE,
+                    fract.counts = TRUE)
   # Generalised version of gometh with user-specified gene sets 
   # Gene sets collections must be Entrez Gene ID
   # Can take into account probability of differential methylation 
@@ -16,10 +17,11 @@ gsameth <- function(sig.cpg, all.cpg=NULL, collection,
   
   # Get mapped entrez gene IDs from CpG probe names
   if(!is.null(anno)){
-    out <- getMappedEntrezIDs(sig.cpg=sig.cpg,all.cpg=all.cpg,array.type=array.type,
-                              anno)
+    out <- getMappedEntrezIDs(sig.cpg=sig.cpg,all.cpg=all.cpg,
+                              array.type=array.type, anno)
   } else {
-    out <- getMappedEntrezIDs(sig.cpg=sig.cpg,all.cpg=all.cpg,array.type=array.type)
+    out <- getMappedEntrezIDs(sig.cpg=sig.cpg,all.cpg=all.cpg,
+                              array.type=array.type)
   }
   sorted.eg.sig <- out$sig.eg
   eg.universe <- out$universe
@@ -37,18 +39,18 @@ gsameth <- function(sig.cpg, all.cpg=NULL, collection,
   # Make sure only collections with geneids present in universe are included
   inUniv <- lapply(collection, function(x) sum(eg.universe %in% x))
   collection <- collection[inUniv!=0]
-  
+
   # Estimate prior probabilities
   if(prior.prob){
-    if(equiv.cpg){
-      pwf <- .estimatePWF(D=test.de,bias=as.vector(equiv))
-      if(plot.bias)
-        .plotBias(D=test.de,bias=as.vector(equiv))
-    }
-    else{
-      pwf <- .estimatePWF(D=test.de,bias=as.vector(freq_genes))
-      if(plot.bias)
-        .plotBias(D=test.de,bias=as.vector(freq_genes))
+    if(equiv.cpg){ 
+        # use "equivalent" no. of cpgs in odds calculation
+        pwf <- .estimatePWF(D=test.de,bias=as.vector(equiv))
+        if(plot.bias)
+            .plotBias(D=test.de,bias=as.vector(equiv))
+    } else {
+        pwf <- .estimatePWF(D=test.de,bias=as.vector(freq_genes))
+        if(plot.bias)
+            .plotBias(D=test.de,bias=as.vector(freq_genes))
     }
   }
   
@@ -56,7 +58,16 @@ gsameth <- function(sig.cpg, all.cpg=NULL, collection,
   colnames(results) <- c("N","DE","P.DE","FDR")
   rownames(results) <- names(collection)
   results[,"N"] <- unlist(lapply(collection,length))
-  results[,"DE"] <- unlist(lapply(collection, function(x) sum((sorted.eg.sig %in% x) * frac$frac)))
+  
+  if(prior.prob & fract.counts){ 
+      # use fractional counting to account for cpgs that map to multiple genes
+      results[,"DE"] <- unlist(lapply(collection, function(x) 
+          sum((sorted.eg.sig %in% x) * frac$frac)))
+  } else {
+      results[,"DE"] <- unlist(lapply(collection, function(x) 
+          sum((sorted.eg.sig %in% x))))
+  } 
+  
   Nuniverse <- length(eg.universe)
   m <- length(sorted.eg.sig)
   
@@ -70,7 +81,8 @@ gsameth <- function(sig.cpg, all.cpg=NULL, collection,
       results[i,"P.DE"] <- BiasedUrn::pWNCHypergeo(results[i,"DE"],
                                                    results[i,"N"],
                                                    Nuniverse-results[i,"N"],
-                                                   m,odds,lower.tail=FALSE) + BiasedUrn::dWNCHypergeo(results[i,"DE"],
+                                                   m,odds,lower.tail=FALSE) + 
+          BiasedUrn::dWNCHypergeo(results[i,"DE"],
                                                                                                       results[i,"N"],
                                                                                                       Nuniverse-results[i,"N"],
                                                                                                       m,odds)
@@ -79,11 +91,11 @@ gsameth <- function(sig.cpg, all.cpg=NULL, collection,
   # Hypergeometric test without prior probabilities
   else{
     for(i in 1:length(collection)){
-      results[i,"P.DE"] <- phyper(q=results[i,"DE"]-0.5,m=m,n=Nuniverse-m,
+      results[i,"P.DE"] <- stats::phyper(q=results[i,"DE"]-0.5,m=m,n=Nuniverse-m,
                                   k=results[i,"N"],lower.tail=FALSE)    
     }
   }
-  results[,"FDR"] <- p.adjust(results[,"P.DE"],method="BH")
+  results[,"FDR"] <- stats::p.adjust(results[,"P.DE"],method="BH")
   data.frame(results)
 }
 
