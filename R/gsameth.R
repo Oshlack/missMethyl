@@ -162,9 +162,11 @@ gsameth <- function(sig.cpg, all.cpg=NULL, collection,
   collection <- lapply(collection, as.character)
   # Make sure gene set collections don't have any NAs
   collection <- lapply(collection, function(x) x[!is.na(x)])
-  # Make sure only collections with geneids present in universe are included
-  inUniv <- lapply(collection, function(x) sum(eg.universe %in% x))
-  collection <- collection[inUniv!=0]
+  # Remove genes that are NOT in the universe from collections
+  collection <- lapply(collection, function(x) x[x %in% eg.universe])
+  # Remove collections with no genes left after universe filter
+  inUniv <- sapply(collection, function(x) length(x) > 0)
+  collection <- collection[inUniv]
 
   # Estimate prior probabilities
   if(prior.prob){
@@ -209,9 +211,9 @@ gsameth <- function(sig.cpg, all.cpg=NULL, collection,
                                                    Nuniverse-results[i,"N"],
                                                    m,odds,lower.tail=FALSE) + 
           BiasedUrn::dWNCHypergeo(results[i,"DE"],
-                                                                                                      results[i,"N"],
-                                                                                                      Nuniverse-results[i,"N"],
-                                                                                                      m,odds)
+                                  results[i,"N"],
+                                  Nuniverse-results[i,"N"],
+                                  m,odds)
     }
   }
   # Hypergeometric test without prior probabilities

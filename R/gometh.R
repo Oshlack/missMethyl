@@ -296,10 +296,8 @@ gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"),
 {
   if(is.null(anno)){
     if(array.type=="450K"){
-      # require(IlluminaHumanMethylation450kanno.ilmn12.hg19)
       anno <- minfi::getAnnotation(IlluminaHumanMethylation450kanno.ilmn12.hg19::IlluminaHumanMethylation450kanno.ilmn12.hg19)
     } else {
-      # require(IlluminaHumanMethylationEPICanno.ilm10b4.hg19)
       anno <- minfi::getAnnotation(IlluminaHumanMethylationEPICanno.ilm10b4.hg19::IlluminaHumanMethylationEPICanno.ilm10b4.hg19)
     }
   }
