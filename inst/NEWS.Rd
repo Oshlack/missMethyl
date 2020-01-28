@@ -2,6 +2,11 @@
 \title{missMethyl News}
 \encoding{UTF-8}
 
+\section{Version 1.20.4}{\itemize{
+
+\item Bug fix: Fixed bug that resulted in negative value for odds. Bug only occurred in rare cases when CpG universe was smaller than all CpGs on array AND if some large collections had more genes than the universe.    
+}}
+
 \section{Version 1.20.3}{\itemize{
 
 \item Added \code{fract.counts} logical parameter to enable fractional counting of CpGs 
