@@ -143,14 +143,32 @@
 goregion <- function(regions, all.cpg=NULL, collection=c("GO","KEGG"), 
                      array.type = c("450K","EPIC"), plot.bias=FALSE, 
                      prior.prob=TRUE, anno=NULL, equiv.cpg = TRUE,
-                     fract.counts = TRUE)
+                     fract.counts = TRUE, 
+                     genomic.features = c("ALL", "TSS200","TSS1500","Body",
+                                          "1stExon","3'UTR","5'UTR","ExonBnd"))
   # Gene ontology testing or KEGG pathway analysis for differentially methylated regions
   # Takes into account probability of differential methylation based on
   # numbers of probes on array per gene
   # Jovana Maksimovic
   # 26 April 2019. Last updated 26 April 2019.
 {
-  collection <- match.arg(toupper(collection),c("GO","KEGG"))
+    array.type <- match.arg(toupper(array.type), c("450K","EPIC"))    
+    collection <- match.arg(toupper(collection), c("GO","KEGG"))
+    genomic.features <- match.arg(genomic.features, c("ALL", "TSS200","TSS1500",
+                                                      "Body", "1stExon","3'UTR",
+                                                      "5'UTR","ExonBnd"), 
+                                  several.ok = TRUE)
+    
+    if(length(genomic.features) > 1 & any(grepl("ALL", genomic.features))){
+        stop("The genomic.features parameter must either be set to 'ALL' OR a\n
+             combination of one OR more of the OTHER possible features.")      
+    } 
+    
+    if(array.type == "450K" & any(grepl("ExonBnd", genomic.features))){
+        stop("'ExonBnd' is not an annotated feature on 450K arrays,\n
+             please remove it from your genomic.feature parameter\n
+             specification.") 
+    }
   
   if(is.null(anno)){
     if(array.type=="450K"){
@@ -317,7 +335,9 @@ goregion <- function(regions, all.cpg=NULL, collection=c("GO","KEGG"),
 gsaregion <- function(regions, all.cpg=NULL, collection, 
                       array.type = c("450K","EPIC"), plot.bias=FALSE, 
                       prior.prob=TRUE, anno=NULL, equiv.cpg = TRUE, 
-                      fract.counts=TRUE)
+                      fract.counts=TRUE, 
+                      genomic.features = c("ALL", "TSS200","TSS1500","Body",
+                                           "1stExon","3'UTR","5'UTR","ExonBnd"))
   # Generalised version of goregion with user-specified gene sets 
   # Gene sets collections must be Entrez Gene ID
   # Takes into account probability of differential methylation based on
@@ -325,6 +345,25 @@ gsaregion <- function(regions, all.cpg=NULL, collection,
   # Jovana Maksimovic
   # 26 April 2019. Last updated 26 April 2019.
 {
+
+    array.type <- match.arg(toupper(array.type), c("450K","EPIC"))    
+    collection <- match.arg(toupper(collection), c("GO","KEGG"))
+    genomic.features <- match.arg(genomic.features, c("ALL", "TSS200","TSS1500",
+                                                      "Body", "1stExon","3'UTR",
+                                                      "5'UTR","ExonBnd"), 
+                                  several.ok = TRUE)
+    
+    if(length(genomic.features) > 1 & any(grepl("ALL", genomic.features))){
+        stop("The genomic.features parameter must either be set to 'ALL' OR a
+          combination of one OR more of the OTHER possible features.")      
+    } 
+    
+    if(array.type == "450K" & any(grepl("ExonBnd", genomic.features))){
+        stop("'ExonBnd' is not an annotated feature on 450K arrays,
+           please remove it from your genomic.feature parameter
+           specification.") 
+    }
+    
   if(is.null(anno)){
     if(array.type=="450K"){
       anno <- minfi::getAnnotation(IlluminaHumanMethylation450kanno.ilmn12.hg19::IlluminaHumanMethylation450kanno.ilmn12.hg19)

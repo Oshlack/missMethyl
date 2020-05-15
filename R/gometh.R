@@ -133,7 +133,9 @@
 gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"), 
                    array.type = c("450K","EPIC"), plot.bias=FALSE, 
                    prior.prob=TRUE, anno=NULL, equiv.cpg = TRUE, 
-                   fract.counts = TRUE)
+                   fract.counts = TRUE, 
+                   genomic.features = c("ALL", "TSS200","TSS1500","Body",
+                                       "1stExon","3'UTR","5'UTR","ExonBnd"))
   # Gene ontology testing or KEGG pathway analysis for Illumina methylation 
   # arrays based on goseq
   # Takes into account probability of differential methylation based on
@@ -142,14 +144,31 @@ gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"),
   # 28 January 2015. Last updated 23 April 2019.
   # EPIC functionality contributed by Andrew Y.F. Li Yim
 {
-  collection <- match.arg(toupper(collection),c("GO","KEGG"))
+  array.type <- match.arg(toupper(array.type), c("450K","EPIC"))    
+  collection <- match.arg(toupper(collection), c("GO","KEGG"))
+  genomic.features <- match.arg(genomic.features, c("ALL", "TSS200","TSS1500",
+                                                    "Body", "1stExon","3'UTR",
+                                                    "5'UTR","ExonBnd"), 
+                                several.ok = TRUE)
   
+  if(length(genomic.features) > 1 & any(grepl("ALL", genomic.features))){
+    stop("The genomic.features parameter must either be set to 'ALL' OR a\n
+          combination of one OR more of the OTHER possible features.")      
+  } 
+  
+  if(array.type == "450K" & any(grepl("ExonBnd", genomic.features))){
+      stop("'ExonBnd' is not an annotated feature on 450K arrays,\n
+           please remove it from your genomic.feature parameter\n
+           specification.") 
+  }
+   
   if(collection == "GO"){
     go <- .getGO()
     result <- gsameth(sig.cpg=sig.cpg, all.cpg=all.cpg, collection=go$idList, 
                       array.type=array.type, plot.bias=plot.bias, 
                       prior.prob=prior.prob, anno=anno, equiv.cpg=equiv.cpg,
-                      fract.counts=fract.counts)
+                      fract.counts=fract.counts, 
+                      genomic.features = genomic.features)
     result <- merge(go$idTable,result,by.x="GOID",by.y="row.names")
     rownames(result) <- result$GOID
 
@@ -158,7 +177,8 @@ gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"),
     result <- gsameth(sig.cpg=sig.cpg, all.cpg=all.cpg, collection=kegg$idList, 
                       array.type=array.type, plot.bias=plot.bias, 
                       prior.prob=prior.prob, anno=anno, equiv.cpg=equiv.cpg,
-                      fract.counts=fract.counts)
+                      fract.counts=fract.counts, 
+                      genomic.features = genomic.features)
     result <- merge(kegg$idTable,result,by.x="PathwayID",by.y="row.names")
     rownames(result) <- result$PathwayID
   }
@@ -422,16 +442,37 @@ gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"),
 #' }
 #' 
 #' @export getMappedEntrezIDs
-getMappedEntrezIDs <- function(sig.cpg,all.cpg=NULL,array.type,anno=NULL)
+getMappedEntrezIDs <- function(sig.cpg, all.cpg=NULL, 
+                               array.type=c("450K","EPIC"), anno=NULL, 
+                               genomic.features = c("ALL", "TSS200","TSS1500",
+                                                    "Body","1stExon","3'UTR",
+                                                    "5'UTR","ExonBnd"))
   # From a list of CpG sites, obtain the Entrez Gene IDs that are used for 
   # testing pathway enrichment
-  # Belinda Phipson
+  # Belinda Phipson & Jovana Maksimovic
   # 10 February 2016
-  # Updated 29 March 2019
+  # Updated 12 May 2020 to allow restricting sig.cpg by genomic features
 {
   # check input
   sig.cpg <- as.character(sig.cpg)
   sig.cpg <- sig.cpg[!is.na(sig.cpg)]
+  
+  array.type <- match.arg(toupper(array.type), c("450K","EPIC"))    
+  genomic.features <- match.arg(genomic.features, c("ALL", "TSS200","TSS1500",
+                                                    "Body", "1stExon","3'UTR",
+                                                    "5'UTR","ExonBnd"), 
+                                several.ok = TRUE)
+  
+  if(length(genomic.features) > 1 & any(grepl("ALL", genomic.features))){
+      stop("The genomic.features parameter must either be set to 'ALL' OR a
+           combination of one OR more of the OTHER possible features.")      
+  } 
+  
+  if(array.type == "450K" & any(grepl("ExonBnd", genomic.features))){
+      stop("'ExonBnd' is not an annotated feature on 450K arrays,
+           please remove it from your genomic.feature parameter
+           specification.") 
+  }
   
   # Get annotaton in appropriate format
   if(is.null(anno)){
@@ -447,11 +488,20 @@ getMappedEntrezIDs <- function(sig.cpg,all.cpg=NULL,array.type,anno=NULL)
     all.cpg <- all.cpg[!is.na(all.cpg)]
     all.cpg <- unique(all.cpg)
   }
-  
+
   # map CpG sites to entrez gene id's
   sig.cpg <- unique(sig.cpg)
+  
   m1 <- match(flat.u$cpg,sig.cpg)
-  eg.sig <- flat.u$entrezid[!is.na(m1)]
+  
+  #eg.sig <- flat.u$entrezid[!is.na(m1)]
+  if(any(grepl("ALL", genomic.features))){
+      eg.sig <- flat.u$entrezid[!is.na(m1)]
+  } else {
+      # select only genes with sig. CpGs map to certain genomic features
+      eg.sig <- flat.u$entrezid[!is.na(m1) & flat.u$group %in% genomic.features]
+  }
+  
   eg.sig <- unique(eg.sig)
   
   m2 <- match(flat.u$cpg,all.cpg)
@@ -475,7 +525,13 @@ getMappedEntrezIDs <- function(sig.cpg,all.cpg=NULL,array.type,anno=NULL)
   mm <- match(eg.universe,names(equivN))
   equivN <- equivN[mm]
   
-  sig.flat <- flat.u[!is.na(m1),]
+  #sig.flat <- flat.u[!is.na(m1),]
+  if(any(grepl("ALL", genomic.features))){
+      sig.flat <- flat.u[!is.na(m1),]
+  } else {
+      # select only CpGs that map to certain genomic features
+      sig.flat <- flat.u[!is.na(m1) & flat.u$group %in% genomic.features, ]
+  }
   
   fract <- data.frame(weight=pmin(tapply(1/sig.flat$multimap,
                                          sig.flat$entrezid,sum),

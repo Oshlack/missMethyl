@@ -127,7 +127,9 @@
 gsameth <- function(sig.cpg, all.cpg=NULL, collection, 
                     array.type = c("450K","EPIC"), plot.bias=FALSE, 
                     prior.prob=TRUE, anno=NULL, equiv.cpg = TRUE,
-                    fract.counts = TRUE)
+                    fract.counts = TRUE, 
+                    genomic.features = c("ALL", "TSS200","TSS1500","Body",
+                                         "1stExon","3'UTR","5'UTR","ExonBnd"))
   # Generalised version of gometh with user-specified gene sets 
   # Gene sets collections must be Entrez Gene ID
   # Can take into account probability of differential methylation 
@@ -140,14 +142,31 @@ gsameth <- function(sig.cpg, all.cpg=NULL, collection,
   if(!is.vector(sig.cpg))
     stop("Input CpG list is not a character vector")
   array.type <- match.arg(toupper(array.type),c("450K","EPIC"))
+  genomic.features <- match.arg(genomic.features, c("ALL", "TSS200","TSS1500",
+                                                    "Body", "1stExon","3'UTR",
+                                                    "5'UTR","ExonBnd"), 
+                                several.ok = TRUE)
+  
+  if(length(genomic.features) > 1 & any(grepl("ALL", genomic.features))){
+      stop("The genomic.features parameter must either be set to 'ALL' OR a
+           combination of one OR more of the OTHER possible features.")      
+  } 
+  
+  if(array.type == "450K" & any(("ExonBnd" %in% genomic.features))){
+      stop("'ExonBnd' is not an annotated feature on 450K arrays,
+           please remove it from your genomic.feature parameter
+           specification.") 
+  }
   
   # Get mapped entrez gene IDs from CpG probe names
   if(!is.null(anno)){
     out <- getMappedEntrezIDs(sig.cpg=sig.cpg,all.cpg=all.cpg,
-                              array.type=array.type, anno)
+                              array.type=array.type, anno, 
+                              genomic.features = genomic.features)
   } else {
     out <- getMappedEntrezIDs(sig.cpg=sig.cpg,all.cpg=all.cpg,
-                              array.type=array.type)
+                              array.type=array.type, 
+                              genomic.features = genomic.features)
   }
   sorted.eg.sig <- out$sig.eg
   eg.universe <- out$universe
