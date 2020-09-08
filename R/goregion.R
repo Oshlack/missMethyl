@@ -1,4 +1,4 @@
-#' Gene ontology testing for Ilumina methylation array data
+#' Gene ontology testing of DMRs for Ilumina methylation array data
 #' 
 #' Tests gene ontology or KEGG pathway enrichment for differentially methylated
 #' regions (DMRs) identified from Illumina's Infinium HumanMethylation450 or
@@ -7,17 +7,11 @@
 #' 
 #' This function takes a \code{GRanges} object of DMR coordinates, maps them to
 #' CpG sites on the array and then to Entrez Gene IDs, and tests for GO term or
-#' KEGG pathway enrichment using a hypergeometric test, taking into account the
-#' number of CpG sites per gene on the 450K/EPIC array.  Geeleher et al. (2013)
-#' showed that a severe bias exists when performing gene set analysis for
-#' genome-wide methylation data that occurs due to the differing numbers of CpG
-#' sites profiled for each gene. \code{gometh} is based on the \code{goseq}
-#' method (Young et al., 2010) and calls the \code{goana} function for GO
-#' testing, or the \code{kegga} function for KEGG testing, both of which are
-#' from the \code{limma} package (Ritchie et al. 2015). If \code{prior.prob} is
-#' set to FALSE, then prior probabilities are not used and it is assumed that
-#' each gene is equally likely to have a significant CpG site associated with
-#' it. 
+#' KEGG pathway enrichment using Wallenius' noncentral hypergeometric test, 
+#' taking into account the number of CpG sites per gene on the 450K/EPIC array.  
+#' If \code{prior.prob} is set to FALSE, then prior probabilities are not used 
+#' and it is assumed that each gene is equally likely to have a significant CpG 
+#' site associated with it. 
 #' 
 #' The testing now also takes into account that some CpGs map to multiple genes. 
 #' For a small number of gene families, this previously caused their associated 
@@ -33,13 +27,18 @@
 #' argument. 
 #' 
 #' In order to get a list which contains the mapped Entrez gene IDS,
-#' please use the \code{getMappedEntrezIDs} function. \code{gometh} tests all
+#' please use the \code{getMappedEntrezIDs} function. \code{goregion} tests all
 #' GO or KEGG terms, and false discovery rates are calculated using the method
-#' of Benjamini and Hochberg (1995).  The \code{limma} functions \code{topGO}
-#' and \code{topKEGG} can be used to display the top 20 most enriched pathways.
+#' of Benjamini and Hochberg (1995). The \code{topGSA} function can be used to 
+#' display the top 20 most enriched pathways.
+#' 
+#' If you are interested in which genes overlap with the genes in the gene set, 
+#' setting \code{sig.genes} to TRUE will output an additional column in the 
+#' results data frame that contains all the significant differentially 
+#' methylated gene symbols, comma separated. The default is FALSE.
 #' 
 #' For more generalised gene set testing where the user can specify the gene
-#' set/s of interest to be tested, please use the \code{gsameth} function.
+#' set/s of interest to be tested, please use the \code{gsaregion} function.
 #' 
 #' @param regions \code{GRanges} object of DMR coordinates to test for GO term
 #' enrichment.
@@ -63,6 +62,15 @@
 #' @param fract.counts Logical, if true then fractional counting of cpgs is used
 #' to account for cgps that map to multiple genes. Only used if 
 #' \code{prior.prob=TRUE}.
+#' @param genomic.features Character vector or scalar indicating whether the 
+#' gene set enrichment analysis should be restricted to CpGs from specific 
+#' genomic locations. Options are "ALL", "TSS200","TSS1500","Body","1stExon",
+#' "3'UTR","5'UTR","ExonBnd"; and the user can select any combination. Defaults
+#' to "ALL".
+#' @param sig.genes Logical, if true then the significant differentially 
+#' methylated genes that overlap with the gene set of interest is outputted 
+#' as the final column in the results table. Default is FALSE.
+#' 
 #' @return A data frame with a row for each GO or KEGG term and the following
 #' columns: \item{Term}{ GO term if testing GO pathways } \item{Ont}{ ontology
 #' that the GO term belongs to if testing GO pathways. "BP" - biological
@@ -71,9 +79,12 @@
 #' \item{N}{ number of genes in the GO or KEGG term } \item{DE}{ number of
 #' genes that are differentially methylated } \item{P.DE}{ p-value for
 #' over-representation of the GO or KEGG term term } \item{FDR}{ False
-#' discovery rate }
+#' discovery rate } \item{SigGenesInSet}{ Significant differentially methylated 
+#' genes overlapping with the gene set of interest. }
+#' 
 #' @author Jovana Maksimovic
-#' @seealso \code{\link{goana},\link{kegga},\link{gsameth}}
+#' @seealso \code{\link{gometh},\link{gsameth},\link{gsaregion}}
+#' 
 #' @references Phipson, B., Maksimovic, J., and Oshlack, A. (2016). missMethyl:
 #' an R package for analysing methylation data from Illuminas
 #' HumanMethylation450 platform. \emph{Bioinformatics}, \bold{15};32(2),
@@ -145,12 +156,13 @@ goregion <- function(regions, all.cpg=NULL, collection=c("GO","KEGG"),
                      prior.prob=TRUE, anno=NULL, equiv.cpg = TRUE,
                      fract.counts = TRUE, 
                      genomic.features = c("ALL", "TSS200","TSS1500","Body",
-                                          "1stExon","3'UTR","5'UTR","ExonBnd"))
+                                          "1stExon","3'UTR","5'UTR","ExonBnd"),
+                     sig.genes = FALSE)
   # Gene ontology testing or KEGG pathway analysis for differentially methylated regions
   # Takes into account probability of differential methylation based on
   # numbers of probes on array per gene
   # Jovana Maksimovic
-  # 26 April 2019. Last updated 26 April 2019.
+  # 26 April 2019. Last updated 1 September 2020.
 {
     array.type <- match.arg(toupper(array.type), c("450K","EPIC"))    
     collection <- match.arg(toupper(collection), c("GO","KEGG"))
@@ -160,8 +172,8 @@ goregion <- function(regions, all.cpg=NULL, collection=c("GO","KEGG"),
                                   several.ok = TRUE)
     
     if(length(genomic.features) > 1 & any(grepl("ALL", genomic.features))){
-        stop("The genomic.features parameter must either be set to 'ALL' OR a\n
-             combination of one OR more of the OTHER possible features.")      
+      message("All input CpGs are used for testing.") 
+      genomic.features <- "ALL"   
     } 
     
     if(array.type == "450K" & any(grepl("ExonBnd", genomic.features))){
@@ -194,7 +206,9 @@ goregion <- function(regions, all.cpg=NULL, collection=c("GO","KEGG"),
   result <- gometh(sig.cpg=sig.cpg, all.cpg=all.cpg, collection=collection, 
                    array.type=array.type, plot.bias=plot.bias, 
                    prior.prob=prior.prob, anno=anno, equiv.cpg=equiv.cpg,
-                   fract.counts=fract.counts)
+                   fract.counts=fract.counts, 
+                   genomic.features = genomic.features,
+                   sig.genes = sig.genes)
   result
 }  
 
@@ -202,23 +216,19 @@ goregion <- function(regions, all.cpg=NULL, collection=c("GO","KEGG"),
 
 #' Generalised gene set testing for Illumina's methylation array data
 #' 
-#' Given a user specified list of gene sets to test, \code{gsameth} tests
+#' Given a user specified list of gene sets to test, \code{gsaregion} tests
 #' whether differentially methylated regions (DMRs) identified from Illumina's
 #' Infinium HumanMethylation450 or MethylationEPIC array are enriched, taking
 #' into account the differing number of probes per gene present on the array.
 #' 
-#' This function extends \code{gometh}, which only tests GO and KEGG pathways.
-#' \code{gsameth} can take a list of user specified gene sets and test whether
+#' This function extends \code{goregion}, which only tests GO and KEGG pathways.
+#' \code{gsaregion} can take a list of user specified gene sets and test whether
 #' the significant DMRs are enriched in these pathways. This function takes a
 #' \code{GRanges} object of DMR coordinates, maps them to CpG sites on the
-#' array and then to Entrez Gene IDs, and tests for enrichment using a
-#' hypergeometric test, taking into account the number of CpG sites per gene on
-#' the 450K/EPIC array.  Geeleher et al. (2013) showed that a severe bias
-#' exists when performing gene set analysis for genome-wide methylation data
-#' that occurs due to the differing numbers of CpG sites profiled for each
-#' gene. \code{gsameth} and \code{gometh} is based on the \code{goseq} method
-#' (Young et al., 2010). If \code{prior.prob} is set to FALSE, then prior
-#' probabilities are not used and it is assumed that each gene is equally
+#' array and then to Entrez Gene IDs, and tests for enrichment using Wallenius' 
+#' noncentral hypergeometric test, taking into account the number of CpG sites 
+#' per gene on the 450K/EPIC array.  If \code{prior.prob} is set to FALSE, then 
+#' prior probabilities are not used and it is assumed that each gene is equally
 #' likely to have a significant CpG site associated with it. 
 #' 
 #' The testing now also takes into account that some CpGs map to multiple genes. 
@@ -235,7 +245,13 @@ goregion <- function(regions, all.cpg=NULL, collection=c("GO","KEGG"),
 #' argument. 
 #' 
 #' In order to get a list which contains the mapped Entrez gene IDS,
-#' please use the \code{getMappedEntrezIDs} function.
+#' please use the \code{getMappedEntrezIDs} function. The \code{topGSA} function 
+#' can be used to display the top 20 most enriched pathways.
+#' 
+#' If you are interested in which genes overlap with the genes in the gene set, 
+#' setting \code{sig.genes} to TRUE will output an additional column in the 
+#' results data frame that contains all the significant differentially 
+#' methylated gene symbols, comma separated. The default is FALSE.
 #' 
 #' @param regions \code{GRanges} Object of DMR coordinates to test for GO term
 #' enrichment.
@@ -259,13 +275,24 @@ goregion <- function(regions, all.cpg=NULL, collection=c("GO","KEGG"),
 #' @param fract.counts Logical, if true then fractional counting of cpgs is used
 #' to account for cgps that map to multiple genes. Only used if 
 #' \code{prior.prob=TRUE}.
+#' @param genomic.features Character vector or scalar indicating whether the 
+#' gene set enrichment analysis should be restricted to CpGs from specific 
+#' genomic locations. Options are "ALL", "TSS200","TSS1500","Body","1stExon",
+#' "3'UTR","5'UTR","ExonBnd"; and the user can select any combination. Defaults
+#' to "ALL".
+#' @param sig.genes Logical, if true then the significant differentially 
+#' methylated genes that overlap with the gene set of interest is outputted 
+#' as the final column in the results table. Default is FALSE.
+#' 
 #' @return A data frame with a row for each gene set and the following columns:
 #' \item{N}{ number of genes in the gene set } \item{DE}{ number of genes that
 #' are differentially methylated } \item{P.DE}{ p-value for over-representation
 #' of the gene set } \item{FDR}{ False discovery rate, calculated using the
-#' method of Benjamini and Hochberg (1995).  }
-#' @author Belinda Phipson
-#' @seealso \code{\link{gometh},\link{getMappedEntrezIDs}}
+#' method of Benjamini and Hochberg (1995).  } \item{SigGenesInSet}{ Significant 
+#' differentially methylated genes overlapping with the gene set of interest. }
+#' @author Jovana Maksimovic
+#' @seealso \code{\link{gometh},\link{goregion},\link{gsameth},
+#' \link{getMappedEntrezIDs}}
 #' @references Phipson, B., Maksimovic, J., and Oshlack, A. (2016). missMethyl:
 #' an R package for analysing methylation data from Illuminas
 #' HumanMethylation450 platform. \emph{Bioinformatics}, \bold{15};32(2),
@@ -337,13 +364,14 @@ gsaregion <- function(regions, all.cpg=NULL, collection,
                       prior.prob=TRUE, anno=NULL, equiv.cpg = TRUE, 
                       fract.counts=TRUE, 
                       genomic.features = c("ALL", "TSS200","TSS1500","Body",
-                                           "1stExon","3'UTR","5'UTR","ExonBnd"))
+                                           "1stExon","3'UTR","5'UTR","ExonBnd"),
+                      sig.genes = FALSE)
   # Generalised version of goregion with user-specified gene sets 
   # Gene sets collections must be Entrez Gene ID
   # Takes into account probability of differential methylation based on
   # numbers of probes on array per gene
   # Jovana Maksimovic
-  # 26 April 2019. Last updated 26 April 2019.
+  # 26 April 2019. Last updated 1 Setember 2020.
 {
 
     array.type <- match.arg(toupper(array.type), c("450K","EPIC"))    
@@ -354,8 +382,8 @@ gsaregion <- function(regions, all.cpg=NULL, collection,
                                   several.ok = TRUE)
     
     if(length(genomic.features) > 1 & any(grepl("ALL", genomic.features))){
-        stop("The genomic.features parameter must either be set to 'ALL' OR a
-          combination of one OR more of the OTHER possible features.")      
+        message("All input CpGs are used for testing.") 
+        genomic.features <- "ALL"      
     } 
     
     if(array.type == "450K" & any(grepl("ExonBnd", genomic.features))){
@@ -388,6 +416,8 @@ gsaregion <- function(regions, all.cpg=NULL, collection,
   result <- gsameth(sig.cpg=sig.cpg, all.cpg=all.cpg, collection=collection, 
                    array.type=array.type, plot.bias=plot.bias, 
                    prior.prob=prior.prob, anno=anno, equiv.cpg=equiv.cpg,
-                   fract.counts=fract.counts)
+                   fract.counts=fract.counts,
+                   genomic.features = genomic.features,
+                   sig.genes = sig.genes)
   result
 }

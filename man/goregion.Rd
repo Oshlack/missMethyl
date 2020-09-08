@@ -2,7 +2,7 @@
 % Please edit documentation in R/goregion.R
 \name{goregion}
 \alias{goregion}
-\title{Gene ontology testing for Ilumina methylation array data}
+\title{Gene ontology testing of DMRs for Ilumina methylation array data}
 \usage{
 goregion(
   regions,
@@ -13,7 +13,10 @@ goregion(
   prior.prob = TRUE,
   anno = NULL,
   equiv.cpg = TRUE,
-  fract.counts = TRUE
+  fract.counts = TRUE,
+  genomic.features = c("ALL", "TSS200", "TSS1500", "Body", "1stExon", "3'UTR", "5'UTR",
+    "ExonBnd"),
+  sig.genes = FALSE
 )
 }
 \arguments{
@@ -47,6 +50,16 @@ for odds calculation rather than total number cpgs. Only used if
 \item{fract.counts}{Logical, if true then fractional counting of cpgs is used
 to account for cgps that map to multiple genes. Only used if 
 \code{prior.prob=TRUE}.}
+
+\item{genomic.features}{Character vector or scalar indicating whether the 
+gene set enrichment analysis should be restricted to CpGs from specific 
+genomic locations. Options are "ALL", "TSS200","TSS1500","Body","1stExon",
+"3'UTR","5'UTR","ExonBnd"; and the user can select any combination. Defaults
+to "ALL".}
+
+\item{sig.genes}{Logical, if true then the significant differentially 
+methylated genes that overlap with the gene set of interest is outputted 
+as the final column in the results table. Default is FALSE.}
 }
 \value{
 A data frame with a row for each GO or KEGG term and the following
@@ -57,7 +70,8 @@ process, "CC" - cellular component, "MF" - molecular function.  }
 \item{N}{ number of genes in the GO or KEGG term } \item{DE}{ number of
 genes that are differentially methylated } \item{P.DE}{ p-value for
 over-representation of the GO or KEGG term term } \item{FDR}{ False
-discovery rate }
+discovery rate } \item{SigGenesInSet}{ Significant differentially methylated 
+genes overlapping with the gene set of interest. }
 }
 \description{
 Tests gene ontology or KEGG pathway enrichment for differentially methylated

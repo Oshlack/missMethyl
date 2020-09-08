@@ -52,10 +52,10 @@ Description: Normalisation, testing for differential variability and
 	systematic errors of unknown origin in high-dimensional data by
  	using negative control probes. Gene ontology analysis is performed
  	by taking into account the number of probes per gene on the
- 	array.
+ 	array, as well as taking into account multi-gene associated probes.
 License: GPL-2
 biocViews: Normalization, DNAMethylation, MethylationArray,
         GenomicVariation, GeneticVariability, DifferentialMethylation,
         GeneSetEnrichment
-RoxygenNote: 7.0.2
+RoxygenNote: 7.1.1
 Encoding: UTF-8

@@ -13,7 +13,10 @@ gsaregion(
   prior.prob = TRUE,
   anno = NULL,
   equiv.cpg = TRUE,
-  fract.counts = TRUE
+  fract.counts = TRUE,
+  genomic.features = c("ALL", "TSS200", "TSS1500", "Body", "1stExon", "3'UTR", "5'UTR",
+    "ExonBnd"),
+  sig.genes = FALSE
 )
 }
 \arguments{
@@ -47,13 +50,24 @@ for odds calculation rather than total number cpgs. Only used if
 \item{fract.counts}{Logical, if true then fractional counting of cpgs is used
 to account for cgps that map to multiple genes. Only used if 
 \code{prior.prob=TRUE}.}
+
+\item{genomic.features}{Character vector or scalar indicating whether the 
+gene set enrichment analysis should be restricted to CpGs from specific 
+genomic locations. Options are "ALL", "TSS200","TSS1500","Body","1stExon",
+"3'UTR","5'UTR","ExonBnd"; and the user can select any combination. Defaults
+to "ALL".}
+
+\item{sig.genes}{Logical, if true then the significant differentially 
+methylated genes that overlap with the gene set of interest is outputted 
+as the final column in the results table. Default is FALSE.}
 }
 \value{
 A data frame with a row for each gene set and the following columns:
 \item{N}{ number of genes in the gene set } \item{DE}{ number of genes that
 are differentially methylated } \item{P.DE}{ p-value for over-representation
 of the gene set } \item{FDR}{ False discovery rate, calculated using the
-method of Benjamini and Hochberg (1995).  }
+method of Benjamini and Hochberg (1995).  } \item{SigGenesInSet}{ Significant 
+differentially methylated genes overlapping with the gene set of interest. }
 }
 \description{
 Given a user specified list of gene sets to test, \code{gsameth} tests
