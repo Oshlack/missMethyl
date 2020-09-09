@@ -101,7 +101,7 @@
 #' genes overlapping with the gene set of interest. }
 #' 
 #' @author Belinda Phipson
-#' @seealso \code{\link{gsameth},\link{goregion},\link(gsaregion),
+#' @seealso \code{\link{gsameth},\link{goregion},\link{gsaregion},
 #' \link{getMappedEntrezIDs}}
 #' 
 #' @references Phipson, B., Maksimovic, J., and Oshlack, A. (2016). missMethyl:

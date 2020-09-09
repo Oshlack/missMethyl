@@ -82,17 +82,11 @@ per gene present on the array.
 \details{
 This function takes a \code{GRanges} object of DMR coordinates, maps them to
 CpG sites on the array and then to Entrez Gene IDs, and tests for GO term or
-KEGG pathway enrichment using a hypergeometric test, taking into account the
-number of CpG sites per gene on the 450K/EPIC array.  Geeleher et al. (2013)
-showed that a severe bias exists when performing gene set analysis for
-genome-wide methylation data that occurs due to the differing numbers of CpG
-sites profiled for each gene. \code{gometh} is based on the \code{goseq}
-method (Young et al., 2010) and calls the \code{goana} function for GO
-testing, or the \code{kegga} function for KEGG testing, both of which are
-from the \code{limma} package (Ritchie et al. 2015). If \code{prior.prob} is
-set to FALSE, then prior probabilities are not used and it is assumed that
-each gene is equally likely to have a significant CpG site associated with
-it. 
+KEGG pathway enrichment using Wallenius' noncentral hypergeometric test, 
+taking into account the number of CpG sites per gene on the 450K/EPIC array.  
+If \code{prior.prob} is set to FALSE, then prior probabilities are not used 
+and it is assumed that each gene is equally likely to have a significant CpG 
+site associated with it. 
 
 The testing now also takes into account that some CpGs map to multiple genes. 
 For a small number of gene families, this previously caused their associated 
@@ -108,13 +102,18 @@ different annotation package, please supply it using the \code{anno}
 argument. 
 
 In order to get a list which contains the mapped Entrez gene IDS,
-please use the \code{getMappedEntrezIDs} function. \code{gometh} tests all
+please use the \code{getMappedEntrezIDs} function. \code{goregion} tests all
 GO or KEGG terms, and false discovery rates are calculated using the method
-of Benjamini and Hochberg (1995).  The \code{limma} functions \code{topGO}
-and \code{topKEGG} can be used to display the top 20 most enriched pathways.
+of Benjamini and Hochberg (1995). The \code{topGSA} function can be used to 
+display the top 20 most enriched pathways.
+
+If you are interested in which genes overlap with the genes in the gene set, 
+setting \code{sig.genes} to TRUE will output an additional column in the 
+results data frame that contains all the significant differentially 
+methylated gene symbols, comma separated. The default is FALSE.
 
 For more generalised gene set testing where the user can specify the gene
-set/s of interest to be tested, please use the \code{gsameth} function.
+set/s of interest to be tested, please use the \code{gsaregion} function.
 }
 \examples{
 
@@ -185,7 +184,7 @@ testing. \emph{Journal of the Royal Statistical Society Series}, B,
 \bold{57}, 289-300.
 }
 \seealso{
-\code{\link{goana},\link{kegga},\link{gsameth}}
+\code{\link{gometh},\link{gsameth},\link{gsaregion}}
 }
 \author{
 Jovana Maksimovic

@@ -144,6 +144,7 @@
 #' topGSA(gst.bias)
 #' }
 #' 
+#' @import IlluminaHumanMethylation450kanno.ilmn12.hg19 IlluminaHumanMethylationEPICanno.ilm10b4.hg19
 #' @export gsameth
 gsameth <- function(sig.cpg, all.cpg=NULL, collection, 
                     array.type = c("450K","EPIC"), plot.bias=FALSE, 

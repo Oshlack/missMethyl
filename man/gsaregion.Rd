@@ -70,24 +70,20 @@ method of Benjamini and Hochberg (1995).  } \item{SigGenesInSet}{ Significant
 differentially methylated genes overlapping with the gene set of interest. }
 }
 \description{
-Given a user specified list of gene sets to test, \code{gsameth} tests
+Given a user specified list of gene sets to test, \code{gsaregion} tests
 whether differentially methylated regions (DMRs) identified from Illumina's
 Infinium HumanMethylation450 or MethylationEPIC array are enriched, taking
 into account the differing number of probes per gene present on the array.
 }
 \details{
-This function extends \code{gometh}, which only tests GO and KEGG pathways.
-\code{gsameth} can take a list of user specified gene sets and test whether
+This function extends \code{goregion}, which only tests GO and KEGG pathways.
+\code{gsaregion} can take a list of user specified gene sets and test whether
 the significant DMRs are enriched in these pathways. This function takes a
 \code{GRanges} object of DMR coordinates, maps them to CpG sites on the
-array and then to Entrez Gene IDs, and tests for enrichment using a
-hypergeometric test, taking into account the number of CpG sites per gene on
-the 450K/EPIC array.  Geeleher et al. (2013) showed that a severe bias
-exists when performing gene set analysis for genome-wide methylation data
-that occurs due to the differing numbers of CpG sites profiled for each
-gene. \code{gsameth} and \code{gometh} is based on the \code{goseq} method
-(Young et al., 2010). If \code{prior.prob} is set to FALSE, then prior
-probabilities are not used and it is assumed that each gene is equally
+array and then to Entrez Gene IDs, and tests for enrichment using Wallenius' 
+noncentral hypergeometric test, taking into account the number of CpG sites 
+per gene on the 450K/EPIC array.  If \code{prior.prob} is set to FALSE, then 
+prior probabilities are not used and it is assumed that each gene is equally
 likely to have a significant CpG site associated with it. 
 
 The testing now also takes into account that some CpGs map to multiple genes. 
@@ -104,7 +100,13 @@ different annotation package, please supply it using the \code{anno}
 argument. 
 
 In order to get a list which contains the mapped Entrez gene IDS,
-please use the \code{getMappedEntrezIDs} function.
+please use the \code{getMappedEntrezIDs} function. The \code{topGSA} function 
+can be used to display the top 20 most enriched pathways.
+
+If you are interested in which genes overlap with the genes in the gene set, 
+setting \code{sig.genes} to TRUE will output an additional column in the 
+results data frame that contains all the significant differentially 
+methylated gene symbols, comma separated. The default is FALSE.
 }
 \examples{
 
@@ -175,8 +177,9 @@ testing. \emph{Journal of the Royal Statistical Society Series}, B,
 \bold{57}, 289-300.
 }
 \seealso{
-\code{\link{gometh},\link{getMappedEntrezIDs}}
+\code{\link{gometh},\link{goregion},\link{gsameth},
+\link{getMappedEntrezIDs}}
 }
 \author{
-Belinda Phipson
+Jovana Maksimovic
 }

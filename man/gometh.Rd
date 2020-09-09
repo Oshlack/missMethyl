@@ -116,11 +116,16 @@ Genes associated with each CpG site are obtained from the annotation package
 different annotation package, please supply it using the \code{anno}
 argument. 
 
+If you are interested in which genes overlap with the genes in the gene set, 
+setting \code{sig.genes} to TRUE will output an additional column in the 
+results data frame that contains all the significant differentially 
+methylated gene symbols, comma separated. The default is FALSE.
+
 In order to get a list which contains the mapped Entrez gene IDs,
 please use the \code{getMappedEntrezIDs} function. \code{gometh} tests all
 GO or KEGG terms, and false discovery rates are calculated using the method
-of Benjamini and Hochberg (1995).  The \code{limma} functions \code{topGO}
-and \code{topKEGG} can be used to display the top 20 most enriched pathways.
+of Benjamini and Hochberg (1995).  The \code{topGSA} function can be used to 
+display the top 20 most enriched pathways.
 
 For more generalised gene set testing where the user can specify the gene
 set/s of interest to be tested, please use the \code{gsameth} function.
@@ -191,7 +196,8 @@ testing. \emph{Journal of the Royal Statistical Society Series}, B,
 \bold{57}, 289-300.
 }
 \seealso{
-
+\code{\link{gsameth},\link{goregion},\link{gsaregion},
+\link{getMappedEntrezIDs}}
 }
 \author{
 Belinda Phipson

@@ -8,9 +8,7 @@ Maintainer: Belinda Phipson <belinda.phipson@petermec.org>, Jovana
         Maksimovic <jovana.maksimovic@petermac.org>,
         Andrew Lonsdale <andrew.lonsdale@petermac.org>
 Depends: 
-    R (>= 3.6.0),
-    IlluminaHumanMethylation450kanno.ilmn12.hg19,
-    IlluminaHumanMethylationEPICanno.ilm10b4.hg19
+    R (>= 3.6.0)
 Imports:
     AnnotationDbi, 
     BiasedUrn,

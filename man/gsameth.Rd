@@ -79,15 +79,11 @@ This function extends \code{gometh}, which only tests GO and KEGG pathways.
 \code{gsameth} can take a list of user specified gene sets and test whether
 the significant CpG sites are enriched in these pathways. \code{gsameth}
 maps the CpG sites to Entrez Gene IDs and tests for pathway enrichment using
-a hypergeometric test, taking into account the number of CpG sites per gene
-on the 450K/EPIC arrays. Please note the gene ids for the collection of gene
-sets must be Entrez Gene IDs. Geeleher et al. (2013) showed that a severe
-bias exists when performing gene set analysis for genome-wide methylation
-data that occurs due to the differing numbers of CpG sites profiled for each
-gene. \code{gsameth} and \code{gometh} is based on the \code{goseq} method
-(Young et al., 2010). If \code{prior.prob} is set to FALSE, then prior
-probabilities are not used and it is assumed that each gene is equally
-likely to have a significant CpG site associated with it. 
+Wallenius' concentral hypergeometric test, taking into account the number of 
+CpG sites per gene on the 450K/EPIC arrays. Please note the gene ids for the 
+collection of gene,sets must be Entrez Gene IDs. If \code{prior.prob} is set 
+to FALSE, then prior probabilities are not used and it is assumed that each 
+gene is equally likely to have a significant CpG site associated with it. 
 
 The testing now also takes into account that some CpGs map to multiple genes. 
 For a small number of gene families, this previously caused their associated 
@@ -113,7 +109,12 @@ different annotation package, please supply it using the \code{anno}
 argument. 
 
 In order to get a list which contains the mapped Entrez gene IDS,
-please use the \code{getMappedEntrezIDs} function.
+please use the \code{getMappedEntrezIDs} function. 
+
+If you are interested in which genes overlap with the genes in the gene set, 
+setting \code{sig.genes} to TRUE will output an additional column in the 
+results data frame that contains all the significant differentially 
+methylated gene symbols, comma separated. The default is FALSE.
 }
 \examples{
 
