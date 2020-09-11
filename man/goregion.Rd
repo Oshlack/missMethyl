@@ -2,7 +2,7 @@
 % Please edit documentation in R/goregion.R
 \name{goregion}
 \alias{goregion}
-\title{Gene ontology testing for Ilumina methylation array data}
+\title{Gene ontology testing of DMRs for Ilumina methylation array data}
 \usage{
 goregion(
   regions,
@@ -13,7 +13,10 @@ goregion(
   prior.prob = TRUE,
   anno = NULL,
   equiv.cpg = TRUE,
-  fract.counts = TRUE
+  fract.counts = TRUE,
+  genomic.features = c("ALL", "TSS200", "TSS1500", "Body", "1stExon", "3'UTR", "5'UTR",
+    "ExonBnd"),
+  sig.genes = FALSE
 )
 }
 \arguments{
@@ -47,6 +50,16 @@ for odds calculation rather than total number cpgs. Only used if
 \item{fract.counts}{Logical, if true then fractional counting of cpgs is used
 to account for cgps that map to multiple genes. Only used if 
 \code{prior.prob=TRUE}.}
+
+\item{genomic.features}{Character vector or scalar indicating whether the 
+gene set enrichment analysis should be restricted to CpGs from specific 
+genomic locations. Options are "ALL", "TSS200","TSS1500","Body","1stExon",
+"3'UTR","5'UTR","ExonBnd"; and the user can select any combination. Defaults
+to "ALL".}
+
+\item{sig.genes}{Logical, if true then the significant differentially 
+methylated genes that overlap with the gene set of interest is outputted 
+as the final column in the results table. Default is FALSE.}
 }
 \value{
 A data frame with a row for each GO or KEGG term and the following
@@ -57,7 +70,8 @@ process, "CC" - cellular component, "MF" - molecular function.  }
 \item{N}{ number of genes in the GO or KEGG term } \item{DE}{ number of
 genes that are differentially methylated } \item{P.DE}{ p-value for
 over-representation of the GO or KEGG term term } \item{FDR}{ False
-discovery rate }
+discovery rate } \item{SigGenesInSet}{ Significant differentially methylated 
+genes overlapping with the gene set of interest. }
 }
 \description{
 Tests gene ontology or KEGG pathway enrichment for differentially methylated
@@ -68,17 +82,13 @@ per gene present on the array.
 \details{
 This function takes a \code{GRanges} object of DMR coordinates, maps them to
 CpG sites on the array and then to Entrez Gene IDs, and tests for GO term or
-KEGG pathway enrichment using a hypergeometric test, taking into account the
-number of CpG sites per gene on the 450K/EPIC array.  Geeleher et al. (2013)
-showed that a severe bias exists when performing gene set analysis for
-genome-wide methylation data that occurs due to the differing numbers of CpG
-sites profiled for each gene. \code{gometh} is based on the \code{goseq}
-method (Young et al., 2010) and calls the \code{goana} function for GO
-testing, or the \code{kegga} function for KEGG testing, both of which are
-from the \code{limma} package (Ritchie et al. 2015). If \code{prior.prob} is
-set to FALSE, then prior probabilities are not used and it is assumed that
-each gene is equally likely to have a significant CpG site associated with
-it. 
+KEGG pathway enrichment using Wallenius' noncentral hypergeometric test, 
+taking into account the number of CpG sites per gene on the 450K/EPIC array.  
+If \code{prior.prob} is set to FALSE, then prior probabilities are not used 
+and it is assumed that each gene is equally likely to have a significant CpG 
+site associated with it. Please not that we have tested \code{goregion} and 
+\code{gsaregion} extensively using the \code{DMRCate} package to identify 
+differentially methylated regions (Peters, et al., 2015).
 
 The testing now also takes into account that some CpGs map to multiple genes. 
 For a small number of gene families, this previously caused their associated 
@@ -94,54 +104,89 @@ different annotation package, please supply it using the \code{anno}
 argument. 
 
 In order to get a list which contains the mapped Entrez gene IDS,
-please use the \code{getMappedEntrezIDs} function. \code{gometh} tests all
+please use the \code{getMappedEntrezIDs} function. \code{goregion} tests all
 GO or KEGG terms, and false discovery rates are calculated using the method
-of Benjamini and Hochberg (1995).  The \code{limma} functions \code{topGO}
-and \code{topKEGG} can be used to display the top 20 most enriched pathways.
+of Benjamini and Hochberg (1995). The \code{topGSA} function can be used to 
+display the top 20 most enriched pathways.
+
+If you are interested in which genes overlap with the genes in the gene set, 
+setting \code{sig.genes} to TRUE will output an additional column in the 
+results data frame that contains all the significant differentially 
+methylated gene symbols, comma separated. The default is FALSE.
 
 For more generalised gene set testing where the user can specify the gene
-set/s of interest to be tested, please use the \code{gsameth} function.
+set/s of interest to be tested, please use the \code{gsaregion} function.
 }
 \examples{
 
 \dontrun{ # to avoid timeout on Bioconductor build
-library(IlluminaHumanMethylation450kanno.ilmn12.hg19)
+library(IlluminaHumanMethylationEPICanno.ilm10b4.hg19)
 library(limma)
 library(DMRcate)
-data(dmrcatedata)
-myMs <- logit2(myBetas)
-myMs.noSNPs <- rmSNPandCH(myMs, dist=2, mafcut=0.05)
-patient <- factor(sub("-.*", "", colnames(myMs)))
-type <- factor(sub(".*-", "", colnames(myMs)))
-design <- model.matrix(~patient + type) 
-myannotation <- cpg.annotate("array", myMs.noSNPs, what="M", arraytype = "450K",
-                             analysis.type="differential", design=design, coef=39)
-dmrcoutput <- dmrcate(myannotation, lambda=1000)
-regions <- extractRanges(dmrcoutput)
+library(ExperimentHub)
 
-ann <- getAnnotation(IlluminaHumanMethylation450kanno.ilmn12.hg19)
-# All CpG sites tested
-allcpgs <- rownames(ann)
+# Follow the example for the dmrcate function to get some EPIC data from
+# ExperimentHub
+eh <- ExperimentHub()
+FlowSorted.Blood.EPIC <- eh[["EH1136"]]
+tcell <- FlowSorted.Blood.EPIC[,colData(FlowSorted.Blood.EPIC)$CD4T==100 |
+                                colData(FlowSorted.Blood.EPIC)$CD8T==100]
+detP <- detectionP(tcell)
+remove <- apply(detP, 1, function (x) any(x > 0.01))
+tcell <- tcell[!remove,]
+tcell <- preprocessFunnorm(tcell)
+#Subset to chr2 only
+tcell <- tcell[seqnames(tcell) == "chr2",]
+tcellms <- getM(tcell)
+tcellms.noSNPs <- rmSNPandCH(tcellms, dist=2, mafcut=0.05)
+tcell$Replicate[tcell$Replicate==""] <- tcell$Sample_Name[tcell$Replicate==""]
+tcellms.noSNPs <- avearrays(tcellms.noSNPs, tcell$Replicate)
+tcell <- tcell[,!duplicated(tcell$Replicate)]
+tcell <- tcell[rownames(tcellms.noSNPs),]
+colnames(tcellms.noSNPs) <- colnames(tcell)
+assays(tcell)[["M"]] <- tcellms.noSNPs
+assays(tcell)[["Beta"]] <- ilogit2(tcellms.noSNPs)
+
+# Perform region analysis
+type <- factor(tcell$CellType)
+design <- model.matrix(~type) 
+myannotation <- cpg.annotate("array", tcell, arraytype = "EPIC",
+                             analysis.type="differential", design=design, 
+                             coef=2)
+# Run DMRCate with beta value cut-off filter of 0.1                              
+dmrcoutput <- dmrcate(myannotation, lambda=1000, C=2, betacutoff = 0.1)
+regions <- extractRanges(dmrcoutput)
+length(regions)
+
+ann <- getAnnotation(IlluminaHumanMethylationEPICanno.ilm10b4.hg19)
+# All CpG sites tested (limited to chr 2)
+allcpgs <- rownames(tcell)
 # GO testing with prior probabilities taken into account
 # Plot of bias due to differing numbers of CpG sites per gene
 gst <- goregion(regions = regions, all.cpg = allcpgs, collection = "GO", 
-              plot.bias = TRUE, prior.prob = TRUE, anno = ann)
-# Total number of GO categories significant at 5\% FDR
-table(gst$FDR<0.05)
+                array.type = "EPIC", plot.bias = TRUE, prior.prob = TRUE, 
+                anno = ann)
 # Table of top GO results
-topGSA(gst)
-# GO testing ignoring bias
-gst.bias <- goregion(regions = regions, all.cpg = allcpgs, collection = "GO", 
-                    prior.prob=FALSE, anno = ann)
-# Total number of GO categories significant at 5\% FDR ignoring bias
-table(gst.bias$FDR<0.05)
-# Table of top GO results ignoring bias
-topGSA(gst.bias)
+topGSA(gst, n=10)
+
 # KEGG testing
 kegg <- goregion(regions = regions, all.cpg = allcpgs, collection = "KEGG", 
-                prior.prob=TRUE, anno = ann)
+                 array.type = "EPIC", prior.prob=TRUE, anno = ann)
 # Table of top KEGG results
-topGSA(kegg)
+topGSA(kegg, n=10)
+
+# Restrict to promoter regions
+gst.prom <- goregion(regions = regions, all.cpg = allcpgs, collection = "GO", 
+                array.type = "EPIC", plot.bias = TRUE, prior.prob = TRUE, 
+                anno = ann, genomic.features = c("TSS200","TSS1500"))
+topGSA(gst.prom, n=10)
+
+# Add significant genes in gene set to KEGG output
+kegg <- goregion(regions = regions, all.cpg = allcpgs, collection = "KEGG", 
+                 array.type = "EPIC", prior.prob=TRUE, anno = ann, 
+                 sig.genes = TRUE)
+# Table of top KEGG results
+topGSA(kegg, n=5)
 }
 
 }
@@ -169,9 +214,14 @@ Benjamini, Y., and Hochberg, Y. (1995). Controlling
 the false discovery rate: a practical and powerful approach to multiple
 testing. \emph{Journal of the Royal Statistical Society Series}, B,
 \bold{57}, 289-300.
+
+Peters, T.J., Buckley, M.J., Statham, A.L., Pidsley, R., Samaras, K., 
+Lord, R.V., Clark, S.J.,Molloy, P.L. (2015). De novo identification of 
+differentially methylated regions in the human genome. \emph{Epigenetics & 
+Chromatin}, \bold{8}, 6.
 }
 \seealso{
-\code{\link{goana},\link{kegga},\link{gsameth}}
+\code{\link{gometh},\link{gsameth},\link{gsaregion}}
 }
 \author{
 Jovana Maksimovic

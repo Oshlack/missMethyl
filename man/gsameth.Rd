@@ -13,7 +13,10 @@ gsameth(
   prior.prob = TRUE,
   anno = NULL,
   equiv.cpg = TRUE,
-  fract.counts = TRUE
+  fract.counts = TRUE,
+  genomic.features = c("ALL", "TSS200", "TSS1500", "Body", "1stExon", "3'UTR", "5'UTR",
+    "ExonBnd"),
+  sig.genes = FALSE
 )
 }
 \arguments{
@@ -47,13 +50,24 @@ for odds calculation rather than total number cpgs. Only used if
 \item{fract.counts}{Logical, if true then fractional counting of cpgs is used
 to account for cgps that map to multiple genes. Only used if 
 \code{prior.prob=TRUE}.}
+
+\item{genomic.features}{Character vector or scalar indicating whether the 
+gene set enrichment analysis should be restricted to CpGs from specific 
+genomic locations. Options are "ALL", "TSS200","TSS1500","Body","1stExon",
+"3'UTR","5'UTR","ExonBnd"; and the user can select any combination. Defaults
+to "ALL".}
+
+\item{sig.genes}{Logical, if true then the significant differentially 
+methylated genes that overlap with the gene set of interest is outputted 
+as the final column in the results table. Default is FALSE.}
 }
 \value{
 A data frame with a row for each gene set and the following columns:
 \item{N}{ number of genes in the gene set } \item{DE}{ number of genes that
 are differentially methylated } \item{P.DE}{ p-value for over-representation
 of the gene set } \item{FDR}{ False discovery rate, calculated using the
-method of Benjamini and Hochberg (1995).  }
+method of Benjamini and Hochberg (1995).  } \item{SigGenesInSet}{ Significant 
+differentially methylated genes overlapping with the gene set of interest. }
 }
 \description{
 Given a user specified list of gene sets to test, \code{gsameth} tests
@@ -65,21 +79,27 @@ This function extends \code{gometh}, which only tests GO and KEGG pathways.
 \code{gsameth} can take a list of user specified gene sets and test whether
 the significant CpG sites are enriched in these pathways. \code{gsameth}
 maps the CpG sites to Entrez Gene IDs and tests for pathway enrichment using
-a hypergeometric test, taking into account the number of CpG sites per gene
-on the 450K/EPIC arrays. Please note the gene ids for the collection of gene
-sets must be Entrez Gene IDs. Geeleher et al. (2013) showed that a severe
-bias exists when performing gene set analysis for genome-wide methylation
-data that occurs due to the differing numbers of CpG sites profiled for each
-gene. \code{gsameth} and \code{gometh} is based on the \code{goseq} method
-(Young et al., 2010). If \code{prior.prob} is set to FALSE, then prior
-probabilities are not used and it is assumed that each gene is equally
-likely to have a significant CpG site associated with it. 
+Wallenius' concentral hypergeometric test, taking into account the number of 
+CpG sites per gene on the 450K/EPIC arrays. Please note the gene ids for the 
+collection of gene,sets must be Entrez Gene IDs. If \code{prior.prob} is set 
+to FALSE, then prior probabilities are not used and it is assumed that each 
+gene is equally likely to have a significant CpG site associated with it. 
 
 The testing now also takes into account that some CpGs map to multiple genes. 
 For a small number of gene families, this previously caused their associated 
 GO categories/gene sets to be erroneously overrepresented and thus highly 
 significant. If \code{fract.counts=FALSE} then CpGs are allowed to map to 
 multiple genes (this is NOT recommended). 
+
+A new feature of \code{gometh} and \code{gsameth} is the ability to restrict 
+the input CpGs by genomic feature with the argument \code{genomic.features}. 
+The possible options include "ALL", "TSS200", "TSS1500", "Body", "1stExon", 
+"3'UTR", "5'UTR" and "ExonBnd", and the user may specify any combination. 
+Please not that "ExonBnd" is not an annotatedfeature on 450K arrays. For 
+example if you are interested in the promoter region only, you could specify 
+\code{genomic.features = c("TSS1500","TSS200","1stExon")}. The default 
+behaviour is to test all input CpGs \code{sig.cpg} even if the user specifies
+ "ALL" and one or more other features.
 
 Genes associated with each CpG site are obtained from the annotation 
 package \code{IlluminaHumanMethylation450kanno.ilmn12.hg19} if the array 
@@ -89,7 +109,12 @@ different annotation package, please supply it using the \code{anno}
 argument. 
 
 In order to get a list which contains the mapped Entrez gene IDS,
-please use the \code{getMappedEntrezIDs} function.
+please use the \code{getMappedEntrezIDs} function. 
+
+If you are interested in which genes overlap with the genes in the gene set, 
+setting \code{sig.genes} to TRUE will output an additional column in the 
+results data frame that contains all the significant differentially 
+methylated gene symbols, comma separated. The default is FALSE.
 }
 \examples{
 
@@ -122,10 +147,22 @@ names(sets) <- c(setname1,setname2)
 gst <- gsameth(sig.cpg = sigcpgs, all.cpg = allcpgs, collection = sets, 
                 plot.bias = TRUE, prior.prob = TRUE)
 topGSA(gst)
+
+# Add significant gene symbols in each set to output
+gst <- gsameth(sig.cpg = sigcpgs, all.cpg = allcpgs, collection = sets, 
+                plot.bias = TRUE, prior.prob = TRUE, sig.genes = TRUE)
+topGSA(gst)
+
 # Testing ignoring bias
 gst.bias <- gsameth(sig.cpg = sigcpgs, all.cpg = allcpgs, collection = sets, 
                     prior.prob = FALSE)
 topGSA(gst.bias)
+
+# Restrict to CpGs in gene bodies
+gst.body <- gsameth(sig.cpg = sigcpgs, all.cpg = allcpgs, collection = sets,
+                    genomic.features = "Body")
+topGSA(gst.body)
+
 }
 
 }

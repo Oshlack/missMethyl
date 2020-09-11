@@ -8,21 +8,27 @@
 #' \code{gsameth} can take a list of user specified gene sets and test whether
 #' the significant CpG sites are enriched in these pathways. \code{gsameth}
 #' maps the CpG sites to Entrez Gene IDs and tests for pathway enrichment using
-#' a hypergeometric test, taking into account the number of CpG sites per gene
-#' on the 450K/EPIC arrays. Please note the gene ids for the collection of gene
-#' sets must be Entrez Gene IDs. Geeleher et al. (2013) showed that a severe
-#' bias exists when performing gene set analysis for genome-wide methylation
-#' data that occurs due to the differing numbers of CpG sites profiled for each
-#' gene. \code{gsameth} and \code{gometh} is based on the \code{goseq} method
-#' (Young et al., 2010). If \code{prior.prob} is set to FALSE, then prior
-#' probabilities are not used and it is assumed that each gene is equally
-#' likely to have a significant CpG site associated with it. 
+#' Wallenius' concentral hypergeometric test, taking into account the number of 
+#' CpG sites per gene on the 450K/EPIC arrays. Please note the gene ids for the 
+#' collection of gene,sets must be Entrez Gene IDs. If \code{prior.prob} is set 
+#' to FALSE, then prior probabilities are not used and it is assumed that each 
+#' gene is equally likely to have a significant CpG site associated with it. 
 #' 
 #' The testing now also takes into account that some CpGs map to multiple genes. 
 #' For a small number of gene families, this previously caused their associated 
 #' GO categories/gene sets to be erroneously overrepresented and thus highly 
 #' significant. If \code{fract.counts=FALSE} then CpGs are allowed to map to 
 #' multiple genes (this is NOT recommended). 
+#' 
+#' A new feature of \code{gometh} and \code{gsameth} is the ability to restrict 
+#' the input CpGs by genomic feature with the argument \code{genomic.features}. 
+#' The possible options include "ALL", "TSS200", "TSS1500", "Body", "1stExon", 
+#' "3'UTR", "5'UTR" and "ExonBnd", and the user may specify any combination. 
+#' Please not that "ExonBnd" is not an annotatedfeature on 450K arrays. For 
+#' example if you are interested in the promoter region only, you could specify 
+#' \code{genomic.features = c("TSS1500","TSS200","1stExon")}. The default 
+#' behaviour is to test all input CpGs \code{sig.cpg} even if the user specifies
+#'  "ALL" and one or more other features.
 #' 
 #' Genes associated with each CpG site are obtained from the annotation 
 #' package \code{IlluminaHumanMethylation450kanno.ilmn12.hg19} if the array 
@@ -32,7 +38,12 @@
 #' argument. 
 #' 
 #' In order to get a list which contains the mapped Entrez gene IDS,
-#' please use the \code{getMappedEntrezIDs} function.
+#' please use the \code{getMappedEntrezIDs} function. 
+#' 
+#' If you are interested in which genes overlap with the genes in the gene set, 
+#' setting \code{sig.genes} to TRUE will output an additional column in the 
+#' results data frame that contains all the significant differentially 
+#' methylated gene symbols, comma separated. The default is FALSE.
 #' 
 #' @param sig.cpg Character vector of significant CpG sites to test for gene
 #' set enrichment.
@@ -56,11 +67,21 @@
 #' @param fract.counts Logical, if true then fractional counting of cpgs is used
 #' to account for cgps that map to multiple genes. Only used if 
 #' \code{prior.prob=TRUE}.
+#' @param genomic.features Character vector or scalar indicating whether the 
+#' gene set enrichment analysis should be restricted to CpGs from specific 
+#' genomic locations. Options are "ALL", "TSS200","TSS1500","Body","1stExon",
+#' "3'UTR","5'UTR","ExonBnd"; and the user can select any combination. Defaults
+#' to "ALL".
+#' @param sig.genes Logical, if true then the significant differentially 
+#' methylated genes that overlap with the gene set of interest is outputted 
+#' as the final column in the results table. Default is FALSE.
+#' 
 #' @return A data frame with a row for each gene set and the following columns:
 #' \item{N}{ number of genes in the gene set } \item{DE}{ number of genes that
 #' are differentially methylated } \item{P.DE}{ p-value for over-representation
 #' of the gene set } \item{FDR}{ False discovery rate, calculated using the
-#' method of Benjamini and Hochberg (1995).  }
+#' method of Benjamini and Hochberg (1995).  } \item{SigGenesInSet}{ Significant 
+#' differentially methylated genes overlapping with the gene set of interest. }
 #' @author Belinda Phipson
 #' @seealso \code{\link{gometh},\link{getMappedEntrezIDs}}
 #' @references Phipson, B., Maksimovic, J., and Oshlack, A. (2016). missMethyl:
@@ -117,17 +138,33 @@
 #' gst <- gsameth(sig.cpg = sigcpgs, all.cpg = allcpgs, collection = sets, 
 #'                 plot.bias = TRUE, prior.prob = TRUE)
 #' topGSA(gst)
+#' 
+#' # Add significant gene symbols in each set to output
+#' gst <- gsameth(sig.cpg = sigcpgs, all.cpg = allcpgs, collection = sets, 
+#'                 plot.bias = TRUE, prior.prob = TRUE, sig.genes = TRUE)
+#' topGSA(gst)
+#' 
 #' # Testing ignoring bias
 #' gst.bias <- gsameth(sig.cpg = sigcpgs, all.cpg = allcpgs, collection = sets, 
 #'                     prior.prob = FALSE)
 #' topGSA(gst.bias)
+#' 
+#' # Restrict to CpGs in gene bodies
+#' gst.body <- gsameth(sig.cpg = sigcpgs, all.cpg = allcpgs, collection = sets,
+#'                     genomic.features = "Body")
+#' topGSA(gst.body)
+#' 
 #' }
 #' 
+#' @import IlluminaHumanMethylation450kanno.ilmn12.hg19 IlluminaHumanMethylationEPICanno.ilm10b4.hg19
 #' @export gsameth
 gsameth <- function(sig.cpg, all.cpg=NULL, collection, 
                     array.type = c("450K","EPIC"), plot.bias=FALSE, 
                     prior.prob=TRUE, anno=NULL, equiv.cpg = TRUE,
-                    fract.counts = TRUE)
+                    fract.counts = TRUE, 
+                    genomic.features = c("ALL", "TSS200","TSS1500","Body",
+                                         "1stExon","3'UTR","5'UTR","ExonBnd"),
+                    sig.genes = FALSE)
   # Generalised version of gometh with user-specified gene sets 
   # Gene sets collections must be Entrez Gene ID
   # Can take into account probability of differential methylation 
@@ -140,14 +177,31 @@ gsameth <- function(sig.cpg, all.cpg=NULL, collection,
   if(!is.vector(sig.cpg))
     stop("Input CpG list is not a character vector")
   array.type <- match.arg(toupper(array.type),c("450K","EPIC"))
+  genomic.features <- match.arg(genomic.features, c("ALL", "TSS200","TSS1500",
+                                                    "Body", "1stExon","3'UTR",
+                                                    "5'UTR","ExonBnd"), 
+                                several.ok = TRUE)
+  
+  if(length(genomic.features) > 1 & any(grepl("ALL", genomic.features))){
+    message("All input CpGs are used for testing.") 
+    genomic.features <- "ALL"   
+  } 
+  
+  if(array.type == "450K" & any(("ExonBnd" %in% genomic.features))){
+      stop("'ExonBnd' is not an annotated feature on 450K arrays,
+           please remove it from your genomic.feature parameter
+           specification.") 
+  }
   
   # Get mapped entrez gene IDs from CpG probe names
   if(!is.null(anno)){
     out <- getMappedEntrezIDs(sig.cpg=sig.cpg,all.cpg=all.cpg,
-                              array.type=array.type, anno)
+                              array.type=array.type, anno, 
+                              genomic.features = genomic.features)
   } else {
     out <- getMappedEntrezIDs(sig.cpg=sig.cpg,all.cpg=all.cpg,
-                              array.type=array.type)
+                              array.type=array.type, 
+                              genomic.features = genomic.features)
   }
   sorted.eg.sig <- out$sig.eg
   eg.universe <- out$universe
@@ -186,6 +240,7 @@ gsameth <- function(sig.cpg, all.cpg=NULL, collection,
   colnames(results) <- c("N","DE","P.DE","FDR")
   rownames(results) <- names(collection)
   results[,"N"] <- unlist(lapply(collection,length))
+  if(sig.genes) SigGenesInSet <- rep(NA,length(collection))
   
   if(prior.prob & fract.counts){ 
       # use fractional counting to account for cpgs that map to multiple genes
@@ -214,17 +269,36 @@ gsameth <- function(sig.cpg, all.cpg=NULL, collection,
                                   results[i,"N"],
                                   Nuniverse-results[i,"N"],
                                   m,odds)
+      if(sig.genes){
+        # Get gene symbols of significant genes
+        SigGenesEntrezID <- sorted.eg.sig[sorted.eg.sig %in% collection[[i]]]
+        SigGenesSymbol <- suppressMessages(AnnotationDbi::select(org.Hs.eg.db, 
+                                             keys = SigGenesEntrezID,
+                                             columns = "SYMBOL"))
+        SigGenesInSet[i] <- paste(SigGenesSymbol$SYMBOL,collapse=",")
+      }
     }
   }
   # Hypergeometric test without prior probabilities
   else{
     for(i in 1:length(collection)){
-      results[i,"P.DE"] <- stats::phyper(q=results[i,"DE"]-0.5,m=m,n=Nuniverse-m,
-                                  k=results[i,"N"],lower.tail=FALSE)    
+      results[i,"P.DE"] <- stats::phyper(q=results[i,"DE"]-0.5,m=m,
+                                         n=Nuniverse-m,k=results[i,"N"],
+                                         lower.tail=FALSE)
+      if(sig.genes){
+        # Get gene symbols of significant genes
+        SigGenesEntrezID <- sorted.eg.sig[sorted.eg.sig %in% collection[[i]]]
+        SigGenesSymbol <- suppressMessages(AnnotationDbi::select(org.Hs.eg.db, 
+                                                               keys = SigGenesEntrezID,
+                                                               columns = "SYMBOL"))
+        SigGenesInSet[i] <- paste(SigGenesSymbol$SYMBOL,collapse=",")
+      }
     }
   }
   results[,"FDR"] <- stats::p.adjust(results[,"P.DE"],method="BH")
-  data.frame(results)
+  results[,"DE"] <- floor(results[,"DE"])
+  if(sig.genes) data.frame(results, SigGenesInSet)
+  else data.frame(results)
 }
 
 
@@ -246,7 +320,9 @@ gsameth <- function(sig.cpg, all.cpg=NULL, collection,
 #' following columns: \item{N}{ number of genes in the gene set } \item{DE}{
 #' number of genes that are differentially methylated } \item{P.DE}{ p-value
 #' for over-representation of the gene set } \item{FDR}{ False discovery rate,
-#' calculated using the method of Benjamini and Hochberg (1995).  }
+#' calculated using the method of Benjamini and Hochberg (1995) }.  
+#' \item{SigGenesInSet}{ Significant differentially methylated genes overlapping
+#' with the gene set of interest. }
 #' @author Belinda Phipson
 #' @seealso \code{\link{gsameth}}
 #' @examples

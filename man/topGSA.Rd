@@ -19,7 +19,9 @@ A matrix ordered by P.DE, with a row for each gene set and the
 following columns: \item{N}{ number of genes in the gene set } \item{DE}{
 number of genes that are differentially methylated } \item{P.DE}{ p-value
 for over-representation of the gene set } \item{FDR}{ False discovery rate,
-calculated using the method of Benjamini and Hochberg (1995).  }
+calculated using the method of Benjamini and Hochberg (1995) }.  
+\item{SigGenesInSet}{ Significant differentially methylated genes overlapping
+with the gene set of interest. }
 }
 \description{
 After using \code{gsameth}, calling topGSA will output the top 20 most

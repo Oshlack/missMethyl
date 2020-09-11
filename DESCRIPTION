@@ -1,16 +1,14 @@
 Package: missMethyl
 Type: Package
 Title: Analysing Illumina HumanMethylation BeadChip Data
-Version: 1.21.4
+Version: 1.21.5
 Date: 2019-10-04
 Author: Belinda Phipson and Jovana Maksimovic 
-Maintainer: Belinda Phipson <belinda.phipson@mcri.edu.au>, Jovana
+Maintainer: Belinda Phipson <belinda.phipson@petermec.org>, Jovana
         Maksimovic <jovana.maksimovic@petermac.org>,
         Andrew Lonsdale <andrew.lonsdale@petermac.org>
 Depends: 
-    R (>= 3.6.0),
-    IlluminaHumanMethylation450kanno.ilmn12.hg19,
-    IlluminaHumanMethylationEPICanno.ilm10b4.hg19
+    R (>= 3.6.0)
 Imports:
     AnnotationDbi, 
     BiasedUrn,
@@ -40,7 +38,9 @@ Suggests:
     knitr,
     minfiData, 
     rmarkdown, 
-    tweeDEseqCountData
+    tweeDEseqCountData,
+    DMRcate,
+    ExperimentHub
 Description: Normalisation, testing for differential variability and
 	differential methylation and gene set testing for data from Illumina's 
 	Infinium HumanMethylation arrays. The normalisation procedure is 
@@ -52,10 +52,10 @@ Description: Normalisation, testing for differential variability and
 	systematic errors of unknown origin in high-dimensional data by
  	using negative control probes. Gene ontology analysis is performed
  	by taking into account the number of probes per gene on the
- 	array.
+ 	array, as well as taking into account multi-gene associated probes.
 License: GPL-2
 biocViews: Normalization, DNAMethylation, MethylationArray,
         GenomicVariation, GeneticVariability, DifferentialMethylation,
         GeneSetEnrichment
-RoxygenNote: 7.0.2
+RoxygenNote: 7.1.1
 Encoding: UTF-8

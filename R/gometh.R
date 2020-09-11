@@ -1,27 +1,38 @@
 #' Gene ontology testing for Ilumina methylation array data
 #' 
 #' Tests gene ontology enrichment for significant CpGs from Illumina's Infinium
-#' HumanMethylation450 or MethylationEPIC array, taking into account the
-#' differing number of probes per gene present on the array.
+#' HumanMethylation450 or MethylationEPIC array, taking into account two 
+#' different sources of bias: 1) the differing number of probes per gene 
+#' present on the array, and 2) CpGs that are annotated to multiple genes.
 #' 
 #' This function takes a character vector of significant CpG sites, maps the
 #' CpG sites to Entrez Gene IDs, and tests for GO term or KEGG pathway
-#' enrichment using a hypergeometric test, taking into account the number of
-#' CpG sites per gene on the 450K/EPIC array.  Geeleher et al. (2013) showed
+#' enrichment using a Wallenius' non central hypergeometric test, taking into 
+#' account the number of CpG sites per gene on the 450K/EPIC array and 
+#' multi-gene annotated CpGs.  Geeleher et al. (2013) showed
 #' that a severe bias exists when performing gene set analysis for genome-wide
 #' methylation data that occurs due to the differing numbers of CpG sites
 #' profiled for each gene. \code{gometh} is based on the \code{goseq} method
-#' (Young et al., 2010) and calls the \code{goana} function for GO testing, or
-#' the \code{kegga} function for KEGG testing, both of which are from the
-#' \code{limma} package (Ritchie et al. 2015). If \code{prior.prob} is set to
+#' (Young et al., 2010), and is a modification of the \code{goana} function in 
+#' the \code{limma} package. If \code{prior.prob} is set to
 #' FALSE, then prior probabilities are not used and it is assumed that each
 #' gene is equally likely to have a significant CpG site associated with it.
 #' 
-#' The testing now also takes into account that some CpGs map to multiple genes. 
-#' For a small number of gene families, this previously caused their associated 
-#' GO categories/gene sets to be erroneously overrepresented and thus highly 
-#' significant. If \code{fract.counts=FALSE} then CpGs are allowed to map to 
-#' multiple genes (this is NOT recommended).
+#' The testing now also takes into account that some CpGs are annotated to 
+#' multiple genes. For a small number of gene families, this previously caused 
+#' their associated GO categories/gene sets to be erroneously overrepresented 
+#' and thus highly significant. If \code{fract.counts=FALSE} then CpGs are 
+#' allowed to map to multiple genes (this is NOT recommended).
+#' 
+#' A new feature of \code{gometh} and \code{gsameth} is the ability to restrict 
+#' the input CpGs by genomic feature with the argument \code{genomic.features}. 
+#' The possible options include "ALL", "TSS200", "TSS1500", "Body", "1stExon", 
+#' "3'UTR", "5'UTR" and "ExonBnd", and the user may specify any combination. 
+#' Please not that "ExonBnd" is not an annotated feature on 450K arrays. For 
+#' example if you are interested in the promoter region only, you could specify 
+#' \code{genomic.features = c("TSS1500","TSS200","1stExon")}. The default 
+#' behaviour is to test all input CpGs \code{sig.cpg} even if the user specifies
+#'  "ALL" and one or more other features.
 #' 
 #' Genes associated with each CpG site are obtained from the annotation package
 #' \code{IlluminaHumanMethylation450kanno.ilmn12.hg19} if the array type is
@@ -30,14 +41,22 @@
 #' different annotation package, please supply it using the \code{anno}
 #' argument. 
 #' 
+#' If you are interested in which genes overlap with the genes in the gene set, 
+#' setting \code{sig.genes} to TRUE will output an additional column in the 
+#' results data frame that contains all the significant differentially 
+#' methylated gene symbols, comma separated. The default is FALSE.
+#' 
 #' In order to get a list which contains the mapped Entrez gene IDs,
 #' please use the \code{getMappedEntrezIDs} function. \code{gometh} tests all
 #' GO or KEGG terms, and false discovery rates are calculated using the method
-#' of Benjamini and Hochberg (1995).  The \code{limma} functions \code{topGO}
-#' and \code{topKEGG} can be used to display the top 20 most enriched pathways.
+#' of Benjamini and Hochberg (1995).  The \code{topGSA} function can be used to 
+#' display the top 20 most enriched pathways.
 #' 
 #' For more generalised gene set testing where the user can specify the gene
 #' set/s of interest to be tested, please use the \code{gsameth} function.
+#' If you are interested in performing gene set testing following a region 
+#' analysis, then the functions \code{goregion} and \code{gsaregion} can be 
+#' used.
 #' 
 #' @param sig.cpg Character vector of significant CpG sites to test for GO term
 #' enrichment.
@@ -50,17 +69,26 @@
 #' @param plot.bias Logical, if true a plot showing the bias due to the
 #' differing numbers of probes per gene will be displayed.
 #' @param prior.prob Logical, if true will take into account the probability of
-#' significant differentially methylation due to numbers of probes per gene. If
+#' significant differential methylation due to numbers of probes per gene. If
 #' false, a hypergeometric test is performed ignoring any bias in the data.
 #' @param anno Optional. A \code{DataFrame} object containing the complete
-#' array annotation as generated by the \code{\link{minfi}}.
+#' array annotation as generated by the \code{\link{minfi}}
 #' \code{\link{getAnnotation}} function. Speeds up execution, if provided.
 #' @param equiv.cpg Logical, if true then equivalent numbers of cpgs are used
 #' for odds calculation rather than total number cpgs. Only used if 
 #' \code{prior.prob=TRUE}.
-#' @param fract.counts Logical, if true then fractional counting of cpgs is used
-#' to account for cgps that map to multiple genes. Only used if 
+#' @param fract.counts Logical, if true then fractional counting of Cpgs is used
+#' to account for CpGs that are annotated to multiple genes. Only used if 
 #' \code{prior.prob=TRUE}.
+#' @param genomic.features Character vector or scalar indicating whether the 
+#' gene set enrichment analysis should be restricted to CpGs from specific 
+#' genomic locations. Options are "ALL", "TSS200","TSS1500","Body","1stExon",
+#' "3'UTR","5'UTR","ExonBnd"; and the user can select any combination. Defaults
+#' to "ALL".
+#' @param sig.genes Logical, if true then the significant differentially 
+#' methylated genes that overlap with the gene set of interest is outputted 
+#' as the final column in the results table. Default is FALSE.
+#' 
 #' @return A data frame with a row for each GO or KEGG term and the following
 #' columns: \item{Term}{ GO term if testing GO pathways } \item{Ont}{ ontology
 #' that the GO term belongs to if testing GO pathways. "BP" - biological
@@ -69,9 +97,13 @@
 #' \item{N}{ number of genes in the GO or KEGG term } \item{DE}{ number of
 #' genes that are differentially methylated } \item{P.DE}{ p-value for
 #' over-representation of the GO or KEGG term term } \item{FDR}{ False
-#' discovery rate }
+#' discovery rate } \item{SigGenesInSet}{ Significant differentially methylated 
+#' genes overlapping with the gene set of interest. }
+#' 
 #' @author Belinda Phipson
-#' @seealso \code{\link{goana},\link{kegga},\link{gsameth}}
+#' @seealso \code{\link{gsameth},\link{goregion},\link{gsaregion},
+#' \link{getMappedEntrezIDs}}
+#' 
 #' @references Phipson, B., Maksimovic, J., and Oshlack, A. (2016). missMethyl:
 #' an R package for analysing methylation data from Illuminas
 #' HumanMethylation450 platform. \emph{Bioinformatics}, \bold{15};32(2),
@@ -95,6 +127,7 @@
 #' the false discovery rate: a practical and powerful approach to multiple
 #' testing. \emph{Journal of the Royal Statistical Society Series}, B,
 #' \bold{57}, 289-300.
+#' 
 #' @examples
 #' 
 #' \dontrun{ # to avoid timeout on Bioconductor build
@@ -105,6 +138,7 @@
 #' sigcpgs <- sample(rownames(ann),1000,replace=FALSE)
 #' # All CpG sites tested
 #' allcpgs <- rownames(ann)
+#' 
 #' # GO testing with prior probabilities taken into account
 #' # Plot of bias due to differing numbers of CpG sites per gene
 #' gst <- gometh(sig.cpg = sigcpgs, all.cpg = allcpgs, collection = "GO", 
@@ -113,6 +147,7 @@
 #' table(gst$FDR<0.05)
 #' # Table of top GO results
 #' topGSA(gst)
+#' 
 #' # GO testing ignoring bias
 #' gst.bias <- gometh(sig.cpg = sigcpgs, all.cpg = allcpgs, collection = "GO", 
 #'                     prior.prob=FALSE, anno = ann)
@@ -120,11 +155,30 @@
 #' table(gst.bias$FDR<0.05)
 #' # Table of top GO results ignoring bias
 #' topGSA(gst.bias)
+#' 
+#' # GO testing ignoring multi-mapping CpGs
+#' gst.multi <- gometh(sig.cpg = sigcpgs, all.cpg = allcpgs, collection = "GO", 
+#'               plot.bias = TRUE, prior.prob = TRUE, fract.counts = FALSE,
+#'               anno = ann)
+#' topGSA(gst.multi, n=10)
+#' 
+#' # Restrict to CpGs in promoter regions 
+#' gst.promoter <- gometh(sig.cpg = sigcpgs, all.cpg = allcpgs, 
+#'                 collection = "GO", anno = ann, 
+#'                 genomic.features=c("TSS200","TSS1500","1stExon"))
+#' topGSA(gst.promoter)
+#' 
 #' # KEGG testing
 #' kegg <- gometh(sig.cpg = sigcpgs, all.cpg = allcpgs, collection = "KEGG", 
 #'                 prior.prob=TRUE, anno = ann)
 #' # Table of top KEGG results
 #' topGSA(kegg)
+#' 
+#' # Add significant genes to KEGG output
+#' kegg.siggenes <- gometh(sig.cpg = sigcpgs, all.cpg = allcpgs, 
+#'                         collection = "KEGG", anno = ann, sig.genes = TRUE)
+#' # Output top 5 KEGG pathways
+#' topGSA(kegg.siggenes, n=5)
 #' }
 #' 
 #' @import org.Hs.eg.db statmod stringr
@@ -133,23 +187,44 @@
 gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"), 
                    array.type = c("450K","EPIC"), plot.bias=FALSE, 
                    prior.prob=TRUE, anno=NULL, equiv.cpg = TRUE, 
-                   fract.counts = TRUE)
+                   fract.counts = TRUE, 
+                   genomic.features = c("ALL", "TSS200","TSS1500","Body",
+                                       "1stExon","3'UTR","5'UTR","ExonBnd"),
+                   sig.genes = FALSE)
   # Gene ontology testing or KEGG pathway analysis for Illumina methylation 
   # arrays based on goseq
   # Takes into account probability of differential methylation based on
   # numbers of probes on array per gene
   # Belinda Phipson
-  # 28 January 2015. Last updated 23 April 2019.
+  # 28 January 2015. Last updated 1 September 2020.
   # EPIC functionality contributed by Andrew Y.F. Li Yim
 {
-  collection <- match.arg(toupper(collection),c("GO","KEGG"))
+  array.type <- match.arg(toupper(array.type), c("450K","EPIC"))    
+  collection <- match.arg(toupper(collection), c("GO","KEGG"))
+  genomic.features <- match.arg(genomic.features, c("ALL", "TSS200","TSS1500",
+                                                    "Body", "1stExon","3'UTR",
+                                                    "5'UTR","ExonBnd"), 
+                                several.ok = TRUE)
   
+  if(length(genomic.features) > 1 & any(grepl("ALL", genomic.features))){
+    message("All input CpGs are used for testing.") 
+    genomic.features <- "ALL"
+  } 
+  
+  if(array.type == "450K" & any(grepl("ExonBnd", genomic.features))){
+      stop("'ExonBnd' is not an annotated feature on 450K arrays,\n
+           please remove it from your genomic.feature parameter\n
+           specification.") 
+  }
+   
   if(collection == "GO"){
     go <- .getGO()
     result <- gsameth(sig.cpg=sig.cpg, all.cpg=all.cpg, collection=go$idList, 
                       array.type=array.type, plot.bias=plot.bias, 
                       prior.prob=prior.prob, anno=anno, equiv.cpg=equiv.cpg,
-                      fract.counts=fract.counts)
+                      fract.counts=fract.counts, 
+                      genomic.features = genomic.features,
+                      sig.genes = sig.genes)
     result <- merge(go$idTable,result,by.x="GOID",by.y="row.names")
     rownames(result) <- result$GOID
 
@@ -158,7 +233,9 @@ gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"),
     result <- gsameth(sig.cpg=sig.cpg, all.cpg=all.cpg, collection=kegg$idList, 
                       array.type=array.type, plot.bias=plot.bias, 
                       prior.prob=prior.prob, anno=anno, equiv.cpg=equiv.cpg,
-                      fract.counts=fract.counts)
+                      fract.counts=fract.counts, 
+                      genomic.features = genomic.features,
+                      sig.genes = sig.genes)
     result <- merge(kegg$idTable,result,by.x="PathwayID",by.y="row.names")
     rownames(result) <- result$PathwayID
   }
@@ -167,21 +244,19 @@ gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"),
 }  
 
 .getGO <- function(){
+  if(!requireNamespace("org.Hs.eg.db", quietly = TRUE))
+    stop("org.Hs.eg.db package required but not installed.")
+  egGO2ALLEGS <- utils::getFromNamespace("org.Hs.egGO2ALLEGS", "org.Hs.eg.db")
+  GeneID.PathID <- AnnotationDbi::toTable(egGO2ALLEGS)[,c("gene_id", "go_id", "Ontology")]
+  d <- !duplicated(GeneID.PathID[, c("gene_id", "go_id")])
+  GeneID.PathID <- GeneID.PathID[d, ]
+  GOID.TERM <- suppressMessages(AnnotationDbi::select(GO.db::GO.db, 
+                                                      keys=unique(GeneID.PathID$go_id), 
+                                                      columns=c("GOID","ONTOLOGY","TERM"), 
+                                                      keytype="GOID"))
+  go <- tapply(GeneID.PathID$gene_id, GeneID.PathID$go_id, list)
     
-    if(!requireNamespace("org.Hs.eg.db", quietly = TRUE))
-        stop("org.Hs.eg.db package required but not installed.")
-    egGO2ALLEGS <- utils::getFromNamespace("org.Hs.egGO2ALLEGS", "org.Hs.eg.db")
-    GeneID.PathID <- AnnotationDbi::toTable(egGO2ALLEGS)[, 
-                                                         c("gene_id", "go_id", "Ontology")]
-    d <- !duplicated(GeneID.PathID[, c("gene_id", "go_id")])
-    GeneID.PathID <- GeneID.PathID[d, ]
-    GOID.TERM <- suppressMessages(AnnotationDbi::select(GO.db::GO.db, 
-                                                        keys=unique(GeneID.PathID$go_id), 
-                                                        columns=c("GOID","ONTOLOGY","TERM"), 
-                                                        keytype="GOID"))
-    go <- tapply(GeneID.PathID$gene_id, GeneID.PathID$go_id, list)
-    
-    list(idList=go, idTable=GOID.TERM)
+  list(idList=go, idTable=GOID.TERM)
 }
 
 .getKEGG <- function(){
@@ -198,65 +273,6 @@ gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"),
   
   list(idList = kegg, idTable = PathID.PathName)
 }  
-
-# gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"), array.type = c("450K","EPIC"),
-#                    plot.bias=FALSE, prior.prob=TRUE, anno=NULL, equiv.cpg = TRUE)
-# # Gene ontology testing or KEGG pathway analysis for Illumina methylation arrays based on goseq
-# # Takes into account probability of differential methylation based on
-# # numbers of probes on array per gene
-# # Belinda Phipson
-# # 28 January 2015. Last updated 29 March 2019.
-# # EPIC functionality contributed by Andrew Y.F. Li Yim
-# {
-#     if(!is.vector(sig.cpg))
-#         stop("Input CpG list is not a character vector")
-#     array.type <- match.arg(toupper(array.type),c("450K","EPIC"))
-#     collection <- match.arg(toupper(collection),c("GO","KEGG"))
-# 
-#     # Get mapped entrez gene IDs from CpG probe names
-#     if(!is.null(anno)){
-#       out <- getMappedEntrezIDs(sig.cpg=sig.cpg,all.cpg=all.cpg,array.type=array.type,
-#                                 anno=anno)
-#     } else {
-#       out <- getMappedEntrezIDs(sig.cpg=sig.cpg,all.cpg=all.cpg,array.type=array.type)
-#     }
-#     sorted.eg.sig <- out$sig.eg
-#     eg.universe <- out$universe
-#     freq_genes <- out$freq
-#     test.de <- out$de
-#     equiv <- out$equiv
-# 
-#     # get gene-wise prior probabilities and perform testing
-#     if(prior.prob){
-#       if(equiv.cpg){
-#         pwf <- .estimatePWF(D=test.de,bias=as.vector(equiv))
-#         if(plot.bias)
-#             .plotBias(D=test.de,bias=as.vector(equiv))
-#         if(collection=="GO")
-#             gst <- limma:::goana(sorted.eg.sig,universe=eg.universe,prior.prob=pwf)
-#         if(collection=="KEGG")
-#             gst <- limma:::kegga(sorted.eg.sig,universe=eg.universe,prior.prob=pwf)
-#       }
-#       else{
-#         pwf <- .estimatePWF(D=test.de,bias=as.vector(freq_genes))
-#         if(plot.bias)
-#           .plotBias(D=test.de,bias=as.vector(freq_genes))
-#         if(collection=="GO")
-#           gst <- limma:::goana(sorted.eg.sig,universe=eg.universe,prior.prob=pwf)
-#         if(collection=="KEGG")
-#           gst <- limma:::kegga(sorted.eg.sig,universe=eg.universe,prior.prob=pwf)
-#       }
-#     }
-#     # Perform GO or KEGG testing without correcting for CpG density bias
-#     else{
-#         if(collection=="GO")
-#             gst <- limma:::goana(sorted.eg.sig,universe=eg.universe)
-#         if(collection=="KEGG")
-#             gst <- limma:::kegga(sorted.eg.sig,universe=eg.universe)
-#     }
-#     gst$FDR<-p.adjust(gst$P.DE,method="BH")
-#     gst
-# }
 
 .plotBias <- function(D,bias)
   # Plotting function to show gene level CpG density bias
@@ -362,130 +378,3 @@ gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"),
 
 
 
-#' Get mapped Entrez Gene IDs from CpG probe names
-#' 
-#' Given a set of CpG probe names and optionally all the CpG sites tested, this
-#' function outputs a list containing the mapped Entrez Gene IDs as well as the
-#' numbers of probes per gene, and a vector indicating significance.
-#' 
-#' This function is used by the gene set testing functions \code{gometh} and
-#' \code{gsameth}. It maps the significant CpG probe names to Entrez Gene IDs,
-#' as well as all the CpG sites tested. It also calculates the numbers of
-#' probes for gene.
-#' 
-#' Genes associated with each CpG site are obtained from the annotation package
-#' \code{IlluminaHumanMethylation450kanno.ilmn12.hg19} if the array type is
-#' "450K". For the EPIC array, the annotation package
-#' \code{IlluminaHumanMethylationEPICanno.ilm10b4.hg19} is used. To use a
-#' different annotation package, please supply it using the \code{anno}
-#' argument.
-#' 
-#' @param sig.cpg Character vector of significant CpG sites used for testing
-#' gene set enrichment.
-#' @param all.cpg Character vector of all CpG sites tested. Defaults to all CpG
-#' sites on the array.
-#' @param array.type The Illumina methylation array used. Options are "450K" or
-#' "EPIC".
-#' @param anno Optional. A \code{DataFrame} object containing the complete
-#' array annotation as generated by the \code{\link{minfi}}
-#' \code{\link{getAnnotation}} function. Speeds up execution, if provided.
-#' @return A list with the following elements \item{sig.eg}{ mapped Entrez Gene
-#' IDs for the significant probes } \item{universe}{ mapped Entrez Gene IDs for
-#' all probes on the array, or for all the CpG probes tested.  } \item{freq}{
-#' table output with numbers of probes associated with each gene } \item{de}{ a
-#' vector of ones and zeroes of the same length of universe indicating which
-#' genes in the universe are significantly differentially methylated.  }
-#' \item{fract.counts}{ a dataframe with 2 columns corresponding to the Entrez
-#' Gene IDS for the significant probes and the associated weight to account for
-#' multi-mapping probes.  }
-#' @author Belinda Phipson
-#' @seealso \code{\link{gometh},\link{gsameth}}
-#' @examples
-#' 
-#' \dontrun{ # to avoid timeout on Bioconductor build
-#' library(IlluminaHumanMethylation450kanno.ilmn12.hg19)
-#' library(org.Hs.eg.db)
-#' library(limma)
-#' ann <- getAnnotation(IlluminaHumanMethylation450kanno.ilmn12.hg19)
-#' 
-#' # Randomly select 1000 CpGs to be significantly differentially methylated
-#' sigcpgs <- sample(rownames(ann),1000,replace=FALSE)
-#' 
-#' # All CpG sites tested
-#' allcpgs <- rownames(ann)
-#' 
-#' mappedEz <- getMappedEntrezIDs(sigcpgs,allcpgs,array.type="450K")
-#' mappedEz$sig.eg[1:10]
-#' mappedEz$universe[1:10]
-#' mappedEz$freq[1:10]
-#' mappedEz$de[1:10]
-#' }
-#' 
-#' @export getMappedEntrezIDs
-getMappedEntrezIDs <- function(sig.cpg,all.cpg=NULL,array.type,anno=NULL)
-  # From a list of CpG sites, obtain the Entrez Gene IDs that are used for 
-  # testing pathway enrichment
-  # Belinda Phipson
-  # 10 February 2016
-  # Updated 29 March 2019
-{
-  # check input
-  sig.cpg <- as.character(sig.cpg)
-  sig.cpg <- sig.cpg[!is.na(sig.cpg)]
-  
-  # Get annotaton in appropriate format
-  if(is.null(anno)){
-    flat.u <- .getFlatAnnotation(array.type)
-  } else {
-    flat.u <- .getFlatAnnotation(array.type,anno)
-  }
-  
-  if(is.null(all.cpg))
-    all.cpg <- unique(flat.u$cpg)
-  else{
-    all.cpg <- as.character(all.cpg)
-    all.cpg <- all.cpg[!is.na(all.cpg)]
-    all.cpg <- unique(all.cpg)
-  }
-  
-  # map CpG sites to entrez gene id's
-  sig.cpg <- unique(sig.cpg)
-  m1 <- match(flat.u$cpg,sig.cpg)
-  eg.sig <- flat.u$entrezid[!is.na(m1)]
-  eg.sig <- unique(eg.sig)
-  
-  m2 <- match(flat.u$cpg,all.cpg)
-  eg.all <- flat.u$entrezid[!is.na(m2)]
-  
-  freq_genes <- table(eg.all)
-  eg.universe <- names(freq_genes)
-  
-  test.de <- as.integer(eg.universe %in% eg.sig)
-  
-  sorted.eg.sig <- eg.universe[test.de==1]
-  
-  multimap <- data.frame(table(flat.u$cpg))
-  multimap$Var1 <- as.character(multimap$Var1)
-  m3 <- match(flat.u$cpg, multimap$Var1)
-  flat.u$multimap <- multimap$Freq[m3]
-  
-  flat.u$inv.multimap <- 1/flat.u$multimap
-  
-  equivN <- tapply(flat.u$inv.multimap,flat.u$entrezid,sum)
-  mm <- match(eg.universe,names(equivN))
-  equivN <- equivN[mm]
-  
-  sig.flat <- flat.u[!is.na(m1),]
-  
-  fract <- data.frame(weight=pmin(tapply(1/sig.flat$multimap,
-                                         sig.flat$entrezid,sum),
-                                  1))
-  
-  m4 <- match(sorted.eg.sig,rownames(fract))
-  fract.counts <- fract$weight[m4]
-  
-  out <- list(sig.eg = sorted.eg.sig, universe = eg.universe, 
-              freq = freq_genes, equiv =  equivN, de = test.de, 
-              fract.counts = data.frame(sigid=sorted.eg.sig,frac=fract.counts))
-  out
-}
