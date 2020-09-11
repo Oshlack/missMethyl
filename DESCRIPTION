@@ -38,7 +38,9 @@ Suggests:
     knitr,
     minfiData, 
     rmarkdown, 
-    tweeDEseqCountData
+    tweeDEseqCountData,
+    DMRcate,
+    ExperimentHub
 Description: Normalisation, testing for differential variability and
 	differential methylation and gene set testing for data from Illumina's 
 	Infinium HumanMethylation arrays. The normalisation procedure is 

@@ -143,6 +143,7 @@ ann <- getAnnotation(IlluminaHumanMethylation450kanno.ilmn12.hg19)
 sigcpgs <- sample(rownames(ann),1000,replace=FALSE)
 # All CpG sites tested
 allcpgs <- rownames(ann)
+
 # GO testing with prior probabilities taken into account
 # Plot of bias due to differing numbers of CpG sites per gene
 gst <- gometh(sig.cpg = sigcpgs, all.cpg = allcpgs, collection = "GO", 
@@ -151,6 +152,7 @@ gst <- gometh(sig.cpg = sigcpgs, all.cpg = allcpgs, collection = "GO",
 table(gst$FDR<0.05)
 # Table of top GO results
 topGSA(gst)
+
 # GO testing ignoring bias
 gst.bias <- gometh(sig.cpg = sigcpgs, all.cpg = allcpgs, collection = "GO", 
                     prior.prob=FALSE, anno = ann)
@@ -158,15 +160,30 @@ gst.bias <- gometh(sig.cpg = sigcpgs, all.cpg = allcpgs, collection = "GO",
 table(gst.bias$FDR<0.05)
 # Table of top GO results ignoring bias
 topGSA(gst.bias)
+
+# GO testing ignoring multi-mapping CpGs
+gst.multi <- gometh(sig.cpg = sigcpgs, all.cpg = allcpgs, collection = "GO", 
+              plot.bias = TRUE, prior.prob = TRUE, fract.counts = FALSE,
+              anno = ann)
+topGSA(gst.multi, n=10)
+
 # Restrict to CpGs in promoter regions 
 gst.promoter <- gometh(sig.cpg = sigcpgs, all.cpg = allcpgs, 
                 collection = "GO", anno = ann, 
                 genomic.features=c("TSS200","TSS1500","1stExon"))
+topGSA(gst.promoter)
+
 # KEGG testing
 kegg <- gometh(sig.cpg = sigcpgs, all.cpg = allcpgs, collection = "KEGG", 
                 prior.prob=TRUE, anno = ann)
 # Table of top KEGG results
 topGSA(kegg)
+
+# Add significant genes to KEGG output
+kegg.siggenes <- gometh(sig.cpg = sigcpgs, all.cpg = allcpgs, 
+                        collection = "KEGG", anno = ann, sig.genes = TRUE)
+# Output top 5 KEGG pathways
+topGSA(kegg.siggenes, n=5)
 }
 
 }

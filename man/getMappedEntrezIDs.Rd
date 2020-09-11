@@ -37,12 +37,14 @@ to "ALL".}
 A list with the following elements \item{sig.eg}{ mapped Entrez Gene
 IDs for the significant probes } \item{universe}{ mapped Entrez Gene IDs for
 all probes on the array, or for all the CpG probes tested.  } \item{freq}{
-table output with numbers of probes associated with each gene } \item{de}{ a
+table output with numbers of probes associated with each gene } 
+\item{equiv}{ table output with equivalent numbers of probes associated
+with each gene taking into account multi-gene bias} \item{de}{ a
 vector of ones and zeroes of the same length of universe indicating which
 genes in the universe are significantly differentially methylated.  }
 \item{fract.counts}{ a dataframe with 2 columns corresponding to the Entrez
 Gene IDS for the significant probes and the associated weight to account for
-multi-mapping probes.  }
+multi-gene probes.  }
 }
 \description{
 Given a set of CpG probe names and optionally all the CpG sites tested, this
@@ -78,9 +80,16 @@ sigcpgs <- sample(rownames(ann),1000,replace=FALSE)
 allcpgs <- rownames(ann)
 
 mappedEz <- getMappedEntrezIDs(sigcpgs,allcpgs,array.type="450K")
+names(mappedEz)
+# Entrez IDs of the significant genes
 mappedEz$sig.eg[1:10]
+# Entrez IDs for the universe
 mappedEz$universe[1:10]
+# Number of CpGs per gene
 mappedEz$freq[1:10]
+# Equivalent numbers of CpGs measured per gene
+mappedEz$equiv[1:10]
+A vector of 0s and 1s indicating which genes in the universe are significant
 mappedEz$de[1:10]
 }
 

@@ -58,6 +58,7 @@ package. Please note that the \code{gene.length} parameter must be in the
 same order and of the same length as the \code{universe} parameter.
 }
 \examples{
+\dontrun{ # to avoid timeout on Bioconductor build
 library(org.Hs.eg.db)
 # Use org.Hs.eg.db to extract GO terms
 GOtoID <- suppressMessages(select(org.Hs.eg.db, keys=keys(org.Hs.eg.db), 
@@ -102,6 +103,7 @@ gsaseq(sig.de = de.genes, universe = universe, collection = sets)
 # invariant
 gsaseq(sig.de = de.genes, univers = universe, collection = sets, 
 gene.length = genelength)
+}
 
 }
 \seealso{

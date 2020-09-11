@@ -138,10 +138,22 @@
 #' gst <- gsameth(sig.cpg = sigcpgs, all.cpg = allcpgs, collection = sets, 
 #'                 plot.bias = TRUE, prior.prob = TRUE)
 #' topGSA(gst)
+#' 
+#' # Add significant gene symbols in each set to output
+#' gst <- gsameth(sig.cpg = sigcpgs, all.cpg = allcpgs, collection = sets, 
+#'                 plot.bias = TRUE, prior.prob = TRUE, sig.genes = TRUE)
+#' topGSA(gst)
+#' 
 #' # Testing ignoring bias
 #' gst.bias <- gsameth(sig.cpg = sigcpgs, all.cpg = allcpgs, collection = sets, 
 #'                     prior.prob = FALSE)
 #' topGSA(gst.bias)
+#' 
+#' # Restrict to CpGs in gene bodies
+#' gst.body <- gsameth(sig.cpg = sigcpgs, all.cpg = allcpgs, collection = sets,
+#'                     genomic.features = "Body")
+#' topGSA(gst.body)
+#' 
 #' }
 #' 
 #' @import IlluminaHumanMethylation450kanno.ilmn12.hg19 IlluminaHumanMethylationEPICanno.ilm10b4.hg19
@@ -284,6 +296,7 @@ gsameth <- function(sig.cpg, all.cpg=NULL, collection,
     }
   }
   results[,"FDR"] <- stats::p.adjust(results[,"P.DE"],method="BH")
+  results[,"DE"] <- floor(results[,"DE"])
   if(sig.genes) data.frame(results, SigGenesInSet)
   else data.frame(results)
 }

@@ -41,6 +41,7 @@
 #' 
 #' 
 #' @examples
+#' \dontrun{ # to avoid timeout on Bioconductor build
 #' library(org.Hs.eg.db)
 #' # Use org.Hs.eg.db to extract GO terms
 #' GOtoID <- suppressMessages(select(org.Hs.eg.db, keys=keys(org.Hs.eg.db), 
@@ -85,6 +86,7 @@
 #' # invariant
 #' gsaseq(sig.de = de.genes, univers = universe, collection = sets, 
 #' gene.length = genelength)
+#' }
 #' 
 gsaseq <- function(sig.de, universe, collection, plot.bias=FALSE, 
                    gene.length=NULL, sort = TRUE)
