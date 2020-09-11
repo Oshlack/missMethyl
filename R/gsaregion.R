@@ -108,6 +108,7 @@
 #' library(limma)
 #' library(DMRcate)
 #' library(ExperimentHub)
+#' library(org.Hs.eg.db)
 #' 
 #' # Follow the example for the dmrcate function to get some EPIC data from
 #' # ExperimentHub
