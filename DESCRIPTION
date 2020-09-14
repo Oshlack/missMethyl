@@ -1,14 +1,16 @@
 Package: missMethyl
 Type: Package
 Title: Analysing Illumina HumanMethylation BeadChip Data
-Version: 1.21.6
+Version: 1.21.5
 Date: 2019-10-04
 Author: Belinda Phipson and Jovana Maksimovic 
 Maintainer: Belinda Phipson <belinda.phipson@petermec.org>, Jovana
         Maksimovic <jovana.maksimovic@petermac.org>,
         Andrew Lonsdale <andrew.lonsdale@petermac.org>
 Depends: 
-    R (>= 3.6.0)
+    R (>= 3.6.0),
+    IlluminaHumanMethylation450kanno.ilmn12.hg19,
+    IlluminaHumanMethylationEPICanno.ilm10b4.hg19
 Imports:
     AnnotationDbi, 
     BiasedUrn,
@@ -17,9 +19,7 @@ Imports:
     GenomicRanges,
     GO.db,
     IlluminaHumanMethylation450kmanifest,
-    IlluminaHumanMethylation450kanno.ilmn12.hg19,
     IlluminaHumanMethylationEPICmanifest,
-    IlluminaHumanMethylationEPICanno.ilm10b4.hg19,
     IRanges,
     limma,
     methods,
