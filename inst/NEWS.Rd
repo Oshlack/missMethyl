@@ -2,58 +2,95 @@
 \title{missMethyl News}
 \encoding{UTF-8}
 
+\section{Version 1.21.5}{\itemize{
+
+\item Added functionality to the gene set testing functions to allow
+the user to limit the input CpGs to genomic regions of interest with the
+\code{genomic.features} parameter.
+\item Added \code{sig.genes} parameter to the gene set testing functions to 
+allow the user to add the significant genes overlapping each gene set to the 
+output.
+\item Added a fix to gsameth to avoid p-values of exactly zero being reported.
+\item Modified the default for \code{coef} in the \code{varFit} function so the
+default is all columns of the design matrix used to compute Levene Residuals.
+\item Updated vignette to include examples of how to perform gene set testing
+following a region level analysis
+
+}}
+
 \section{Version 1.21.4}{\itemize{
 
-\item Bug fix: Fixed bug that resulted in negative value for odds. Bug only occurred in rare cases when CpG universe was smaller than all CpGs on array AND if some large collections had more genes than the universe.    
+\item Bug fix: Fixed bug that resulted in negative value for odds. Bug only 
+occurred in rare cases when CpG universe was smaller than all CpGs on array AND 
+if some large collections had more genes than the universe.    
+
 }}
 
 \section{Version 1.20.3}{\itemize{
 
-\item Added \code{fract.counts} logical parameter to enable fractional counting of CpGs 
-to be turned off in gometh, gsameth, goregion and gsaregion. This switches off 
-the adjustment for CpGs that map to multiple genes. This is primarily intended 
-for comparison with earlier versions and we strongly encourage it to be set to 
-TRUE.
+\item Added \code{fract.counts} logical parameter to enable fractional counting 
+of CpGs to be turned off in gometh, gsameth, goregion and gsaregion. This 
+switches off the adjustment for CpGs that map to multiple genes. This is 
+primarily intended for comparison with earlier versions and we strongly 
+encourage it to be set to TRUE.
+
 }}
 
 \section{Version 1.20.0}{\itemize{
 
-\item Updated gsameth to take into account that some CpGs map to multiple genes. For a small number of gene families, this previously caused their associated GO categories/gene sets to be erroneously overrepresented and thus highly significant.    
-\item Updated gometh to call gsameth to perform statistical testing for GO categories and KEGG pathways; goana and kegga are no longer used.
-\item Replaced use of the AnnotationDbi 'toTable' function with 'select' to speed up execution.
-\item The 'topGSA' function is now used to look at the top ranked results from both gometh and gsameth. The vignette has been modified accordingly. 
+\item Updated gsameth to take into account that some CpGs map to multiple genes. 
+For a small number of gene families, this previously caused their associated GO 
+categories/gene sets to be erroneously overrepresented and thus highly 
+significant.    
+\item Updated gometh to call gsameth to perform statistical testing for GO 
+categories and KEGG pathways; goana and kegga are no longer used.
+\item Replaced use of the AnnotationDbi 'toTable' function with 'select' to 
+speed up execution.
+\item The 'topGSA' function is now used to look at the top ranked results from 
+both gometh and gsameth. The vignette has been modified accordingly. 
+
 }}
 
 \section{Version 1.15.2}{\itemize{
 
-\item Updated getMappedEntrezIDs, gometh and gsameth to to speed up execution by taking the array annotation in as an optional argument.
-\item missMethyl now uses the latest IlluminaHumanMethylationEPICanno.ilm10b2.hg19 annotation by default for EPIC arrays.
+\item Updated getMappedEntrezIDs, gometh and gsameth to to speed up execution 
+by taking the array annotation in as an optional argument.
+\item missMethyl now uses the latest 
+IlluminaHumanMethylationEPICanno.ilm10b2.hg19 annotation by default for EPIC 
+arrays.
+
 }}
 
 
 \section{Version 1.15.1}{\itemize{
 
-\item Added getAdjusted function for extracting RUVm adjusted data for visualisation purposes
+\item Added getAdjusted function for extracting RUVm adjusted data for 
+visualisation purposes
 \item Updated vignette to demonstrate use of getAdjusted function
-\item Vignette now includes an example of how to handle cases with RUVm where number of samples is greater than number of Illumina negative controls
+\item Vignette now includes an example of how to handle cases with RUVm where 
+number of samples is greater than number of Illumina negative controls
 
 }}
 
 \section{Version 1.7.3}{\itemize{
 
-\item modified gene set testing functions gometh and gsameth to accommodate EPIC arrays
+\item modified gene set testing functions gometh and gsameth to accommodate EPIC 
+arrays
 
 }}
 
 \section{Version 1.5.1}{\itemize{
 
-\item New gene set testing function gsameth() added, kegg testing functionality added to gometh().
+\item New gene set testing function gsameth() added, kegg testing functionality 
+added to \code{gometh}.
 
 }}
 
 \section{Version 1.1.10}{\itemize{
 
-\item This version of the package contains functions to perform SWAN normalisation, RUV normalisation and differential methylation analysis, differential variability analysis and gene ontology testing for the 450K array.
+\item This version of the package contains functions to perform SWAN 
+normalisation, RUV normalisation and differential methylation analysis, 
+differential variability analysis and gene ontology testing for the 450K array.
 
 }}
 
@@ -74,7 +111,8 @@ Added functions to perform RUV normalization and differential methylation analys
 \section{Version 0.99.9}{\itemize{
 
 \item
-This version of the package has all calculations in matrix formulation and handles nuisance parameters appropriately.
+This version of the package has all calculations in matrix formulation and 
+handles nuisance parameters appropriately.
 
 }}
 
@@ -96,13 +134,16 @@ Modified getLeveneResiduals
 \section{Version 0.99.5}{\itemize{
 
 \item
-Modified the varFit function to accept DGEList objects for differential variability testing for RNA-Seq data.
+Modified the varFit function to accept DGEList objects for differential 
+variability testing for RNA-Seq data.
 
 }}
 
 \section{Version 0.99.4}{\itemize{
 
 \item
-First version of package contains functions to perform SWAN normalisation and differential variability analysis for DNA methylation data from Illumina's Infinium HumanMethylation450 beadchip.
+First version of package contains functions to perform SWAN normalisation and 
+differential variability analysis for DNA methylation data from Illumina's 
+Infinium HumanMethylation450 beadchip.
 
 }}

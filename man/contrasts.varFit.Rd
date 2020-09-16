@@ -39,9 +39,11 @@ y<-matrix(rnorm(1200),ncol=12)
 group<-factor(rep(c(1,2,3),each=4))
 design<-model.matrix(~0+group)
 colnames(design)<-c("grp1","grp2","grp3")
+design
 
 # Fit linear model for differential variability
-vfit<-varFit(y,design)
+# Please always specify the coef parameter in the call to varFit
+vfit<-varFit(y,design,coef=c(1,2,3))
 
 # Specify contrasts
 contr<-makeContrasts(grp2-grp1,grp3-grp1,grp3-grp2,levels=colnames(design))

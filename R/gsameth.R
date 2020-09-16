@@ -277,6 +277,13 @@ gsameth <- function(sig.cpg, all.cpg=NULL, collection,
                                              columns = "SYMBOL"))
         SigGenesInSet[i] <- paste(SigGenesSymbol$SYMBOL,collapse=",")
       }
+      if(results[i,"P.DE"]==0){
+        message("Pvalue of exactly zero detected. Performing hypergeometric 
+                test for gene set ", rownames(results)[i])
+        results[i,"P.DE"] <- stats::phyper(q=results[i,"DE"]-0.5,m=m,
+                                           n=Nuniverse-m,k=results[i,"N"],
+                                           lower.tail=FALSE)
+      }
     }
   }
   # Hypergeometric test without prior probabilities

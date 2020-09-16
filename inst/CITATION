@@ -1,4 +1,5 @@
-citHeader("Please cite the relevant papers for individual methods and the missMethyl Bioinformatics paper for the whole package.")
+citHeader("Please cite the relevant papers for individual methods and the 
+missMethyl Bioinformatics paper for the whole package.")
 
 citEntry(
   entry="article",	

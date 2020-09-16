@@ -14,6 +14,8 @@
 #' discovery rates are calculated using the method of Benjamini and Hochberg
 #' (1995).
 #' 
+#' Please always specify the \code{coef} parameter in the call to \code{varFit}, 
+#' which indicates which groups are to be tested for differential variability.
 #' If \code{coef} is not specified, then group means are estimated based on all
 #' the columns of the design matrix and subtracted out before testing for
 #' differential variability. If the design matrix contains nuisance parameters,
@@ -41,14 +43,14 @@
 #' for example, \code{topTable} and \code{decideTests}.
 #' 
 #' @aliases varFit varFit.default varFit.DGEList varFit.MethylSet
-#' @param data Object of class \code{MethylSet} or \code{matrix} with rows
-#' corresponding to the features of interest such as CpG sites and columns
-#' corresponding to samples or arrays.
+#' @param data Object of class \code{MethylSet} or \code{matrix} of M-values 
+#' with rows corresponding to the features of interest such as CpG sites and 
+#' columns corresponding to samples or arrays.
 #' @param design The design matrix of the experiment, with rows corresponding
 #' to arrays/samples and columns to coefficients to be estimated. Defaults to
 #' the unit vector.
 #' @param coef The columns of the design matrix containing the comparisons to
-#' test for differential variability.
+#' test for differential variability. Defaults to all columns of design matrix.
 #' @param type Character string, \code{"AD"} for absolute residuals or
 #' \code{"SQ"} for squared residuals. Default is absolute.
 #' @param trend Logical, if true fits a mean variance trend on the absolute or
@@ -171,8 +173,10 @@ varFit.default <- function(data,design=NULL,coef=NULL,type=NULL,trend=TRUE,
     }    
     else{        
         design <- as.matrix(design)
-        if(is.null(coef)) 
-            coef <- c(1,ncol(design))
+        if(is.null(coef)){
+            message("coef not specified. Using all columns of design matrix.")
+            coef <- c(1:ncol(design))
+        }
         z <- getLeveneResiduals(data,design=design[,coef],type=type)
     }
         
@@ -222,9 +226,11 @@ varFit.default <- function(data,design=NULL,coef=NULL,type=NULL,trend=TRUE,
 #' group<-factor(rep(c(1,2,3),each=4))
 #' design<-model.matrix(~0+group)
 #' colnames(design)<-c("grp1","grp2","grp3")
+#' design
 #' 
 #' # Fit linear model for differential variability
-#' vfit<-varFit(y,design)
+#' # Please always specify the coef parameter in the call to varFit
+#' vfit<-varFit(y,design,coef=c(1,2,3))
 #' 
 #' # Specify contrasts
 #' contr<-makeContrasts(grp2-grp1,grp3-grp1,grp3-grp2,levels=colnames(design))

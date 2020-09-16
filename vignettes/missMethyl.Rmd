@@ -6,54 +6,56 @@ package: "`r BiocStyle::pkg_ver('missMethyl')`"
 output: 
   BiocStyle::html_document
 vignette: >
+  %\VignetteEncoding{UTF-8}
   %\VignetteIndexEntry{missMethyl: Analysing Illumina HumanMethylation BeadChip Data}
   %\VignetteEngine{knitr::rmarkdown}
-  %\VignetteEncoding{UTF-8}
 bibliography: bibliography.bib
+editor_options: 
+  chunk_output_type: console
 ---
 
 # Introduction
 
-The `r BiocStyle::Biocpkg("missMethyl")` package contains functions to analyse methylation 
-data from Illumina's HumanMethylation450 and MethylationEPIC beadchip. 
-These arrays are a cost-effective alternative to whole genome bisulphite 
-sequencing, and as such are widely used to profile DNA methylation. 
-Specifically, `r BiocStyle::Biocpkg("missMethyl")` contains functions to perform SWAN 
-normalisation [@Maksimovic2012],
-perform differential methylation analysis using **RUVm** [@Maksimovic2015],
-differential variability analysis [@Phipson2014] and gene set analysis
-[@Phipson2016]. As our lab's research into specialised analyses of
-these arrays continues we anticipate that the package will be
-continuously updated with new functions.
+The `r BiocStyle::Biocpkg("missMethyl")` package contains functions to analyse 
+methylation data from Illumina's HumanMethylation450 and MethylationEPIC 
+beadchip. These arrays are a cost-effective alternative to whole genome 
+bisulphite sequencing, and as such are widely used to profile DNA methylation. 
+Specifically, `r BiocStyle::Biocpkg("missMethyl")` contains functions to perform 
+SWAN normalisation [@Maksimovic2012],perform differential methylation analysis 
+using **RUVm** [@Maksimovic2015], differential variability analysis 
+[@Phipson2014] and gene set enrichment analysis [@Phipson2016]. As our lab's 
+research into specialised analyses of these arrays continues we anticipate that 
+the package will be updated with new functions.
 
 Raw data files are in IDAT format, which can be read into R using the
-`r BiocStyle::Biocpkg("minfi")` package [@Aryee2014]. Statistical analyses are usually 
-performed on M-values, and $\beta$ values are used for visualisation, 
-both of which can be extracted from objects, which is a class of object created 
-by `r BiocStyle::Biocpkg("minfi")`. For detecting differentially variable CpGs we recommend that the
-analysis is performed on M-values. All analyses described here are
-performed at the CpG site level.
+`r BiocStyle::Biocpkg("minfi")` package [@Aryee2014]. Statistical analyses are 
+usually performed on M-values, and $\beta$ values are used for visualisation, 
+both of which can be extracted from `MethylSet` data objects, which is a class 
+of object created by `r BiocStyle::Biocpkg("minfi")`. For detecting 
+differentially variable CpGs we recommend that the analysis is performed on 
+M-values. All analyses described here are performed at the CpG site level.
 
 # Reading data into R
 
-We will use the data in the `r BiocStyle::Biocpkg("minfiData")` package to demonstrate the 
-functions in `r BiocStyle::Biocpkg("missMethyl")`.
-The example dataset has 6 samples across two slides. The sample
-information is in the targets file. An essential column in the targets
-file is the `Basename` column which tells where the idat files to be
-read in are located. The R commands to read in the data are taken from
-the `r BiocStyle::Biocpkg("minfi")` User's Guide. For additional details on how to read 
-the IDAT files into R, as well as information regarding quality control please 
-refer to the `r BiocStyle::Biocpkg("minfi")` User's Guide.
+We will use the data in the `r BiocStyle::Biocpkg("minfiData")` package to 
+demonstrate the functions in `r BiocStyle::Biocpkg("missMethyl")`.
+The example dataset has 6 samples across two slides. There are 3 cancer samples
+and 3 normal sample. The sample information is in the targets file. An 
+essential column in the targets file is the `Basename` column which tells us 
+where the idat files to be read in are located. The R commands to read in the 
+data are taken from the `r BiocStyle::Biocpkg("minfi")` User's Guide. For 
+additional details on how to read the IDAT files into R, as well as information 
+regarding quality control please refer to the `r BiocStyle::Biocpkg("minfi")` 
+User's Guide.
 
 ```{r load-libs, message=FALSE}
 library(missMethyl)
 library(limma)
 library(minfi)
+library(minfiData)
 ```
 
 ```{r reading-data, message=FALSE}
-library(minfiData)
 baseDir <- system.file("extdata", package = "minfiData")
 targets <- read.metharray.sheet(baseDir)
 targets[,1:9]
@@ -69,8 +71,8 @@ converted to a `MethylSet` object.
 SWAN (subset-quantile within array normalization) is a within-array
 normalization method for Illumina 450k & EPIC BeadChips. Technical differencs
 have been demonstrated to exist between the Infinium I and Infinium II
-assays on a single Illumina HumanMethylation array [@Bibikova2011, @Dedeurwaerder2011]. Using the 
-SWAN method
+assays on a single Illumina HumanMethylation array 
+[@Bibikova2011, @Dedeurwaerder2011]. Using the SWAN method
 substantially reduces the technical variability between the assay
 designs whilst maintaining important biological differences. The SWAN
 method makes the assumption that the number of CpGs within the 50bp
@@ -89,10 +91,10 @@ the normalized intensities will be
 identical, if the normalization is repeated.
 
 The technical differences between Infinium I and II assay designs can
-result in aberrant beta value distributions (Figure @ref(fig:betasByType), panel "Raw"). Using SWAN 
-corrects for the technical differences between the
+result in aberrant $\beta$ value distributions (Figure \@ref(fig:betasByType), 
+panel "Raw"). Using SWAN corrects for the technical differences between the
 Infinium I and II assay designs and produces a smoother overall $\beta$
-value distribution (Figure @ref(fig:betasByType), panel "SWAN").
+value distribution (Figure \@ref(fig:betasByType), panel "SWAN").
 
 ```{r ppraw}
 mSet <- preprocessRaw(rgSet)
@@ -120,16 +122,17 @@ keep <- rowSums(detP < 0.01) == ncol(rgSet)
 mSetSw <- mSetSw[keep,]
 ```
 
-# Extracting Beta and M-values
+# Extracting $\beta$ and M-values
 
 Now that the data has been `SWAN` normalised we can extract $\beta$ and
 M-values from the object. We prefer to add an offset to the methylated
 and unmethylated intensities when calculating M-values, hence we extract
 the methylated and unmethylated channels separately and perform our own
-calculation. For all subsequent analysis we use a random selection of
+calculation. For all subsequent analyses we use a random selection of
 20000 CpGs to reduce computation time.
 
 ```{r extraction}
+set.seed(10)
 mset_reduced <- mSetSw[sample(1:nrow(mSetSw), 20000),]
 meth <- getMeth(mset_reduced)
 unmeth <- getUnmeth(mset_reduced)
@@ -148,22 +151,20 @@ An MDS plot (Figure \@ref(fig:mdsplot)) is a good sanity check to make sure
 samples cluster together according to the main factor of interest, in
 this case, cancer and normal.
 
-# Testing for differential methylation using 
+# Testing for differential methylation using limma
 
 To test for differential methylation we use the `r BiocStyle::Biocpkg("limma")` 
 package [@Smyth2005], which employs an empirical Bayes framework based on 
 Guassian model theory. First we need to set up the design matrix. 
-There are a number of
-ways to do this, the most straightforward is directly from the targets
-file. There are a number of variables, with the `status` column indicating
-**cancer/normal** samples. From the `person` column of the targets file, we
-see that the **cancer/normal** samples are matched, with 3 individuals each
-contributing both a **cancer** and **normal** sample. Since the 
-`r BiocStyle::Biocpkg("limma")` model framework can handle any experimental design which 
-can be summarised by
-a design matrix, we can take into account the paired nature of the data
-in the analysis. For more complicated experimental designs, please refer
-to the `r BiocStyle::Biocpkg("limma")` User's Guide.
+There are a number of ways to do this, the most straightforward is directly from 
+the targets file. There are a number of variables, with the `status` column 
+indicating **cancer/normal** samples. From the `person` column of the targets 
+file, we see that the **cancer/normal** samples are matched, with 3 individuals 
+each contributing both a **cancer** and **normal** sample. Since the 
+`r BiocStyle::Biocpkg("limma")` model framework can handle any experimental 
+design which can be summarised by a design matrix, we can take into account the 
+paired nature of the data in the analysis. For more complicated experimental 
+designs, please refer to the `r BiocStyle::Biocpkg("limma")` User's Guide.
 
 ```{r design}
 group <- factor(targets$status,levels=c("normal","cancer"))
@@ -178,13 +179,13 @@ M-values.
 
 ```{r diffmeth}
 fit.reduced <- lmFit(Mval,design)
-fit.reduced <- eBayes(fit.reduced)
+fit.reduced <- eBayes(fit.reduced, robust=TRUE)
 ```
 
 The numbers of hyper-methylated (1) and hypo-methylated (-1) can be
-displayed using the `decideTests` function in `r BiocStyle::Biocpkg("limma")` and the top 
-10 differentially methylated CpGs for *cancer* versus *normal* extracted using 
-`topTable`.
+displayed using the `decideTests` function in `r BiocStyle::Biocpkg("limma")` 
+and the top 10 differentially methylated CpGs for *cancer* versus *normal* 
+extracted using `topTable`.
 
 ```{r diffmeth-results}
 summary(decideTests(fit.reduced))
@@ -194,7 +195,7 @@ top
 
 Note that since we performed our analysis on M-values, the `logFC` and
 `AveExpr` columns are computed on the M-value scale. For interpretability
-and visualisation we can look at the $\beta$ values. The beta values for
+and visualisation we can look at the $\beta$ values. The $\beta$ values for
 the top 4 differentially methylated CpGs shown in Figure \@ref(fig:top4).
 
 ```{r top4, fig.cap = "Top DM CpGs. The beta values for the top 4 differentially methylated CpGs.", echo = TRUE, fig.width=10,fig.height=9}
@@ -365,10 +366,10 @@ optimal value of $k$, if using *RUV-4* or *RUV-2*.
 par(mfrow=c(1,2))
 plotMDS(M, labels=targets$Sample_Name, col=as.integer(factor(targets$status)),
         main="Unadjusted", gene.selection = "common")
-legend("topleft",legend=c("Cancer","Normal"),pch=16,cex=1,col=1:2)
+legend("right",legend=c("Cancer","Normal"),pch=16,cex=1,col=1:2)
 plotMDS(Madj, labels=targets$Sample_Name, col=as.integer(factor(targets$status)),
         main="Adjusted: RUV-inverse", gene.selection = "common")
-legend("topleft",legend=c("Cancer","Normal"),pch=16,cex=1,col=1:2)
+legend("topright",legend=c("Cancer","Normal"),pch=16,cex=1,col=1:2)
 ```
 
 To illustrate how the `getAdj` function can be used to help select an
@@ -397,13 +398,13 @@ produces more sensible results.
 par(mfrow=c(2,2))
 plotMDS(M, labels=targets$Sample_Name, col=as.integer(factor(targets$status)),
         main="Unadjusted", gene.selection = "common")
-legend("topleft",legend=c("Cancer","Normal"),pch=16,cex=1,col=1:2)
+legend("top",legend=c("Cancer","Normal"),pch=16,cex=1,col=1:2)
 plotMDS(Madj, labels=targets$Sample_Name, col=as.integer(factor(targets$status)),
         main="Adjusted: RUV-inverse", gene.selection = "common")
-legend("topleft",legend=c("Cancer","Normal"),pch=16,cex=1,col=1:2)
+legend("topright",legend=c("Cancer","Normal"),pch=16,cex=1,col=1:2)
 plotMDS(Madj1, labels=targets$Sample_Name, col=as.integer(factor(targets$status)),
         main="Adjusted: RUV-4, k=1", gene.selection = "common")
-legend("bottomleft",legend=c("Cancer","Normal"),pch=16,cex=1,col=1:2)
+legend("bottom",legend=c("Cancer","Normal"),pch=16,cex=1,col=1:2)
 plotMDS(Madj2, labels=targets$Sample_Name, col=as.integer(factor(targets$status)),
         main="Adjusted: RUV-4, k=2", gene.selection = "common")
 legend("bottomright",legend=c("Cancer","Normal"),pch=16,cex=1,col=1:2)
@@ -433,24 +434,49 @@ samples, but variably methylated in the cancer samples.
 In general we recommend at least 10 samples in each group for accurate
 variance estimation, however for the purpose of this vignette we perform
 the analysis on 3 vs 3. In this example, we are interested in testing
-for differential variability in the cancer versus normal group. Note
-that when we specify the `coef` parameter, which corresponds to the
-columns of the design matrix to be used for testing differential
-variability, we need to specify both the intercept and the fourth
-column. The ID variable is a nuisance parameter and not used when
-obtaining the absolute deviations, however it can be included in the
-linear modelling step. For methylation data, the function will take
-either a matrix of M-values, $\beta$ values or a object as input. If
+for differential variability in the cancer versus normal group. 
+
+An important note on the `coef` parameter: please always explicitly state which 
+columns of design matrix correspond to the groups that you are interested in 
+testing for differential variability. The default setting for `coef` is to 
+include all columns of the design matrix when calculating the Levene residuals, 
+which is not suitable for when there are additional variables that need to be 
+taken into account in the linear model. To avoid misspecification of the model, 
+it is best to explicitly state the `coef` parameter. The additional nuisance or
+confounding variables will still be taken into account in the linear 
+modelling step, however we find that including them when calculating Levene
+residuals often removes all the (possibly interesting) variation in the data.
+
+When the design matrix includes an intercept term, the `coef` parameter must 
+include both the intercept and groups of interest. Consider the design matrix 
+that was used when performing the limma analysis:
+
+```{r checkdesign}
+design
+```
+
+The first column of the design matrix is the intercept term, and the fourth 
+column tells us which samples are cancer and normal samples. The 2nd and 3rd
+columns correspond to the ID parameter, which is not interesting in terms of 
+finding differentially variable CpGs, but may be important to include in the 
+linear model. Hence for this example we would specify `coef = c(1,4)` in the 
+call to `varFit`.
+
+For methylation data, the `varFit` function will take
+either a matrix of M-values, $\beta$ values or a `MethylSet` object as input. If
 $\beta$ values are supplied, a logit transformation is performed. Note
-that as a default, `varFit` uses the robust setting in the `r BiocStyle::Biocpkg("limma")` 
-framework, which requires the use of the `r BiocStyle::CRANpkg("statmod")` package.
+that as a default, `varFit` uses the robust setting in the 
+`r BiocStyle::Biocpkg("limma")` framework, which requires the use of the 
+`r BiocStyle::CRANpkg("statmod")` package.
 
 ```{r diffvar}
 fitvar <- varFit(Mval, design = design, coef = c(1,4))
 ```
 
 The numbers of hyper-variable (1) and hypo-variable (-1) genes in **cancer**
-vs **normal** can be obtained using `decideTests`.
+vs **normal** can be obtained using `decideTests`. In the cancer vs normal
+context, we would expect to see more variability in methylation in cancer 
+compared to normal (i.e. hyper-variable).
 
 ```{r diffvar-results}
 summary(decideTests(fitvar))
@@ -459,10 +485,11 @@ topDV
 ```
 
 An alternate parameterisation of the design matrix that does not include
-an intercept term can also be used, and specific contrasts tested with 
-`contrasts.varFit`.
+an intercept term can also be used (i.e. a cell means model), and specific 
+contrasts tested with `contrasts.varFit`.
 Here we specify the design matrix such that the first two columns
-correspond to the **normal** and **cancer** groups, respectively.
+correspond to the **normal** and **cancer** groups, respectively. Note that we 
+now specify `coef=c(1,2)`.
 
 ```{r alternative}
 design2 <- model.matrix(~0+group+id)
@@ -503,12 +530,13 @@ we apply a `voom` transformation [@Law2014] to obtain observation weights, which
 are then used in the linear modelling step. For RNA-Seq data, the `varFit`
 function will take a `DGElist` object as input.
 
-To demonstrate this, we use data from the `r BiocStyle::Biocpkg("tweeDEseqCountData")` 
-package. This data is part of the International HapMap project, consisting of 
-RNA-Seq profiles from 69 unrelated Nigerian individuals [@Pickrell2010]. The only 
-covariate is gender, so we can look at differentially variable expression between
-males and females. We follow the code from the `r BiocStyle::Biocpkg("limma")` vignette to 
-read in and process the data before testing for differential variability.
+To demonstrate this, we use data from the 
+`r BiocStyle::Biocpkg("tweeDEseqCountData")` package. This data is part of the International HapMap project, consisting of 
+RNA-Seq profiles from 69 unrelated Nigerian individuals [@Pickrell2010]. The 
+only covariate is gender, so we can look at differentially variable expression 
+between males and females. We follow the code from the 
+`r BiocStyle::Biocpkg("limma")` vignette to read in and process the data before 
+testing for differential variability.
 
 First we load up the data and extract the relevant information.
 
@@ -547,13 +575,11 @@ dim(y)
 y <- calcNormFactors(y)
 ```
 
-We set up the design matrix and test for differential variability. In
-this case there are no nuisance parameters, so `coef` does not need to
-be explicitly specified.
+We set up the design matrix and test for differential variability. 
 
 ```{r testhapmap}
 design.hapmap <- model.matrix(~gender)
-fitvar.hapmap <- varFit(y, design = design.hapmap)
+fitvar.hapmap <- varFit(y, design = design.hapmap, coef=c(1,2))
 fitvar.hapmap$genes <- y$genes
 ```
 
@@ -583,36 +609,69 @@ title(genesDV[i],cex.main=1.5)
 
 Once a differential methylation or differential variability analysis has
 been performed, it may be of interest to know which gene pathways are
-targeted by the significant CpG sites. It is not entirely clear from the
-literature how best to perform such an analysis, however Geeleher et al.
+targeted by the significant CpG sites. Geeleher et al.
 [@Geeleher2013] showed there is a severe bias when performing gene
 ontology analysis with methylation data. This is due to the fact that
 there are differing numbers of probes per gene on several different
 array technologies. For the Illumina Infinium HumanMethylation450 array
 the number of probes per gene ranges from 1 to 1299, with a median of 15
 probes per gene. For the EPIC array, the range is 1 to 1487, with a
-median of 20 probes per gene. This means that when mapping CpG sites to
-genes, a gene is more likely to be *selected* if there are many CpG
-sites associated with the gene.
+median of 20 probes per gene. This means that when annotating CpG sites to
+genes, a gene is more likely to be identified as differentially methylated if 
+there are many CpG sites associated with the gene. We refer to this source of
+bias as "probe number bias".
 
 One way to take into account this selection bias is to model the
 relationship between the number of probes per gene and the probability
-of being selected. This can be performed by adapting the 
-`r BiocStyle::Biocpkg("goseq")` method of Young et al. [@Young2010]. Each gene then has a 
-prior probability associated
-with it, and a modified version of a hypergeometric test can be
-performed, testing for over-representation of the selected genes in each
-gene set.
+of being differentially methylated. This can be performed by adapting the 
+`r BiocStyle::Biocpkg("goseq")` method of Young et al. [@Young2010]. Each gene 
+then has a prior probability associated with it, and a modified version of a 
+hypergeometric test can be performed, testing for over-representation of the 
+selected genes in each gene set. The `r BiocStyle::Biocpkg("BiasedUrn")` package
+can be used to obtain p-values from the Wallenius' noncentral hypergeometric 
+distribution, taking into account the odds of differential methylation for each 
+gene set. Note that the `r BiocStyle::Biocpkg("BiasedUrn")` package can 
+occassionally return p-values of 0. For the gene sets where a p-value of exactly 
+zero is outputted we perform a hypergeometric test, which ensures non-zero 
+p-values and hence false discovery rates.
 
-The `gometh` function performs gene set testing on GO categories or KEGG pathways
-[@Phipson2016]. The `gsameth` function is a more generalised gene set testing
-function which can take as input a list of user specified gene sets.
+We have recently uncovered a new source of bias in gene set testing for 
+methylation array data [@Maksimovic2020.08.24.265702] that we refer to as 
+"multi-gene bias". This second source of bias arises due to the fact that
+around 10% of gene-annotated CpGs are annotated to more than one gene, violating 
+assumptions of independently measured genes. This can lead to some GO categories
+being identified as significantly enriched as they contain genes with 
+methylation measurements from shared CpGs. This can occur for large gene 
+families such as the protocadherin gamma gene cluster which happen to be 
+over-represented in the GO category "GO:0007156: homophilic cell adhesion via 
+plasma membrane adhesion molecules". This is now taken into account in the 
+gene set testing functions in `r BiocStyle::Biocpkg("missMethyl")`.
+
+We have developed methods for both CpG and region level analyses. The `gometh` 
+function performs gene set testing on GO categories or KEGG pathways for 
+significant CpG sites. The `gsameth` function is a more generalised gene set 
+testing function which can take as input a list of user specified gene sets.
 Note that for `gsameth`, the format for the gene ids for each gene in the gene
 set needs to be **Entrez Gene IDs**. For example, the entire curated gene
 set list (C2) from the Broad's Molecular Signatures Database can be
 specified as input. The R version of these lists can be downloaded from
 [http://bioinf.wehi.edu.au/software/MSigDB/index.html](here). Both functions
-take a vector of significant CpG probe names as input.
+take a vector of significant CpG probe names as input. For a region level 
+analysis, using the `r BiocStyle::Biocpkg("DMRcate")` package, for example, 
+`goregion` and `gsaregion` can perform gene set enrichment analysis using the 
+ranged object as input.
+
+NOTE ON UPDATES IN SEPTEMBER 2020: We have added new functionality to the 
+gene set testing functions to allow the user to limit the input CpGs to specific
+genomic features of interest using the `genomic.features` argument. This is 
+based on the annotation information in the manifest files for the 450K and EPIC
+arrays. Possible values are ""ALL", "TSS200", "TSS1500", "Body", "1stExon", 
+"3'UTR", "5'UTR" and "ExonBnd" (only for EPIC), and any combination can be 
+specified. In order to include the significant genes that overlap with the gene
+set of interest, the `sig.genes` parameter can be set to `TRUE`. This adds an 
+additional column to the results dataframe.
+
+## CpG level analysis 
 
 To illustrate how to use `gometh`, consider the results from the differential
 methylation analysis with **RUVm**.
@@ -622,14 +681,14 @@ top <- topRUV(rfit4, number = Inf, p.BH = 1)
 table(top$p.BH_X1.1 < 0.01)
 ```
 
-At a 1% false discovery rate cut-off, there are still tens of thousands
-of CpG sites differentially methylated. These will undoubtably map to
-almost all the genes in the genome, making a gene ontology analysis
-irrelevant. One option for selecting CpGs in this context is to apply
-not only a false discovery rate cut-off, but also a $\Delta\beta$
-cut-off. However, for this dataset, taking a relatively large
+At a 1% false discovery rate cut-off, there are more than 60,000 CpG sites 
+differentially methylated. These CpGs are annotated to almost 10,000 genes, 
+which means that a gene ontology analysis is unlikely to be relevant or 
+reveal anything biologically interesting. One option for selecting CpGs in this 
+context is to apply not only a false discovery rate cut-off, but also a 
+$\Delta\beta$ cut-off. However, for this dataset, taking a relatively large
 $\Delta\beta$ cut-off of 0.25 still leaves more than 30000 CpGs
-differentially methylated.
+differentially methylated, which can be annotated to more than 6000 genes.
 
 ```{r gometh2}
 beta <- getBeta(mSet)
@@ -642,60 +701,200 @@ sigDM <- top$p.BH_X1.1 < 0.01 & abs(Delta_beta) > 0.25
 table(sigDM)
 ```
 
-Instead, we take the top 10000 CpG sites as input to `gometh`.
+Instead, we take the top 10000 CpG sites as input to `gometh` which can be 
+annotated to around 2500 genes.
 
 ```{r gometh3}
 topCpGs<-topRUV(rfit4,number=10000)
 sigCpGs <- rownames(topCpGs)
 sigCpGs[1:10]
+
+# Check number of genes that significant CpGs are annotated to
+check <- getMappedEntrezIDs(sig.cpg = sigCpGs)
+length(check$sig.eg)
 ```
 
-The takes as input a character vector of CpG names, and optionally, a
-character vector of all CpG sites tested. If the `all.cpg` argument is
-omitted, all the CpGs on the array are used as background. To change the
-array type, the `array.type` argument can be specified as either
-"450K" or "EPIC". The default is "450K".
+The`gometh` function takes as input a character vector of CpG names, and 
+optionally, a character vector of all CpG sites tested. This is important to 
+include if filtering of the CpGs has been performed prior to differential
+methylation analysis. If the `all.cpg` argument is omitted, all the CpGs on the 
+array are used as background. To change the array type, the `array.type` 
+argument can be specified as either "450K" or "EPIC". The default is "450K".
 
 If the `plot.bias` argument is `TRUE`, a figure showing the relationship
-between the probability of being selected and the number of probes per
+between the probability of differential methylation and the number of probes per
 gene will be displayed.
 
 For testing of GO terms, the `collection` argument takes the value
 "GO", which is the default setting. For KEGG pathway analysis, set
 `collection` to "KEGG". The function `topGSA` shows the top enriched GO
-categories. The function `r BiocStyle::Biocpkg("gsameth")` is
-called for GO and KEGG pathway analysis with the appropriate inputs.
+categories. The `gsameth` function is called for GO and KEGG pathway analysis 
+with the appropriate inputs.
 
 For GO testing on our example dataset:
 
-```{r gometh4}
+```{r gometh4, fig.cap="Probe number bias in the cancer dataset.", fig.width=6, fig.height=5}
 library(IlluminaHumanMethylation450kanno.ilmn12.hg19)
-gst <- gometh(sig.cpg=sigCpGs, all.cpg=rownames(top), collection="GO")
-topGSA(gst)
+gst <- gometh(sig.cpg=sigCpGs, all.cpg=rownames(top), collection="GO",
+              plot.bias=TRUE)
+topGSA(gst, n=10)
 ```
+
+Testing all GO categories (>20,000) can be a little slow. To demonstrate 
+the `genomic.features` parameter, let us rather focus on KEGG pathways 
+(~330 pathways).
+
+```{r gometh5}
+gst.kegg <- gometh(sig.cpg=sigCpGs, all.cpg=rownames(top), collection="KEGG")
+topGSA(gst.kegg, n=10)
+```
+
+We can limit the input CpGs to those in the promoter regions of genes:
+
+```{r gometh6}
+gst.kegg.prom <- gometh(sig.cpg=sigCpGs, all.cpg=rownames(top), 
+                        collection="KEGG", genomic.features = c("TSS200",
+                                                                "TSS1500",
+                                                                "1stExon"))
+topGSA(gst.kegg.prom, n=10)
+```
+
+We can see if the results are different if we only include CpGs in gene bodies:
+
+```{r gometh7}
+gst.kegg.body <- gometh(sig.cpg=sigCpGs, all.cpg=rownames(top), 
+                        collection="KEGG", genomic.features = c("Body"))
+topGSA(gst.kegg.body, n=10)
+```
+
+The KEGG pathways are quite different when limiting CpGs to those in gene bodies 
+versus CpGs in promoters. To include the significant genes that overlap with 
+each gene set, set the `sig.genes` parameter to TRUE.
+
+```{r gometh8}
+gst.kegg.body <- gometh(sig.cpg=sigCpGs, all.cpg=rownames(top), 
+                        collection="KEGG", genomic.features = c("Body"), 
+                        sig.genes = TRUE)
+topGSA(gst.kegg.body, n=5)
+```
+
 
 For a more generalised version of gene set testing in methylation data
 where the user can specify the gene set to be tested, the function `gsameth` can
 be used. To display the top 20 pathways, `topGSA` can be called. `gsameth` can 
 take a single gene set, or a list of gene sets. The gene identifiers in the
-gene set must be **Entrez Gene IDs**. To demonstrate `gsameth`, a toy example is 
-shown below, with gene sets made up of randomly selected genes from the
-`r BiocStyle::Biocpkg("org.Hs.eg.db")` package.
+gene set must be **Entrez Gene IDs**. To demonstrate 
+`gsameth`, we download and use the Hallmark gene set.
 
 ```{r gsameth}
-library(AnnotationDbi)
-library(org.Hs.eg.db)
-genes <- select(org.Hs.eg.db, columns=c("ENTREZID"), keys = keys(org.Hs.eg.db))
-set1 <- sample(genes$ENTREZID,size=80)
-set2 <- sample(genes$ENTREZID,size=100)
-set3 <- sample(genes$ENTREZID,size=30)
-genesets <- list(set1,set2,set3)
-gsa <- gsameth(sig.cpg=sigCpGs, all.cpg=rownames(top), collection=genesets)
-topGSA(gsa)
+hallmark <- readRDS(url("http://bioinf.wehi.edu.au/MSigDB/v7.1/Hs.h.all.v7.1.entrez.rds"))
+gsa <- gsameth(sig.cpg=sigCpGs, all.cpg=rownames(top), collection=hallmark)
+topGSA(gsa, n=10)
 ```
 
 Note that if it is of interest to obtain the **Entrez Gene IDs** that the
-significant CpGs are mapped to, the `getMappedEntrezIDs` can be called.
+significant CpGs are mapped to, the `getMappedEntrezIDs` function can be called.
+
+
+## Region level analysis
+
+We have extended `gometh` and `gsameth` to perform gene set testing following
+a region analysis. The region gene set testing function analogues are `goregion`
+and `gsaregion`. Instead of inputting significant CpGs, a ranged object as 
+typically outputted from region finding software is used. The CpGs overlapping 
+the significant differentially methylated regions (DMRs) are extracted and the 
+same statistical framework in `gometh` and `gsameth` is applied to test for 
+enrichment of gene sets. We find that genes that have more CpGs measuring 
+methylation are more likely to be called as differentially methylated regions, 
+and hence it is important to take into account this bias when performing gene 
+set testing.
+
+To demonstrate `goregion` and `gsaregion` we will perform a region analysis 
+on the cancer dataset using the `r BiocStyle::Biocpkg("DMRcate")` package.
+
+```{r dmrcate1}
+library(DMRcate)
+```
+
+First, the matrix of M-values is annotated with the relevant annotation 
+information about the probes such as their genomic position, gene annotation, 
+etc. By default, this is done using the ilmn12.hg19 annotation. The limma 
+pipeline is then used for differential methylation analysis to calculate 
+moderated t-statistics.
+
+```{r dmrcate2}
+myAnnotation <- cpg.annotate(object = M, datatype = "array", what = "M", 
+                             arraytype = c("450K"), 
+                             analysis.type = "differential", design = design, 
+                             coef = 4)
+```
+
+Next we can use the `dmrcate` function to combine the CpGs to identify
+differentially methylated regions. We can use the `extractRanges` function to 
+extract a `GRanges` object with the genomic location and the relevant 
+statistics associated with each DMR. This object can then be used as input
+to `goregion` and `gsaregion`.
+
+```{r dmrcate3}
+DMRs <- dmrcate(myAnnotation, lambda=1000, C=2)
+results.ranges <- extractRanges(DMRs)
+results.ranges
+```
+
+We can visualise the top DMR using the `DMR.plot` function:
+
+```{r dmrcatetopDMR,fig.cap="Top DMR from DMRcate.", fig.width=10, fig.height=9}
+cols <- c(2,4)[group]
+names(cols) <-group
+beta <- getBeta(mSet)
+par(mfrow=c(1,1))
+DMR.plot(ranges=results.ranges, dmr=2, CpGs=beta, phen.col=cols, 
+         what="Beta", arraytype="450K", genome="hg19")
+```
+
+Now that we have performed our region analysis, we can use `goregion` and 
+`gsaregion` to perform gene set testing. Setting `plot.bias` to TRUE, we can
+see strong probe number bias in the data. This can be interpretted that a
+gene is more likely to have a DMR called if it has more CpGs measuring 
+methylation.
+
+```{r goregion1, fig.cap="Probe number bias for DMRs in the cancer dataset.", fig.width=6, fig.height=5}
+gst.region <- goregion(results.ranges, all.cpg=rownames(M), 
+                       collection="GO", array.type="450K", plot.bias=TRUE)
+```
+
+```{r goregion2}
+topGSA(gst.region, n=10)
+```
+
+We can also test for enrichment of KEGG pathways:
+
+```{r goregion3}
+gst.region.kegg <- goregion(results.ranges, all.cpg=rownames(M), 
+                       collection="KEGG", array.type="450K")
+topGSA(gst.region.kegg, n=10)
+```
+
+What is interesting is that although very similar pathways are highly 
+ranked compared to the CpG level analysis, gene set testing on the regions 
+is more powerful i.e. the p-values are more significant. In experiments 
+where there are tens of thousands of significant CpGs from a CpG level analysis, 
+we recommend that a good quality region analysis can be a more powerful approach 
+for gene set enrichment analysis.
+
+We can also perform gene set testing on the Hallmark gene sets using 
+`gsaregion`:
+
+```{r gsaregion}
+gsa.region <- gsaregion(results.ranges, all.cpg=rownames(M), 
+                        collection=hallmark)
+topGSA(gsa.region, n=10)
+```
+
+Note that the DMR analysis can be further refined by imposing a 
+$\Delta\beta$ value cut-off and changing various parameters. Please refer to the 
+`r BiocStyle::Biocpkg("DMRcate")` package vignette for more details on how to 
+do this.
 
 # Session information
 

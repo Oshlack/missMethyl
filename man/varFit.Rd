@@ -48,16 +48,16 @@ varFit(
 )
 }
 \arguments{
-\item{data}{Object of class \code{MethylSet} or \code{matrix} with rows
-corresponding to the features of interest such as CpG sites and columns
-corresponding to samples or arrays.}
+\item{data}{Object of class \code{MethylSet} or \code{matrix} of M-values 
+with rows corresponding to the features of interest such as CpG sites and 
+columns corresponding to samples or arrays.}
 
 \item{design}{The design matrix of the experiment, with rows corresponding
 to arrays/samples and columns to coefficients to be estimated. Defaults to
 the unit vector.}
 
 \item{coef}{The columns of the design matrix containing the comparisons to
-test for differential variability.}
+test for differential variability. Defaults to all columns of design matrix.}
 
 \item{type}{Character string, \code{"AD"} for absolute residuals or
 \code{"SQ"} for squared residuals. Default is absolute.}
@@ -101,6 +101,8 @@ Bayes shrinkage and moderated t statistics (Smyth, 2004) calculated. False
 discovery rates are calculated using the method of Benjamini and Hochberg
 (1995).
 
+Please always specify the \code{coef} parameter in the call to \code{varFit}, 
+which indicates which groups are to be tested for differential variability.
 If \code{coef} is not specified, then group means are estimated based on all
 the columns of the design matrix and subtracted out before testing for
 differential variability. If the design matrix contains nuisance parameters,
