@@ -112,13 +112,17 @@ getMappedEntrezIDs <- function(sig.cpg, all.cpg=NULL,
         flat.u <- .getFlatAnnotation(array.type,anno)
     }
     
-    if(is.null(all.cpg))
+    if(is.null(all.cpg)) {
         all.cpg <- unique(flat.u$cpg)
-    else{
+    } else {
         all.cpg <- as.character(all.cpg)
         all.cpg <- all.cpg[!is.na(all.cpg)]
         all.cpg <- unique(all.cpg)
     }
+    
+    # remove CpGs from annotation that are not in all.cpg
+    m_all <- match(flat.u$cpg, all.cpg)
+    flat.u = flat.u[!is.na(m_all),]
     
     # map CpG sites to entrez gene id's
     sig.cpg <- unique(sig.cpg)
