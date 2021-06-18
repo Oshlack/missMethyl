@@ -202,7 +202,7 @@ goregion <- function(regions, all.cpg=NULL, collection=c("GO","KEGG"),
   # Takes into account probability of differential methylation based on
   # numbers of probes on array per gene
   # Jovana Maksimovic
-  # 26 April 2019. Last updated 1 September 2020.
+  # 26 April 2019. Last updated 18 June 2021.
 {
     array.type <- match.arg(toupper(array.type), c("450K","EPIC"))    
     collection <- match.arg(toupper(collection), c("GO","KEGG"))
@@ -230,9 +230,11 @@ goregion <- function(regions, all.cpg=NULL, collection=c("GO","KEGG"),
     }
   }
   
-  if(!is.null(all.cpg)){
-    anno <- anno[all.cpg,]
+  if (!is.null(all.cpg)) {
+      anno <- anno[rownames(anno) %in% all.cpg, ]
   }
+    
+  seqlevelsStyle(regions) <- "UCSC"
   
   cpgs <- GenomicRanges::GRanges(seqnames = anno$chr, 
                   ranges = IRanges::IRanges(start = anno$pos, 
