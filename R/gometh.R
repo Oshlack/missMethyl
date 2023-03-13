@@ -268,7 +268,7 @@ gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"),
   GeneID.PathID <- GeneID.PathID[d, ]
   PathID.PathName <- limma::getKEGGPathwayNames(species.KEGG = "hsa", 
                                          remove.qualifier = TRUE)
-  PathID.PathName$PathwayID <- paste0("path:", PathID.PathName$PathwayID)
+  #PathID.PathName$PathwayID <- paste0("path:", PathID.PathName$PathwayID)
   GeneID.PathID <- merge(GeneID.PathID, PathID.PathName, by="PathwayID")
   kegg <- tapply(GeneID.PathID$GeneID, GeneID.PathID$PathwayID, list)
   
