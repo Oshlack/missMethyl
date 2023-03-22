@@ -261,6 +261,7 @@ gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"),
 
 .getKEGG <- function(){
   GeneID.PathID <- limma::getGeneKEGGLinks(species.KEGG = "hsa", convert = TRUE)
+  GeneID.PathID$PathwayID <- gsub("path:", "", GeneID.PathID$PathwayID)
   isna <- rowSums(is.na(GeneID.PathID[, 1:2])) > 0.5
   GeneID.PathID <- GeneID.PathID[!isna, ]
   ID.ID <- paste(GeneID.PathID[, 1], GeneID.PathID[, 2], sep = ".")
