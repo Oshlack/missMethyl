@@ -344,11 +344,19 @@ gometh <- function(sig.cpg, all.cpg=NULL, collection=c("GO","KEGG"),
   grouplist<-strsplit(ann.keep$UCSC_RefGene_Group,split=";")
   names(grouplist)<-rownames(ann.keep)
   
-  flat<-data.frame(symbol=unlist(geneslist),group=unlist(grouplist))
-  flat$symbol<-as.character(flat$symbol)
-  flat$group <- as.character(flat$group)
-  
-  flat$cpg<- substr(rownames(flat),1,10)
+  if (array.type=="EPIC_V2") {
+    flat <- data.frame(cpg = rep(names(geneslist), lengths(geneslist)), 
+                       symbol = unlist(geneslist), 
+                       group = unlist(grouplist))
+    flat$symbol<-as.character(flat$symbol)
+    flat$group <- as.character(flat$group)
+  } else {
+    flat<-data.frame(symbol=unlist(geneslist),group=unlist(grouplist))
+    flat$symbol<-as.character(flat$symbol)
+    flat$group <- as.character(flat$group)
+    
+    flat$cpg<- substr(rownames(flat),1,10)
+  }
   
   #flat$cpg <- rownames(flat)
   flat$alias <- suppressWarnings(limma::alias2SymbolTable(flat$symbol))
