@@ -178,18 +178,17 @@ this case, cancer and normal.
 ## Filtering replicate probes in Illumina MethylationEPIC v2.0 beadchip datasets
 
 The MethylationEPIC v2.0 array contains replicate probes which map to the same 
-CpG dinucleotides. We recommend filtering these replicate probes using the 
-`r BiocStyle::Biocpkg("DMRcate")` package as shown below. Please see the 
-[`r BiocStyle::Biocpkg("DMRcate")` EPICv2 vignette](https://bioconductor.org/packages/release/bioc/vignettes/DMRcate/inst/doc/EPICv2.pdf) for more details.
+CpG dinucleotides. We recommend filtering these replicate probes prior to continuing analysis. The `r BiocStyle::Biocpkg("DMRcate")` package contains [information](https://bioconductor.org/packages/release/bioc/vignettes/DMRcate/inst/doc/EPICv2.pdf) describing possible approaches for filtering replicate probes. We also suggest filtering out non-cg probes, as shown below.
 
 ```{r filter-replicate-probes_Mval, eval=FALSE}
 ### This code is not run within this vignette
 
 # For EPIC_V2, please run these lines to remove replicate and non-cg probes:
-# remove non-cg probes
+# Remove non-cg probes
 Mval <- Mval[grepl("^cg", rownames(Mval)),]
-# select replicate probes with best sensitivity
-Mval <- DMRcate::rmPosReps(Mval, filter.strategy="sensitivity")
+
+# Please also filter replicate probes using an appropriate strategy. See the
+# DMRcate EPIC v2 vignette for details.
 
 ### End of not run
 ```
