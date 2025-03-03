@@ -315,8 +315,9 @@ M <- log2((meth + 100)/(unmeth + 100))
 # For EPIC_V2, please run these lines to remove replicate and non-cg probes:
 # remove non-cg probes
 M <- M[grepl("^cg", rownames(M)),]
-# select replicate probes with best sensitivity
-M <- DMRcate::rmPosReps(M, filter.strategy="sensitivity")
+
+# Please also filter replicate probes using an appropriate strategy. See the
+# DMRcate EPIC v2 vignette for details.
 
 ### End of not run
 ```
